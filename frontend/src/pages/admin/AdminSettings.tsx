@@ -11,6 +11,8 @@ const GROUPS: { label: string; keys: { key: string; label: string; multiline?: b
       { key: 'hero_kicker_ru', label: 'Кикер под логотипом (RU / EN)', multiline: false },
       { key: 'hero_subtitle_ru', label: 'Подзаголовок героя (RU / EN)' },
       { key: 'hero_desc_ru', label: 'Описание в герое C (RU / EN)', multiline: true },
+      { key: 'hero_video_url', label: 'Ссылка на видео Hero (RU / EN)' },
+      { key: 'hero_video_poster', label: 'Постер видео Hero (RU / EN)' },
     ],
   },
   {
@@ -63,6 +65,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     adminApi.getSettings()
@@ -92,6 +95,24 @@ export default function AdminSettings() {
       alert('Ошибка сохранения');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleMediaUpload = async (
+    key: string,
+    field: 'value_ru' | 'value_en',
+    file: File | undefined
+  ) => {
+    if (!file) return;
+    const uploadKey = `${key}:${field}`;
+    setUploading((prev) => ({ ...prev, [uploadKey]: true }));
+    try {
+      const url = await adminApi.uploadFile(file);
+      updateRow(key, field, url);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Ошибка загрузки файла');
+    } finally {
+      setUploading((prev) => ({ ...prev, [uploadKey]: false }));
     }
   };
 
@@ -145,11 +166,24 @@ export default function AdminSettings() {
                           className="admin-settings-input"
                         />
                       ) : (
-                        <input
-                          value={row.value_ru}
-                          onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
-                          className="admin-settings-input"
-                        />
+                        <>
+                          <input
+                            value={row.value_ru}
+                            onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
+                            className="admin-settings-input"
+                          />
+                          {key === 'hero_video_url' ? (
+                            <label className="btn admin-upload-inline-btn">
+                              {uploading[`${key}:value_ru`] ? 'Загрузка...' : 'Загрузить видео'}
+                              <input
+                                type="file"
+                                accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv"
+                                onChange={(e) => handleMediaUpload(key, 'value_ru', e.target.files?.[0])}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                          ) : null}
+                        </>
                       )}
                     </div>
                     <div>
@@ -162,11 +196,24 @@ export default function AdminSettings() {
                           className="admin-settings-input"
                         />
                       ) : (
-                        <input
-                          value={row.value_en}
-                          onChange={(e) => updateRow(key, 'value_en', e.target.value)}
-                          className="admin-settings-input"
-                        />
+                        <>
+                          <input
+                            value={row.value_en}
+                            onChange={(e) => updateRow(key, 'value_en', e.target.value)}
+                            className="admin-settings-input"
+                          />
+                          {key === 'hero_video_url' ? (
+                            <label className="btn admin-upload-inline-btn">
+                              {uploading[`${key}:value_en`] ? 'Uploading...' : 'Upload video'}
+                              <input
+                                type="file"
+                                accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv"
+                                onChange={(e) => handleMediaUpload(key, 'value_en', e.target.files?.[0])}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                          ) : null}
+                        </>
                       )}
                     </div>
                   </div>

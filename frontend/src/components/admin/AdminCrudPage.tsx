@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft, Check, Plus, X } from 'lucide-react';
 
 interface Column<T> {
   key: keyof T | string;
@@ -57,7 +58,7 @@ export default function AdminCrudPage<T extends { id: number }>({
   const getVal = (row: T, key: string): ReactNode => {
     const val = (row as Record<string, unknown>)[key];
     if (val === null || val === undefined) return '—';
-    if (typeof val === 'boolean') return val ? '✓' : '✗';
+    if (typeof val === 'boolean') return val ? <Check size={14} /> : <X size={14} />;
     if (typeof val === 'object') {
       const obj = val as Record<string, unknown>;
       if ('ru' in obj) return String(obj.ru);
@@ -78,7 +79,10 @@ export default function AdminCrudPage<T extends { id: number }>({
             <div className="sub">{subtitle}</div>
             <h1>{editing === null ? 'Новая запись' : 'Редактировать'}</h1>
           </div>
-          <button className="btn" onClick={() => setEditing('none' as unknown as null)}>← Назад</button>
+          <button className="btn" onClick={() => setEditing('none' as unknown as null)}>
+            <ArrowLeft size={14} />
+            Назад
+          </button>
         </div>
         <div className="admin-panel admin-form-shell">
           {renderForm(
@@ -104,7 +108,8 @@ export default function AdminCrudPage<T extends { id: number }>({
           <h1>{title}</h1>
         </div>
         <button className="btn solid" onClick={() => setEditing(null)}>
-          + Добавить
+          <Plus size={14} />
+          Добавить
         </button>
       </div>
 

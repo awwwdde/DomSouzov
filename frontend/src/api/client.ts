@@ -3,6 +3,14 @@ import { SiteContent, Event, NewsArticle, Hall, GalleryImage } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
+const extractApiErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const detail = (error.response?.data as { detail?: string } | undefined)?.detail;
+    return detail || error.message || 'Ошибка запроса';
+  }
+  return error instanceof Error ? error.message : 'Неизвестная ошибка';
+};
+
 // Auth token injection
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('admin_token');
@@ -78,13 +86,21 @@ export const adminApi = {
   deleteGallery: (id: number) => api.delete(`/admin/gallery/${id}`).then((r) => r.data),
 
   // Upload
+  uploadFile: async (file: File): Promise<string> => {
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const r = await api.post('/admin/upload', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return r.data.url;
+    } catch (error) {
+      throw new Error(extractApiErrorMessage(error));
+    }
+  },
+
   uploadImage: async (file: File): Promise<string> => {
-    const form = new FormData();
-    form.append('file', file);
-    const r = await api.post('/admin/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return r.data.url;
+    return adminApi.uploadFile(file);
   },
 
   changePassword: (current_password: string, new_password: string) =>

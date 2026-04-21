@@ -3,15 +3,30 @@ import { useSite } from '../context/SiteContext';
 
 export default function HeroA() {
   const { lang, t } = useSite();
+  const heroVideo = t('hero_video_url');
+  const heroPoster = t('hero_video_poster');
 
   return (
     <section className="hero-a">
       <div className="hero-bleed">
         <div className="hero-bleed-inner">
+          {heroVideo ? (
+            <video
+              className="hero-video"
+              src={heroVideo}
+              poster={heroPoster || undefined}
+              muted
+              autoPlay
+              loop
+              playsInline
+            />
+          ) : null}
           <div className="hero-bleed-overlay" />
-          <div className="hero-bleed-ph">
-            {lang === 'ru' ? '[ КОЛОННЫЙ ЗАЛ — ФОТО ]' : '[ HALL OF COLUMNS — IMAGE ]'}
-          </div>
+          {!heroVideo ? (
+            <div className="hero-bleed-ph">
+              {lang === 'ru' ? '[ ДОБАВЬТЕ ВИДЕО В АДМИНКЕ ]' : '[ ADD HERO VIDEO IN ADMIN PANEL ]'}
+            </div>
+          ) : null}
         </div>
       </div>
 

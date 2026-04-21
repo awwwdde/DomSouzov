@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
+import { CalendarDays, Cog, ExternalLink, GalleryHorizontal, LayoutDashboard, Landmark, Newspaper } from 'lucide-react';
 
 const NAV = [
-  { path: '/admin', label: 'Дашборд', icon: '⬛' },
-  { path: '/admin/events', label: 'Мероприятия', icon: '◈' },
-  { path: '/admin/news', label: 'Хроники', icon: '◉' },
-  { path: '/admin/halls', label: 'Залы', icon: '◧' },
-  { path: '/admin/gallery', label: 'Галерея', icon: '◻' },
-  { path: '/admin/settings', label: 'Настройки', icon: '◎' },
+  { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
+  { path: '/admin/events', label: 'Мероприятия', icon: CalendarDays },
+  { path: '/admin/news', label: 'Хроники', icon: Newspaper },
+  { path: '/admin/halls', label: 'Залы', icon: Landmark },
+  { path: '/admin/gallery', label: 'Галерея', icon: GalleryHorizontal },
+  { path: '/admin/settings', label: 'Настройки', icon: Cog },
 ];
 
 export default function AdminLayout() {
@@ -42,21 +43,25 @@ export default function AdminLayout() {
         </div>
 
         <nav className="admin-nav">
-          {NAV.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`admin-nav-item${location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? ' active' : ''}`}
-            >
-              <span className="admin-nav-icon">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`admin-nav-item${location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? ' active' : ''}`}
+              >
+                <span className="admin-nav-icon"><Icon size={14} strokeWidth={1.8} /></span>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="admin-sidebar-foot">
           <Link to="/" target="_blank" className="admin-view-site mono">
-            ↗ ОТКРЫТЬ САЙТ
+            <ExternalLink size={12} strokeWidth={2} />
+            ОТКРЫТЬ САЙТ
           </Link>
           <div className="admin-user mono">{email}</div>
           <button className="admin-logout-btn mono" onClick={handleLogout}>

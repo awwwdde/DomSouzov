@@ -22,6 +22,18 @@ import aiofiles
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+ALLOWED_VIDEO_TYPES = {
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/x-matroska",
+    "video/x-m4v",
+    "application/mp4",
+}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
+ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "ogg", "mov", "m4v", "avi", "mkv"}
 
 
 # ──────────── AUTH ────────────
@@ -56,14 +68,21 @@ def change_password(
 # ──────────── UPLOAD ────────────
 
 @router.post("/upload")
-async def upload_image(
+async def upload_file(
     file: UploadFile = File(...),
     current: AdminUser = Depends(get_current_admin),
 ):
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(400, "Only JPEG, PNG, WebP or GIF allowed")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "bin"
+    is_known_mime = file.content_type in ALLOWED_IMAGE_TYPES or file.content_type in ALLOWED_VIDEO_TYPES
+    is_known_ext = ext in ALLOWED_IMAGE_EXTENSIONS or ext in ALLOWED_VIDEO_EXTENSIONS
+    is_octet_stream = file.content_type == "application/octet-stream"
 
-    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    if not is_known_mime and not (is_known_ext and is_octet_stream) and not is_known_ext:
+        raise HTTPException(
+            400,
+            "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF. Allowed videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV",
+        )
+
     filename = f"{uuid.uuid4().hex}.{ext}"
     upload_dir = app_settings.UPLOAD_DIR
     os.makedirs(upload_dir, exist_ok=True)

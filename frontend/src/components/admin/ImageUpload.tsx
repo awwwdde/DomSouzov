@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { adminApi } from '../../api/client';
+import { Upload } from 'lucide-react';
 
 interface ImageUploadProps {
   value: string;
@@ -17,8 +18,8 @@ export default function ImageUpload({ value, onChange, label = 'Изображе
     try {
       const url = await adminApi.uploadImage(file);
       onChange(url);
-    } catch {
-      alert('Ошибка загрузки файла');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Ошибка загрузки файла');
     } finally {
       setUploading(false);
     }
@@ -39,7 +40,8 @@ export default function ImageUpload({ value, onChange, label = 'Изображе
           style={{ width: '100%' }}
         />
         <label className="btn" style={{ cursor: 'pointer' }}>
-          {uploading ? 'Загрузка...' : '↑ ЗАГРУЗИТЬ ФАЙЛ'}
+          <Upload size={14} />
+          {uploading ? 'Загрузка...' : 'ЗАГРУЗИТЬ ФАЙЛ'}
           <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
         </label>
       </div>

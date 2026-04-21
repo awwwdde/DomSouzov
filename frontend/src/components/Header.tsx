@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import { Menu, X } from 'lucide-react';
 
 export default function Header() {
   const { lang, setLang } = useSite();
@@ -68,7 +69,7 @@ export default function Header() {
             onClick={() => setMenuOpen(true)}
             aria-label="Menu"
           >
-            <span /><span /><span />
+            <Menu size={16} strokeWidth={1.8} />
           </button>
         </nav>
       </header>
@@ -79,7 +80,8 @@ export default function Header() {
           <div className="overlay-head">
             <span className="logo-overlay">ДОМ · СОЮЗОВ</span>
             <button className="btn overlay-close" onClick={() => setMenuOpen(false)}>
-              {lang === 'ru' ? 'ЗАКРЫТЬ' : 'CLOSE'} ×
+              {lang === 'ru' ? 'ЗАКРЫТЬ' : 'CLOSE'}
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
           <div className="overlay-body">
