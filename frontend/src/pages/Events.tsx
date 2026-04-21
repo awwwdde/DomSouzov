@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import EventsC from '../components/EventsC';
-import './Events.css';
 
 const FILTERS = {
   ru: ['Все', 'Симфония', 'Камерная', 'Хор', 'Литература', 'Конференция'],

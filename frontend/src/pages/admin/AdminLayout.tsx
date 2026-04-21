@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
-import './AdminLayout.css';
 
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: '⬛' },
@@ -30,7 +30,12 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      <aside className="admin-sidebar">
+      <motion.aside
+        className="admin-sidebar"
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="admin-brand">
           <div className="admin-brand-logo serif">ДОМ СОЮЗОВ</div>
           <div className="admin-brand-sub mono">CMS · ADMIN</div>
@@ -58,11 +63,16 @@ export default function AdminLayout() {
             ВЫЙТИ
           </button>
         </div>
-      </aside>
+      </motion.aside>
 
-      <main className="admin-main">
+      <motion.main
+        className="admin-main"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.06 }}
+      >
         <Outlet />
-      </main>
+      </motion.main>
     </div>
   );
 }

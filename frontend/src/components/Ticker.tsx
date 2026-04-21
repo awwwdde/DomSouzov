@@ -1,5 +1,4 @@
 import { useSite } from '../context/SiteContext';
-import './Ticker.css';
 
 const TICKERS = {
   ru: [

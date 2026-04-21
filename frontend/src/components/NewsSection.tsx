@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-import './NewsSection.css';
 
 export default function NewsSection() {
   const { lang, content } = useSite();

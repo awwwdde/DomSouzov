@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-import './Footer.css';
 
 export default function Footer() {
   const { lang, t } = useSite();

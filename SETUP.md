@@ -1,10 +1,34 @@
-# Дом Союзов — Запуск проекта
+# Дом Союзов — Гайд по настройке и запуску
+
+## Рекомендуемый запуск из корня (Windows / PowerShell)
+
+```bash
+cd DomSouzov
+npm run setup   # единоразовая настройка
+npm run dev     # поднимает backend + frontend одновременно
+```
+
+После запуска:
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:8000/api`
+- Админка: `http://localhost:5173/admin/login`
+
+## Что делают команды из корня
+
+- `npm run setup`:
+  - создаёт `backend/venv` (если его нет),
+  - устанавливает backend/frontend/root зависимости,
+  - создаёт `backend/.env` из примера,
+  - выполняет `seed.py` (создаёт таблицы, контент и пользователей).
+- `npm run dev`:
+  - автоматически освобождает порты `8000` и `5173` (если заняты),
+  - запускает backend и frontend в одном терминале.
 
 ## Быстрый старт (Docker)
 
 ```bash
 # 1. Скопируйте и настройте .env
-cp backend/.env.example backend/.env
+Copy-Item backend/.env.example backend/.env
 # Отредактируйте SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
 
 # 2. Запустите всё одной командой
@@ -22,11 +46,14 @@ docker-compose up --build
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# PowerShell (Windows):
+.\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
-cp .env.example .env
-# Настройте DATABASE_URL для вашего PostgreSQL
+Copy-Item .env.example .env
+# По умолчанию используется SQLite (работает "из коробки")
+# Для PostgreSQL замените DATABASE_URL в .env
 
 python seed.py        # Создаёт таблицы и начальные данные
 uvicorn main:app --reload --port 8000
@@ -39,6 +66,21 @@ cd frontend
 npm install
 npm run dev   # http://localhost:5173
 ```
+
+## Вход в админку
+
+URL: `http://localhost:5173/admin/login`
+
+После `npm run setup` доступны 2 учётки:
+
+- Основной администратор:
+  - email: `admin@dom-soyuzov.ru`
+  - password: `changeme`
+- Тестовый супер-пользователь:
+  - email: `superadmin@test.local`
+  - password: `superadmin123`
+
+Важно: для production обязательно поменяйте оба пароля и `SECRET_KEY` в `backend/.env`.
 
 ## Структура проекта
 
@@ -110,8 +152,10 @@ PUT             /api/admin/settings   { settings: [{key, value_ru, value_en}] }
 
 | Переменная | Описание | По умолчанию |
 |-----------|----------|--------------|
-| `DATABASE_URL` | PostgreSQL URL | `postgresql://domuser:dompass@localhost:5432/domsoyuzov` |
+| `DATABASE_URL` | URL базы данных | `sqlite:///./domsoyuzov.db` |
 | `SECRET_KEY` | JWT секрет (32+ символа) | `dev-secret...` |
 | `ADMIN_EMAIL` | Email администратора | `admin@dom-soyuzov.ru` |
 | `ADMIN_PASSWORD` | Пароль администратора | `changeme` |
+| `TEST_SUPERUSER_EMAIL` | Email тестового супер-пользователя | `superadmin@test.local` |
+| `TEST_SUPERUSER_PASSWORD` | Пароль тестового супер-пользователя | `superadmin123` |
 | `CORS_ORIGINS` | Разрешённые CORS-домены | `http://localhost:5173` |

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import { Event } from '../types';
 import { getEvent } from '../api/client';
-import './EventDetail.css';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();

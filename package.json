@@ -1,0 +1,16 @@
+{
+  "name": "dom-soyuzov-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "predev": "powershell -ExecutionPolicy Bypass -File scripts/free-ports.ps1",
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,green \"backend\\\\venv\\\\Scripts\\\\python.exe -m uvicorn main:app --reload --port 8000 --app-dir backend\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "backend\\\\venv\\\\Scripts\\\\python.exe -m uvicorn main:app --reload --port 8000 --app-dir backend",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "backend\\\\venv\\\\Scripts\\\\python.exe backend\\\\seed.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

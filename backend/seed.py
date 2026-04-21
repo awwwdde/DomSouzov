@@ -17,6 +17,14 @@ def seed():
     # Admin user
     if not db.query(AdminUser).filter_by(email=settings.ADMIN_EMAIL).first():
         db.add(AdminUser(email=settings.ADMIN_EMAIL, hashed_password=hash_password(settings.ADMIN_PASSWORD)))
+    # Test super user for quick local login
+    if not db.query(AdminUser).filter_by(email=settings.TEST_SUPERUSER_EMAIL).first():
+        db.add(
+            AdminUser(
+                email=settings.TEST_SUPERUSER_EMAIL,
+                hashed_password=hash_password(settings.TEST_SUPERUSER_PASSWORD),
+            )
+        )
 
     # Site settings
     defaults = [
@@ -202,7 +210,7 @@ def seed():
 
     db.commit()
     db.close()
-    print("✓ Database seeded successfully")
+    print("Database seeded successfully")
 
 
 if __name__ == "__main__":

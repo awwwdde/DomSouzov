@@ -1,4 +1,5 @@
 import { useState, useEffect, ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 interface Column<T> {
   key: keyof T | string;
@@ -66,7 +67,12 @@ export default function AdminCrudPage<T extends { id: number }>({
 
   if (editing !== 'none' as unknown) {
     return (
-      <div className="admin-page">
+      <motion.div
+        className="admin-page"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
         <div className="admin-page-head">
           <div>
             <div className="sub">{subtitle}</div>
@@ -74,17 +80,24 @@ export default function AdminCrudPage<T extends { id: number }>({
           </div>
           <button className="btn" onClick={() => setEditing('none' as unknown as null)}>← Назад</button>
         </div>
-        {renderForm(
+        <div className="admin-panel admin-form-shell">
+          {renderForm(
           editing === null ? null : editing as T,
           () => { load(); setEditing('none' as unknown as null); },
           () => setEditing('none' as unknown as null)
-        )}
-      </div>
+          )}
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="admin-page">
+    <motion.div
+      className="admin-page"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
       <div className="admin-page-head">
         <div>
           <div className="sub">{subtitle}</div>
@@ -102,7 +115,7 @@ export default function AdminCrudPage<T extends { id: number }>({
           {emptyText}
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div className="admin-panel admin-table-shell" style={{ overflowX: 'auto' }}>
           <table className="admin-table">
             <thead>
               <tr>
@@ -138,6 +151,6 @@ export default function AdminCrudPage<T extends { id: number }>({
           </table>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

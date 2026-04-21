@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-import './HallsPreview.css';
 
 export default function HallsPreview() {
   const { lang, content } = useSite();

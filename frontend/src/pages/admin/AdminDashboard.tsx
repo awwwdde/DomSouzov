@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { adminApi } from '../../api/client';
 
 export default function AdminDashboard() {
@@ -40,35 +41,43 @@ export default function AdminDashboard() {
       </div>
 
       <div className="admin-dashboard-grid">
-        {stats.map((s) => (
-          <Link key={s.to} to={s.to} style={{ textDecoration: 'none', color: 'var(--ink)' }}>
-            <div className="admin-stat-card">
+        {stats.map((s, index) => (
+          <motion.div
+            key={s.to}
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.35, delay: index * 0.05 }}
+          >
+            <Link to={s.to} className="admin-card-link">
+              <div className="admin-stat-card">
               <div className="num">{s.num}</div>
               <div className="label">{s.label}</div>
-            </div>
-          </Link>
+              </div>
+            </Link>
+          </motion.div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <div>
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '16px' }}>
+      <div className="admin-dashboard-bottom">
+        <div className="admin-panel">
+          <div className="admin-panel-title mono">
             БЫСТРЫЕ ДЕЙСТВИЯ
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="admin-actions-list">
             {quickLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="btn" style={{ display: 'inline-flex' }}>
+              <Link key={link.to} to={link.to} className="btn admin-quick-link">
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
 
-        <div style={{ padding: '24px', border: '1px solid var(--ink)', background: 'var(--paper-2)' }}>
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '16px' }}>
+        <div className="admin-panel admin-panel-soft">
+          <div className="admin-panel-title mono">
             СТРУКТУРА CMS
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '14px', lineHeight: 2, color: 'var(--ink-2)' }}>
+          <ul className="admin-structure-list">
             <li>— <strong>Мероприятия</strong>: концерты, события, даты, цены</li>
             <li>— <strong>Хроники</strong>: новости, статьи, интервью</li>
             <li>— <strong>Залы</strong>: Колонный, Октябрьский</li>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { adminApi } from '../../api/client';
 
 type SettingRow = { key: string; value_ru: string; value_en: string };
@@ -97,7 +98,12 @@ export default function AdminSettings() {
   if (loading) return <div className="admin-page mono" style={{ color: 'var(--muted)' }}>Загрузка...</div>;
 
   return (
-    <div className="admin-page">
+    <motion.div
+      className="admin-page"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
       <div className="admin-page-head">
         <div>
           <div className="sub">ТЕКСТЫ · КОНТАКТЫ · CMS</div>
@@ -108,51 +114,58 @@ export default function AdminSettings() {
         </button>
       </div>
 
-      {GROUPS.map((group) => (
-        <div key={group.label} style={{ marginBottom: '48px' }}>
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid var(--ink)' }}>
+      {GROUPS.map((group, groupIndex) => (
+        <motion.div
+          key={group.label}
+          className="admin-settings-group"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.35, delay: groupIndex * 0.03 }}
+        >
+          <div className="mono admin-settings-group-title">
             {group.label}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="admin-settings-group-items">
             {group.keys.map(({ key, label, multiline }) => {
               const row = getRow(key);
               return (
-                <div key={key}>
-                  <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.18em', color: 'var(--muted)', marginBottom: '8px' }}>
+                <div key={key} className="admin-settings-row">
+                  <div className="mono admin-settings-row-label">
                     {label}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="admin-settings-grid">
                     <div>
-                      <div className="mono" style={{ fontSize: '9px', letterSpacing: '0.2em', color: 'var(--muted)', marginBottom: '4px' }}>RU</div>
+                      <div className="mono admin-settings-lang">RU</div>
                       {multiline ? (
                         <textarea
                           value={row.value_ru}
                           onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
                           rows={3}
-                          style={{ width: '100%', border: '1px solid var(--ink)', padding: '10px 14px', fontFamily: 'Inter', fontSize: '14px', background: 'transparent', outline: 'none', resize: 'vertical' }}
+                          className="admin-settings-input"
                         />
                       ) : (
                         <input
                           value={row.value_ru}
                           onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
-                          style={{ width: '100%', border: '1px solid var(--ink)', padding: '10px 14px', fontFamily: 'Inter', fontSize: '14px', background: 'transparent', outline: 'none' }}
+                          className="admin-settings-input"
                         />
                       )}
                     </div>
                     <div>
-                      <div className="mono" style={{ fontSize: '9px', letterSpacing: '0.2em', color: 'var(--muted)', marginBottom: '4px' }}>EN</div>
+                      <div className="mono admin-settings-lang">EN</div>
                       {multiline ? (
                         <textarea
                           value={row.value_en}
                           onChange={(e) => updateRow(key, 'value_en', e.target.value)}
                           rows={3}
-                          style={{ width: '100%', border: '1px solid var(--ink)', padding: '10px 14px', fontFamily: 'Inter', fontSize: '14px', background: 'transparent', outline: 'none', resize: 'vertical' }}
+                          className="admin-settings-input"
                         />
                       ) : (
                         <input
                           value={row.value_en}
                           onChange={(e) => updateRow(key, 'value_en', e.target.value)}
-                          style={{ width: '100%', border: '1px solid var(--ink)', padding: '10px 14px', fontFamily: 'Inter', fontSize: '14px', background: 'transparent', outline: 'none' }}
+                          className="admin-settings-input"
                         />
                       )}
                     </div>
@@ -161,14 +174,14 @@ export default function AdminSettings() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       ))}
 
-      <div style={{ position: 'sticky', bottom: 0, background: 'var(--paper)', borderTop: '1px solid var(--ink)', padding: '16px 0', display: 'flex', gap: '10px' }}>
+      <div className="admin-settings-sticky-save">
         <button className="btn solid" onClick={handleSave} disabled={saving}>
           {saving ? 'Сохранение...' : saved ? '✓ СОХРАНЕНО' : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ →'}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

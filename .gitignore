@@ -3,6 +3,7 @@ dist/
 __pycache__/
 *.pyc
 .env
+*.db
 uploads/
 *.zip
 venv/

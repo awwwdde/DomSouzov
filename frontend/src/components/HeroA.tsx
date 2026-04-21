@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-import './HeroA.css';
 
 export default function HeroA() {
   const { lang, t } = useSite();

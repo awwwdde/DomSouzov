@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { Event } from '../types';
-import './EventsC.css';
 
 interface EventsCProps {
   events?: Event[];

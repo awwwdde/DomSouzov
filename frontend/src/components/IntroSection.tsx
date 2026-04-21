@@ -1,5 +1,4 @@
 import { useSite } from '../context/SiteContext';
-import './IntroSection.css';
 
 export default function IntroSection() {
   const { lang, t } = useSite();
