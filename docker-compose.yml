@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: domuser
+      POSTGRES_PASSWORD: dompass
+      POSTGRES_DB: domsoyuzov
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domuser -d domsoyuzov"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://domuser:dompass@db:5432/domsoyuzov
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production-32chars}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@dom-soyuzov.ru}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://frontend:3000
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
+  uploads:

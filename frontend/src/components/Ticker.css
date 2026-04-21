@@ -1,0 +1,38 @@
+.ticker {
+  border-bottom: 1px solid var(--ink);
+  padding: 14px 48px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+
+.ticker-item {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.ticker .dot {
+  width: 5px;
+  height: 5px;
+  background: var(--ink);
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .ticker {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 24px;
+  }
+  .ticker .dot { display: none; }
+}

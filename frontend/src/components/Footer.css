@@ -1,0 +1,83 @@
+.site-footer {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 56px 48px 28px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 32px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid #333;
+}
+
+.footer-brand .footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 44px;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.footer-tagline {
+  font-size: 13px;
+  color: #9a9a9a;
+  line-height: 1.65;
+  max-width: 28ch;
+  margin: 0;
+}
+
+.footer-col-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+  margin: 0 0 14px;
+  font-weight: 400;
+}
+
+.footer-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.footer-nav-list a {
+  color: var(--paper);
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.footer-nav-list a:hover { opacity: 1; }
+
+.footer-contact-list li {
+  color: var(--paper);
+  opacity: 0.75;
+  font-size: 14px;
+}
+
+.footer-bottom {
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+
+@media (max-width: 1024px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .site-footer { padding: 40px 32px 24px; }
+}
+
+@media (max-width: 640px) {
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-brand .footer-logo { font-size: 32px; }
+}

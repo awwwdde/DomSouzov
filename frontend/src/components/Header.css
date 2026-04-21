@@ -1,0 +1,203 @@
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 48px;
+  border-bottom: 1px solid var(--ink);
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 50;
+}
+
+.logo {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.logo .lg1 { letter-spacing: 0.26em; }
+.logo .dot-sep { margin: 0 4px; opacity: 0.5; }
+.logo .lg2 { letter-spacing: 0.12em; }
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-link {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 6px 0;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.nav-link:hover { border-color: var(--ink); }
+
+.cap {
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background 0.15s, color 0.15s;
+}
+.cap:hover { background: var(--ink); color: var(--paper); }
+.lang-toggle {}
+
+.burger-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0;
+}
+.burger-btn span {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: var(--ink);
+}
+
+/* ─── Overlay menu ─── */
+.overlay-menu {
+  position: fixed;
+  inset: 0;
+  background: var(--ink);
+  color: var(--paper);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 48px;
+}
+
+.overlay-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #333;
+}
+
+.logo-overlay {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  font-family: 'Inter', sans-serif;
+}
+
+.overlay-close {
+  background: transparent !important;
+  color: var(--paper) !important;
+  border-color: #555 !important;
+}
+.overlay-close:hover { background: rgba(255,255,255,0.1) !important; }
+
+.overlay-body {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 48px;
+  flex: 1;
+  padding-top: 48px;
+  align-items: end;
+}
+
+.overlay-primary-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.overlay-nav-item {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--paper);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.15s;
+  text-align: left;
+}
+.overlay-nav-item:hover { opacity: 0.65; }
+
+.overlay-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+
+.overlay-sub {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-self: end;
+  padding-bottom: 8px;
+}
+
+.overlay-sub-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 14px;
+}
+
+.overlay-event-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  line-height: 1.2;
+  white-space: pre-line;
+}
+
+.overlay-event-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #888;
+  margin-top: 8px;
+}
+
+.overlay-contact-info {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .site-header { padding: 18px 24px; }
+  .main-nav { gap: 14px; }
+  .nav-link { display: none; }
+  .overlay-menu { padding: 24px; }
+  .overlay-body { grid-template-columns: 1fr; }
+  .overlay-sub { display: none; }
+}
