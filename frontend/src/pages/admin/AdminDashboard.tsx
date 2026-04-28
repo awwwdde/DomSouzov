@@ -28,7 +28,7 @@ export default function AdminDashboard() {
     { label: '+ Новое мероприятие', to: '/admin/events' },
     { label: '+ Новая статья', to: '/admin/news' },
     { label: '+ Загрузить фото', to: '/admin/gallery' },
-    { label: '⚙ Настройки сайта', to: '/admin/settings' },
+    { label: 'Настройки сайта', to: '/admin/settings' },
   ];
 
   return (

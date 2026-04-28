@@ -36,24 +36,24 @@ export default function About() {
       </section>
 
       <section className="about-intro">
-        <div className="ph-img" style={{ aspectRatio: '4/5', border: '1px solid var(--ink)' }}>
+        <div className="ph-img about-ph">
           <div className="ph-label">[ {lang === 'ru' ? 'ИСТОРИЧЕСКОЕ ФОТО · 1800-е' : 'HISTORICAL PHOTO · 1800s'} ]</div>
         </div>
         <div className="copy">
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '16px' }}>
+          <div className="mono about-copy-label">
             {lang === 'ru' ? 'Хроника здания' : 'Chronicle'}
           </div>
-          <p className="dropcap" style={{ fontSize: '16px', lineHeight: '1.75', color: 'var(--ink-2)' }}>
+          <p className="dropcap about-copy-text">
             {lang === 'ru'
               ? 'Здание возведено в конце XVIII века как дворянское собрание. В 1784 году архитектор Матвей Казаков перестраивает его, объединяя анфиладу парадных залов и создавая главный зал с двумя рядами коринфских колонн.'
               : 'The building was erected in the late 18th century as the Assembly of the Nobility. In 1784, architect Matvey Kazakov rebuilt it, joining the enfilade of formal rooms and creating the principal hall with two rows of Corinthian columns.'}
           </p>
-          <p style={{ fontSize: '16px', lineHeight: '1.75', color: 'var(--ink-2)' }}>
+          <p className="about-copy-text">
             {lang === 'ru'
               ? 'Колонный зал стал одной из важнейших концертных площадок Российской империи: здесь выступали Чайковский, Лист, Рахманинов, звучали премьеры.'
               : 'The Hall of Columns became one of the most important concert venues of the Russian Empire: Tchaikovsky, Liszt, and Rachmaninoff performed here; premieres resounded within its walls.'}
           </p>
-          <p style={{ fontSize: '16px', lineHeight: '1.75', color: 'var(--ink-2)' }}>
+          <p className="about-copy-text">
             {lang === 'ru'
               ? 'Сегодня Дом Союзов — действующая культурная площадка: афиша концертов, лекций и торжественных мероприятий.'
               : 'Today the House of Unions is a working cultural venue: a programme of concerts, lectures and ceremonies.'}

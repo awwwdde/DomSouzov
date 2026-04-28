@@ -54,11 +54,12 @@ export default function EventsC({ events: propEvents, showAll = false }: EventsC
             <div className="event-card-body">
               <h3 className="event-title serif">{l(event.title)}</h3>
               <div className="event-info">
-                {l(event.hall)} · {lang === 'ru' ? 'Билеты' : 'Tickets'} {l(event.price)}
+                {l(event.hall)} · {l(event.tag)}
               </div>
               <div className="event-dt mono">
                 <span>{l(event.date)}</span>
                 <span>{event.weekday[lang]} · {event.time}</span>
+                <span>{lang === 'ru' ? 'Билет' : 'Ticket'} {l(event.price)}</span>
               </div>
             </div>
           </Link>

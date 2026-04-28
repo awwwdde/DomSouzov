@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { Menu, X } from 'lucide-react';
 
@@ -7,29 +7,8 @@ export default function Header() {
   const { lang, setLang } = useSite();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  const nav = {
-    ru: [
-      { label: 'Главная', to: '/' },
-      { label: 'Мероприятия', to: '/events' },
-      { label: 'О Доме', to: '/about' },
-      { label: 'Залы', to: '/halls' },
-      { label: 'Галерея', to: '/gallery' },
-      { label: 'Организаторам', to: '/organizers' },
-      { label: 'Зрителям', to: '/audience' },
-      { label: 'Контакты', to: '/contacts' },
-    ],
-    en: [
-      { label: 'Home', to: '/' },
-      { label: 'Events', to: '/events' },
-      { label: 'About', to: '/about' },
-      { label: 'Halls', to: '/halls' },
-      { label: 'Gallery', to: '/gallery' },
-      { label: 'For Organizers', to: '/organizers' },
-      { label: 'For Visitors', to: '/audience' },
-      { label: 'Contacts', to: '/contacts' },
-    ],
-  };
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   const overlayNav = [
     { label_ru: 'О Доме Союзов', label_en: 'About the House', to: '/about' },
@@ -48,16 +27,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="site-header">
-        <Link to="/" className="logo">
-          <span className="lg1">ДОМ</span>
-          <span className="dot-sep"> · </span>
-          <span className="lg2">СОЮЗОВ</span>
-        </Link>
+      <header className={`site-header ${isHome ? 'site-header-overlay' : ''}`}>
         <nav className="main-nav">
-          {nav[lang].slice(0, 4).map((item) => (
-            <Link key={item.to} to={item.to} className="nav-link">{item.label}</Link>
-          ))}
+          <Link to="/" className="header-brand serif">
+            {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
+          </Link>
           <button
             className="cap lang-toggle"
             onClick={() => setLang(lang === 'ru' ? 'en' : 'ru')}
@@ -69,7 +43,7 @@ export default function Header() {
             onClick={() => setMenuOpen(true)}
             aria-label="Menu"
           >
-            <Menu size={16} strokeWidth={1.8} />
+            <Menu size={18} strokeWidth={1.9} />
           </button>
         </nav>
       </header>
@@ -78,7 +52,7 @@ export default function Header() {
       {menuOpen && (
         <div className="overlay-menu">
           <div className="overlay-head">
-            <span className="logo-overlay">ДОМ · СОЮЗОВ</span>
+            <span className="logo-overlay">{lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}</span>
             <button className="btn overlay-close" onClick={() => setMenuOpen(false)}>
               {lang === 'ru' ? 'ЗАКРЫТЬ' : 'CLOSE'}
               <X size={14} strokeWidth={2} />

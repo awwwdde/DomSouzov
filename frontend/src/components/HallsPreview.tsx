@@ -9,7 +9,7 @@ export default function HallsPreview() {
 
   return (
     <section className="halls-preview">
-      <div className="section-head" style={{ borderBottom: '1px solid var(--ink)' }}>
+      <div className="section-head">
         <div>
           <div className="kicker mono">
             {lang === 'ru' ? '2 зала · Коринфский ордер · Акустика A' : '2 halls · Corinthian order · Acoustic class A'}

@@ -22,14 +22,14 @@ export default function Halls() {
 
       <section className="block">
         <h2>{lang === 'ru' ? 'План и посадка' : 'Layout & seating'}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div style={{ aspectRatio: '16/10', border: '1px solid var(--ink)', background: '#F5F3EE', position: 'relative' }}>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.24em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+        <div className="hall-plans">
+          <div className="ph-img hall-plan-ph">
+            <div className="hall-plan-label mono">
               {lang === 'ru' ? '[ СХЕМА КОЛОННОГО ЗАЛА · ПАРТЕР + ЯРУСЫ ]' : '[ HALL OF COLUMNS PLAN · STALLS + TIERS ]'}
             </div>
           </div>
-          <div style={{ aspectRatio: '16/10', border: '1px solid var(--ink)', background: '#F5F3EE', position: 'relative' }}>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.24em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+          <div className="ph-img hall-plan-ph">
+            <div className="hall-plan-label mono">
               {lang === 'ru' ? '[ СХЕМА ОКТЯБРЬСКОГО ЗАЛА ]' : '[ OCTOBER HALL PLAN ]'}
             </div>
           </div>

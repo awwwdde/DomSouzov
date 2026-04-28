@@ -28,7 +28,7 @@ export default function NewsSection() {
       <div className="news-grid">
         {lead && (
           <Link to={`/news/${lead.id}`} className="news-item news-lead">
-            <div className="ph-img news-ph" style={{ aspectRatio: '16/10' }}>
+            <div className="ph-img news-ph news-ph-lead">
               {lead.image ? (
                 <img src={lead.image} alt={l(lead.title)} />
               ) : (
@@ -49,7 +49,7 @@ export default function NewsSection() {
 
         {secondary.map((article, i) => (
           <Link key={article.id} to={`/news/${article.id}`} className="news-item">
-            <div className="ph-img news-ph" style={{ aspectRatio: '4/3' }}>
+            <div className="ph-img news-ph news-ph-item">
               {article.image ? (
                 <img src={article.image} alt={l(article.title)} />
               ) : (

@@ -67,7 +67,7 @@ export default function Organizers() {
             <div className="num mono">{s.num}</div>
             <h3 className="serif">{s.title}</h3>
             <p>{s.desc}</p>
-            <Link to="/contacts" className="btn" style={{ alignSelf: 'flex-start', marginTop: 'auto' }}>
+            <Link to="/contacts" className="btn service-cta">
               {lang === 'ru' ? 'ЗАПРОС' : 'ENQUIRE'} →
             </Link>
           </div>
@@ -76,7 +76,7 @@ export default function Organizers() {
 
       <section className="block">
         <h2>{lang === 'ru' ? 'Процесс бронирования' : 'Booking process'}</h2>
-        <div className="timeline" style={{ borderTop: 'none' }}>
+        <div className="timeline">
           {steps[lang].map((s) => (
             <div key={s.n} className="tl-row">
               <div className="yr serif">{s.n}</div>
@@ -89,7 +89,7 @@ export default function Organizers() {
 
       <section className="block">
         <h2>{lang === 'ru' ? 'Техническое оснащение' : 'Technical equipment'}</h2>
-        <div className="info-grid" style={{ borderBottom: 'none' }}>
+        <div className="info-grid">
           {tech[lang].map((t) => (
             <div key={t.n} className="cell">
               <div className="num">{t.n}</div>

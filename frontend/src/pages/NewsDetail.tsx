@@ -33,26 +33,26 @@ export default function NewsDetail() {
             {' · '}
             {l(article.tag)}
           </div>
-          <h1 className="serif" style={{ fontSize: 'clamp(36px, 5vw, 72px)' }}>{l(article.title)}</h1>
+          <h1 className="serif news-detail-title">{l(article.title)}</h1>
         </div>
         <div>
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>
+          <div className="mono news-detail-tag">
             {l(article.tag)}
           </div>
-          <p style={{ fontSize: '16px', lineHeight: '1.65', color: 'var(--ink-2)', margin: 0 }}>
+          <p className="news-detail-excerpt">
             {l(article.excerpt)}
           </p>
         </div>
       </section>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '56px', padding: '64px 48px', borderBottom: '1px solid var(--ink)' }}>
-        <article>
+      <div className="news-detail-layout">
+        <article className="news-detail-article">
           {article.image && (
-            <div className="ph-img" style={{ aspectRatio: '16/9', border: '1px solid var(--ink)', marginBottom: '40px' }}>
+            <div className="ph-img news-detail-image">
               <img src={article.image} alt={l(article.title)} />
             </div>
           )}
-          <div style={{ fontSize: '16px', lineHeight: '1.8', color: 'var(--ink-2)' }}>
+          <div className="news-detail-body">
             {l(article.content)
               .split('\n')
               .filter(Boolean)
@@ -60,12 +60,12 @@ export default function NewsDetail() {
           </div>
         </article>
 
-        <aside style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
-          <div className="mono" style={{ fontSize: '10px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '16px' }}>
+        <aside className="news-detail-aside">
+          <div className="mono news-detail-category-label">
             {lang === 'ru' ? 'Рубрика' : 'Category'}
           </div>
-          <div style={{ fontSize: '14px', marginBottom: '32px', fontWeight: 500 }}>{l(article.tag)}</div>
-          <Link to="/news" className="btn" style={{ display: 'inline-flex' }}>
+          <div className="news-detail-category-value">{l(article.tag)}</div>
+          <Link to="/news" className="btn news-detail-back">
             ← {lang === 'ru' ? 'ВСЕ СТАТЬИ' : 'ALL ARTICLES'}
           </Link>
         </aside>

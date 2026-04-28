@@ -57,7 +57,7 @@ export default function Events() {
         ))}
         <span className="sp" />
         <span className="label mono">
-          {lang === 'ru' ? 'СОРТИРОВКА' : 'SORT'}: <b style={{ color: 'var(--ink)' }}>
+          {lang === 'ru' ? 'СОРТИРОВКА' : 'SORT'}: <b className="sort-current">
             {lang === 'ru' ? 'ПО ДАТЕ ↑' : 'BY DATE ↑'}
           </b>
         </span>
