@@ -71,7 +71,7 @@ export default function Footer() {
 
       <div className="footer-bottom mono">
         <span>© 2026 {lang === 'ru' ? 'Дом Союзов · Все права защищены' : 'House of Unions · All rights reserved'}</span>
-        <span>DOM SOYUZOV · v1.0</span>
+        <span>Разработано awwwdde</span>
       </div>
     </footer>
   );
