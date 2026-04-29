@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import { Event } from '../types';
 import { getEvent } from '../api/client';
+import Reveal, { RevealSection } from '../components/Reveal';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export default function EventDetail() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">
             <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
@@ -55,9 +56,9 @@ export default function EventDetail() {
             </Link>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <div className="event-detail-body">
+      <Reveal className="event-detail-body">
         <div className="ph-img event-detail-poster">
           {event.image ? (
             <img src={event.image} alt={l(event.title)} />
@@ -71,7 +72,7 @@ export default function EventDetail() {
           </div>
           <p className="event-detail-desc">{l(event.description) || (lang === 'ru' ? 'Описание скоро появится.' : 'Description coming soon.')}</p>
         </div>
-      </div>
+      </Reveal>
     </>
   );
 }

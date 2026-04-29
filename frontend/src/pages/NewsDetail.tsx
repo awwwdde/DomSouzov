@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import { NewsArticle } from '../types';
 import { getNewsItem } from '../api/client';
+import Reveal, { RevealSection } from '../components/Reveal';
 
 export default function NewsDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export default function NewsDetail() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">
             <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
@@ -43,9 +44,9 @@ export default function NewsDetail() {
             {l(article.excerpt)}
           </p>
         </div>
-      </section>
+      </RevealSection>
 
-      <div className="news-detail-layout">
+      <Reveal className="news-detail-layout">
         <article className="news-detail-article">
           {article.image && (
             <div className="ph-img news-detail-image">
@@ -69,7 +70,7 @@ export default function NewsDetail() {
             ← {lang === 'ru' ? 'ВСЕ СТАТЬИ' : 'ALL ARTICLES'}
           </Link>
         </aside>
-      </div>
+      </Reveal>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 export default function News() {
   const { lang, content } = useSite();
@@ -8,7 +9,7 @@ export default function News() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · Хроники' : 'Home · Journal'}</div>
           <h1 className="serif">{lang === 'ru' ? 'Хроники' : 'Journal'}</h1>
@@ -18,32 +19,33 @@ export default function News() {
             ? 'Журнал Дома Союзов: события, интервью, репортажи, история места.'
             : 'The House of Unions journal: events, interviews, features, the history of the place.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <div className="news-list">
+      <RevealList className="news-list">
         {news.map((article, i) => (
-          <Link
-            key={article.id}
-            to={`/news/${article.id}`}
-            className="news-row-link"
-          >
-            <div className="mono news-row-index">
-              N° 0{i + 1}
-            </div>
-            <div>
-              <div className="mono news-row-tag">
-                {l(article.tag)}
+          <RevealItem key={article.id}>
+            <Link
+              to={`/news/${article.id}`}
+              className="news-row-link"
+            >
+              <div className="mono news-row-index">
+                N° 0{i + 1}
               </div>
-              <h3 className="serif news-row-title">
-                {l(article.title)}
-              </h3>
-            </div>
-            <p className="news-row-excerpt">
-              {l(article.excerpt)}
-            </p>
-          </Link>
+              <div>
+                <div className="mono news-row-tag">
+                  {l(article.tag)}
+                </div>
+                <h3 className="serif news-row-title">
+                  {l(article.title)}
+                </h3>
+              </div>
+              <p className="news-row-excerpt">
+                {l(article.excerpt)}
+              </p>
+            </Link>
+          </RevealItem>
         ))}
-      </div>
+      </RevealList>
     </>
   );
 }

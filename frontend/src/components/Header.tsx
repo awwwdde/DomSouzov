@@ -1,11 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-import { Menu, X } from 'lucide-react';
+import { Eye, Menu, X } from 'lucide-react';
+
+type VisionFont = 'normal' | 'large' | 'xlarge';
+type VisionTheme = 'light' | 'dark';
+
+interface VisionSettings {
+  enabled: boolean;
+  font: VisionFont;
+  theme: VisionTheme;
+}
+
+const DEFAULT_VISION_SETTINGS: VisionSettings = {
+  enabled: false,
+  font: 'large',
+  theme: 'light',
+};
+
+const VISION_STORAGE_KEY = 'domsouzov-vision-settings';
+
+function readVisionSettings(): VisionSettings {
+  try {
+    const raw = window.localStorage.getItem(VISION_STORAGE_KEY);
+    return raw ? { ...DEFAULT_VISION_SETTINGS, ...JSON.parse(raw) } : DEFAULT_VISION_SETTINGS;
+  } catch {
+    return DEFAULT_VISION_SETTINGS;
+  }
+}
 
 export default function Header() {
   const { lang, setLang } = useSite();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [visionOpen, setVisionOpen] = useState(false);
+  const [visionSettings, setVisionSettings] = useState<VisionSettings>(readVisionSettings);
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -25,6 +53,18 @@ export default function Header() {
     navigate(to);
   };
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.vision = visionSettings.enabled ? 'true' : 'false';
+    root.dataset.visionFont = visionSettings.font;
+    root.dataset.visionTheme = visionSettings.theme;
+    window.localStorage.setItem(VISION_STORAGE_KEY, JSON.stringify(visionSettings));
+  }, [visionSettings]);
+
+  const updateVision = (next: Partial<VisionSettings>) => {
+    setVisionSettings((current) => ({ ...current, ...next }));
+  };
+
   return (
     <>
       <header className={`site-header ${isHome ? 'site-header-overlay' : ''}`}>
@@ -38,12 +78,77 @@ export default function Header() {
           >
             {lang === 'ru' ? 'EN' : 'RU'}
           </button>
+          <div className="vision-control">
+            <button
+              className={`cap vision-toggle${visionSettings.enabled ? ' active' : ''}`}
+              onClick={() => {
+                updateVision({ enabled: !visionSettings.enabled });
+                setVisionOpen(true);
+              }}
+              aria-label={lang === 'ru' ? 'Версия для слабовидящих' : 'Accessible version'}
+              aria-expanded={visionOpen}
+            >
+              <Eye className="header-icon" size={22}  />
+            </button>
+            {visionOpen ? (
+              <div className="vision-panel">
+                <div className="vision-panel-head">
+                  <strong>{lang === 'ru' ? 'Версия для слабовидящих' : 'Accessible version'}</strong>
+                  <button type="button" onClick={() => setVisionOpen(false)} aria-label={lang === 'ru' ? 'Закрыть' : 'Close'}>×</button>
+                </div>
+                <div className="vision-panel-row">
+                  <span>{lang === 'ru' ? 'Режим' : 'Mode'}</span>
+                  <button
+                    type="button"
+                    className={visionSettings.enabled ? 'active' : ''}
+                    onClick={() => updateVision({ enabled: !visionSettings.enabled })}
+                  >
+                    {visionSettings.enabled ? (lang === 'ru' ? 'Включен' : 'On') : (lang === 'ru' ? 'Выключен' : 'Off')}
+                  </button>
+                </div>
+                <div className="vision-panel-row">
+                  <span>{lang === 'ru' ? 'Текст' : 'Text'}</span>
+                  <div className="vision-options">
+                    {(['normal', 'large', 'xlarge'] as VisionFont[]).map((font) => (
+                      <button
+                        type="button"
+                        key={font}
+                        className={visionSettings.font === font ? 'active' : ''}
+                        onClick={() => updateVision({ enabled: true, font })}
+                      >
+                        {font === 'normal' ? 'A' : font === 'large' ? 'A+' : 'A++'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="vision-panel-row">
+                  <span>{lang === 'ru' ? 'Контраст' : 'Contrast'}</span>
+                  <div className="vision-options">
+                    <button
+                      type="button"
+                      className={visionSettings.theme === 'light' ? 'active' : ''}
+                      onClick={() => updateVision({ enabled: true, theme: 'light' })}
+                    >
+                      {lang === 'ru' ? 'Светлый' : 'Light'}
+                    </button>
+                    <button
+                      type="button"
+                      className={visionSettings.theme === 'dark' ? 'active' : ''}
+                      onClick={() => updateVision({ enabled: true, theme: 'dark' })}
+                    >
+                      {lang === 'ru' ? 'Темный' : 'Dark'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
           <button
             className="burger-btn"
             onClick={() => setMenuOpen(true)}
             aria-label="Menu"
           >
-            <Menu size={18} strokeWidth={1.9} />
+            <Menu className="header-icon" size={24} />
           </button>
         </nav>
       </header>

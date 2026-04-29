@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 const TIMELINE = {
   ru: [
@@ -23,7 +24,7 @@ export default function About() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · О Доме' : 'Home · About'}</div>
           <h1 className="serif">{lang === 'ru' ? 'О Доме Союзов' : 'About the House'}</h1>
@@ -33,9 +34,9 @@ export default function About() {
             ? 'Памятник классицизма конца XVIII века, перестроенный Матвеем Казаковым. Колонный зал — 28 коринфских колонн, одна из лучших акустик Москвы.'
             : 'Late 18th-century classicist landmark, rebuilt by Matvey Kazakov. The Hall of Columns — 28 Corinthian columns, among Moscow\'s finest acoustics.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <section className="about-intro">
+      <RevealSection className="about-intro">
         <div className="ph-img about-ph">
           <div className="ph-label">[ {lang === 'ru' ? 'ИСТОРИЧЕСКОЕ ФОТО · 1800-е' : 'HISTORICAL PHOTO · 1800s'} ]</div>
         </div>
@@ -59,20 +60,22 @@ export default function About() {
               : 'Today the House of Unions is a working cultural venue: a programme of concerts, lectures and ceremonies.'}
           </p>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="block">
+      <RevealSection className="block">
         <h2>{lang === 'ru' ? 'Хронология' : 'Timeline'}</h2>
-        <div className="timeline">
+        <RevealList className="timeline">
           {tl.map((item) => (
-            <div key={item.year} className="tl-row">
-              <div className="yr serif">{item.year}</div>
-              <div className="ev">{item.event}</div>
-              <div className="dc">{item.desc}</div>
-            </div>
+            <RevealItem key={item.year}>
+              <div className="tl-row">
+                <div className="yr serif">{item.year}</div>
+                <div className="ev">{item.event}</div>
+                <div className="dc">{item.desc}</div>
+              </div>
+            </RevealItem>
           ))}
-        </div>
-      </section>
+        </RevealList>
+      </RevealSection>
     </>
   );
 }

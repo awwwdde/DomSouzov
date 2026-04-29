@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from './Reveal';
 
 export default function HallsPreview() {
   const { lang, content } = useSite();
@@ -8,7 +9,7 @@ export default function HallsPreview() {
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
   return (
-    <section className="halls-preview">
+    <RevealSection className="halls-preview">
       <div className="section-head">
         <div>
           <div className="kicker mono">
@@ -23,34 +24,36 @@ export default function HallsPreview() {
         </div>
       </div>
 
-      <div className="halls-grid">
+      <RevealList className="halls-grid">
         {halls.map((hall, i) => (
-          <Link key={hall.id} to="/halls" className="hall-card">
-            <div className="hall-top">
-              <span className="mono">N° 0{i + 1} / 0{halls.length}</span>
-              <span className="mono">{l(hall.features)}</span>
-            </div>
-            <div className="hall-content">
-              <h3 className="hall-name serif">{l(hall.name)}</h3>
-              <div className="ph-img hall-ph"></div>
-            </div>
-            <div className="hall-specs">
-              <div className="spec">
-                <strong className="serif">{hall.capacity.split(' ')[0]}</strong>
-                <div className="spec-label mono">{lang === 'ru' ? 'Мест' : 'Seats'}</div>
+          <RevealItem key={hall.id}>
+            <Link to="/halls" className="hall-card">
+              <div className="hall-top">
+                <span className="mono">N° 0{i + 1} / 0{halls.length}</span>
+                <span className="mono">{l(hall.features)}</span>
               </div>
-              <div className="spec">
-                <strong className="serif">{hall.area.split(' ')[0]}</strong>
-                <div className="spec-label mono">{lang === 'ru' ? 'Площадь м²' : 'Area m²'}</div>
+              <div className="hall-content">
+                <h3 className="hall-name serif">{l(hall.name)}</h3>
+                <div className="ph-img hall-ph"></div>
               </div>
-              <div className="spec">
-                <strong className="serif">{hall.columns ?? '—'}</strong>
-                <div className="spec-label mono">{lang === 'ru' ? 'Колонн' : 'Columns'}</div>
+              <div className="hall-specs">
+                <div className="spec">
+                  <strong className="serif">{hall.capacity.split(' ')[0]}</strong>
+                  <div className="spec-label mono">{lang === 'ru' ? 'Мест' : 'Seats'}</div>
+                </div>
+                <div className="spec">
+                  <strong className="serif">{hall.area.split(' ')[0]}</strong>
+                  <div className="spec-label mono">{lang === 'ru' ? 'Площадь м²' : 'Area m²'}</div>
+                </div>
+                <div className="spec">
+                  <strong className="serif">{hall.columns ?? '—'}</strong>
+                  <div className="spec-label mono">{lang === 'ru' ? 'Колонн' : 'Columns'}</div>
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </RevealItem>
         ))}
-      </div>
-    </section>
+      </RevealList>
+    </RevealSection>
   );
 }

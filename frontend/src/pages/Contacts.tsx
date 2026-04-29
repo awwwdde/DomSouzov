@@ -1,11 +1,12 @@
 import { useSite } from '../context/SiteContext';
+import { RevealSection } from '../components/Reveal';
 
 export default function Contacts() {
   const { lang, t } = useSite();
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · Контакты' : 'Home · Contacts'}</div>
           <h1 className="serif">{lang === 'ru' ? 'Контакты' : 'Contacts'}</h1>
@@ -15,9 +16,9 @@ export default function Contacts() {
             ? 'Билетная касса, аренда, пресс-служба, администрация — все контакты и часы работы.'
             : 'Box office, hire, press, administration — contacts and opening hours.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <section className="contacts-layout">
+      <RevealSection className="contacts-layout">
         <div className="l">
           <div className="mono contacts-label">
             {lang === 'ru' ? 'Расположение' : 'Location'}
@@ -54,7 +55,7 @@ export default function Contacts() {
         <div className="r">
           <div className="map-ph">{lang === 'ru' ? '[ КАРТА · МОСКВА ]' : '[ MAP · MOSCOW ]'}</div>
         </div>
-      </section>
+      </RevealSection>
     </>
   );
 }

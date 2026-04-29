@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 export default function Audience() {
   const { lang } = useSite();
@@ -41,7 +42,7 @@ export default function Audience() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · Зрителям' : 'Home · For Visitors'}</div>
           <h1 className="serif">{lang === 'ru' ? 'Зрителям' : 'For Visitors'}</h1>
@@ -51,30 +52,34 @@ export default function Audience() {
             ? 'Всё, что нужно знать перед визитом: билеты, правила, возврат, доступная среда, дресс-код, фотосъёмка, дети.'
             : 'Everything you need before your visit: tickets, rules, refunds, accessibility, dress code, photography, children.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <div className="info-grid">
+      <RevealList className="info-grid">
         {items[lang].map((item) => (
-          <div key={item.n} className="cell">
-            <div className="num mono">{item.n}</div>
-            <h3 className="serif">{item.title}</h3>
-            <p>{item.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      <section className="block">
-        <h2>{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
-        <div className="timeline">
-          {faq[lang].map((f) => (
-            <div key={f.n} className="tl-row">
-              <div className="yr serif">{f.n}</div>
-              <div className="ev">{f.q}</div>
-              <div className="dc">{f.a}</div>
+          <RevealItem key={item.n}>
+            <div className="cell">
+              <div className="num mono">{item.n}</div>
+              <h3 className="serif">{item.title}</h3>
+              <p>{item.desc}</p>
             </div>
+          </RevealItem>
+        ))}
+      </RevealList>
+
+      <RevealSection className="block">
+        <h2>{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
+        <RevealList className="timeline">
+          {faq[lang].map((f) => (
+            <RevealItem key={f.n}>
+              <div className="tl-row">
+                <div className="yr serif">{f.n}</div>
+                <div className="ev">{f.q}</div>
+                <div className="dc">{f.a}</div>
+              </div>
+            </RevealItem>
           ))}
-        </div>
-      </section>
+        </RevealList>
+      </RevealSection>
     </>
   );
 }

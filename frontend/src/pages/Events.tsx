@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import EventsC from '../components/EventsC';
+import { RevealSection } from '../components/Reveal';
 
 const FILTERS = {
   ru: ['Все', 'Симфония', 'Камерная', 'Хор', 'Литература', 'Конференция'],
@@ -30,7 +31,7 @@ export default function Events() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">
             {lang === 'ru' ? 'Главная · Мероприятия' : 'Home · Events'}
@@ -42,9 +43,9 @@ export default function Events() {
             ? 'Концерты, литературные вечера, камерные программы и хоровая музыка. Полная афиша Дома Союзов — в Колонном и Октябрьском залах.'
             : 'Concerts, literary evenings, chamber programmes and choral music. Full programme across the Hall of Columns and October Hall.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <div className="filters">
+      <RevealSection className="filters" y={14}>
         <span className="label mono">{lang === 'ru' ? 'ФИЛЬТР' : 'FILTER'}</span>
         {FILTERS[lang].map((f, i) => (
           <button
@@ -61,7 +62,7 @@ export default function Events() {
             {lang === 'ru' ? 'ПО ДАТЕ ↑' : 'BY DATE ↑'}
           </b>
         </span>
-      </div>
+      </RevealSection>
 
       <EventsC events={filtered} showAll />
     </>

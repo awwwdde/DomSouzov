@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 const CATS = {
   ru: ['Все', 'Архитектура', 'Концерты', 'Реставрация', 'Архив'],
@@ -39,7 +40,7 @@ export default function Gallery() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</div>
           <h1 className="serif">{lang === 'ru' ? 'Галерея' : 'Gallery'}</h1>
@@ -49,35 +50,39 @@ export default function Gallery() {
             ? 'Архитектура, концерты, закулисье и реставрация. Исторические снимки и съёмки современных постановок.'
             : 'Architecture, concerts, backstage and restoration. Historical photography and contemporary productions.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <div className="filters">
+      <RevealSection className="filters" y={14}>
         <span className="label mono">{lang === 'ru' ? 'РУБРИКА' : 'CATEGORY'}</span>
         {CATS[lang].map((c, i) => (
           <button key={i} className={`chip${cat === i ? ' active' : ''}`} onClick={() => setCat(i)}>{c}</button>
         ))}
-      </div>
+      </RevealSection>
 
-      <div className="gal-grid">
+      <RevealList className="gal-grid">
         {galleryItems
           ? (filtered as typeof galleryItems).map((g) => (
-              <div key={g.id} className={`cell${g.span ? ' ' + g.span : ''}`}>
-                {g.image ? (
-                  <img src={g.image} alt={l(g.caption)} />
-                ) : (
-                  <div className="cell-ph">{l(g.caption)}</div>
-                )}
-                <div className="cell-overlay">{l(g.caption)}</div>
-              </div>
+              <RevealItem key={g.id} className={g.span ?? ''}>
+                <div className="cell">
+                  {g.image ? (
+                    <img src={g.image} alt={l(g.caption)} />
+                  ) : (
+                    <div className="cell-ph">{l(g.caption)}</div>
+                  )}
+                  <div className="cell-overlay">{l(g.caption)}</div>
+                </div>
+              </RevealItem>
             ))
           : (filtered as typeof GALLERY_PH).map((g, i) => (
-              <div key={i} className={`cell${g.span ? ' ' + g.span : ''}`}>
-                <div className="cell-ph">{lang === 'ru' ? g.label_ru : g.label_en}</div>
-                <div className="cell-overlay">{lang === 'ru' ? g.label_ru : g.label_en}</div>
-              </div>
+              <RevealItem key={i} className={g.span ?? ''}>
+                <div className="cell">
+                  <div className="cell-ph">{lang === 'ru' ? g.label_ru : g.label_en}</div>
+                  <div className="cell-overlay">{lang === 'ru' ? g.label_ru : g.label_en}</div>
+                </div>
+              </RevealItem>
             ))
         }
-      </div>
+      </RevealList>
     </>
   );
 }

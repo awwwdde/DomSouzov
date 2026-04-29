@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 export default function Organizers() {
   const { lang } = useSite();
@@ -49,7 +50,7 @@ export default function Organizers() {
 
   return (
     <>
-      <section className="page-title">
+      <RevealSection className="page-title">
         <div>
           <div className="crumb mono">{lang === 'ru' ? 'Главная · Организаторам' : 'Home · For Organizers'}</div>
           <h1 className="serif">{lang === 'ru' ? 'Организаторам' : 'For Organizers'}</h1>
@@ -59,46 +60,52 @@ export default function Organizers() {
             ? 'Аренда залов Дома Союзов для концертов, конференций, торжественных мероприятий и съёмок. Коринфская архитектура, акустика класса A, вместимость до 1 200 человек.'
             : 'Hire the halls of the House of Unions for concerts, conferences, ceremonies and filming. Corinthian architecture, class A acoustics, capacity up to 1,200.'}
         </p>
-      </section>
+      </RevealSection>
 
-      <div className="org-services">
+      <RevealList className="org-services">
         {services[lang].map((s) => (
-          <div key={s.num} className="service">
-            <div className="num mono">{s.num}</div>
-            <h3 className="serif">{s.title}</h3>
-            <p>{s.desc}</p>
-            <Link to="/contacts" className="btn service-cta">
-              {lang === 'ru' ? 'ЗАПРОС' : 'ENQUIRE'} →
-            </Link>
-          </div>
+          <RevealItem key={s.num}>
+            <div className="service">
+              <div className="num mono">{s.num}</div>
+              <h3 className="serif">{s.title}</h3>
+              <p>{s.desc}</p>
+              <Link to="/contacts" className="btn service-cta">
+                {lang === 'ru' ? 'ЗАПРОС' : 'ENQUIRE'} →
+              </Link>
+            </div>
+          </RevealItem>
         ))}
-      </div>
+      </RevealList>
 
-      <section className="block">
+      <RevealSection className="block">
         <h2>{lang === 'ru' ? 'Процесс бронирования' : 'Booking process'}</h2>
-        <div className="timeline">
+        <RevealList className="timeline">
           {steps[lang].map((s) => (
-            <div key={s.n} className="tl-row">
-              <div className="yr serif">{s.n}</div>
-              <div className="ev">{s.ev}</div>
-              <div className="dc">{s.dc}</div>
-            </div>
+            <RevealItem key={s.n}>
+              <div className="tl-row">
+                <div className="yr serif">{s.n}</div>
+                <div className="ev">{s.ev}</div>
+                <div className="dc">{s.dc}</div>
+              </div>
+            </RevealItem>
           ))}
-        </div>
-      </section>
+        </RevealList>
+      </RevealSection>
 
-      <section className="block">
+      <RevealSection className="block">
         <h2>{lang === 'ru' ? 'Техническое оснащение' : 'Technical equipment'}</h2>
-        <div className="info-grid">
+        <RevealList className="info-grid">
           {tech[lang].map((t) => (
-            <div key={t.n} className="cell">
-              <div className="num">{t.n}</div>
-              <h3>{t.title}</h3>
-              <p>{t.desc}</p>
-            </div>
+            <RevealItem key={t.n}>
+              <div className="cell">
+                <div className="num">{t.n}</div>
+                <h3>{t.title}</h3>
+                <p>{t.desc}</p>
+              </div>
+            </RevealItem>
           ))}
-        </div>
-      </section>
+        </RevealList>
+      </RevealSection>
     </>
   );
 }
