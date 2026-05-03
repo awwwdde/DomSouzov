@@ -1,6 +1,6 @@
 $ErrorActionPreference = "SilentlyContinue"
 
-$ports = @(8000, 5173)
+$ports = @(8001, 5173)
 
 foreach ($port in $ports) {
   $pids = @()

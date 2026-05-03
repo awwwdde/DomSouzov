@@ -10,7 +10,7 @@ npm run dev     # поднимает backend + frontend одновременно
 
 После запуска:
 - Frontend: `http://localhost:5173`
-- API: `http://localhost:8000/api`
+- API: `http://localhost:8001/api`
 - Админка: `http://localhost:5173/admin/login`
 
 ## Что делают команды из корня
@@ -21,7 +21,7 @@ npm run dev     # поднимает backend + frontend одновременно
   - создаёт `backend/.env` из примера,
   - выполняет `seed.py` (создаёт таблицы, контент и пользователей).
 - `npm run dev`:
-  - автоматически освобождает порты `8000` и `5173` (если заняты),
+  - автоматически освобождает порты `8001` и `5173` (если заняты),
   - запускает backend и frontend в одном терминале.
 
 ## Быстрый старт (Docker)
@@ -36,7 +36,7 @@ docker-compose up --build
 
 # Сайт: http://localhost:3000
 # Админ: http://localhost:3000/admin
-# API:   http://localhost:8000/api
+# API:   http://localhost:8001/api
 ```
 
 ## Разработка (без Docker)
@@ -56,7 +56,7 @@ Copy-Item .env.example .env
 # Для PostgreSQL замените DATABASE_URL в .env
 
 python seed.py        # Создаёт таблицы и начальные данные
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8001
 ```
 
 ### Frontend
