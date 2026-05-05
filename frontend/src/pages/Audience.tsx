@@ -42,39 +42,39 @@ export default function Audience() {
 
   return (
     <>
-      <RevealSection className="page-title">
+      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
         <div>
-          <div className="crumb mono">{lang === 'ru' ? 'Главная · Зрителям' : 'Home · For Visitors'}</div>
-          <h1 className="serif">{lang === 'ru' ? 'Зрителям' : 'For Visitors'}</h1>
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · Зрителям' : 'Home · For Visitors'}</div>
+          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'Зрителям' : 'For Visitors'}</h1>
         </div>
-        <p className="lede">
+        <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
             ? 'Всё, что нужно знать перед визитом: билеты, правила, возврат, доступная среда, дресс-код, фотосъёмка, дети.'
             : 'Everything you need before your visit: tickets, rules, refunds, accessibility, dress code, photography, children.'}
         </p>
       </RevealSection>
 
-      <RevealList className="info-grid">
+      <RevealList className="grid gap-3 px-6 md:grid-cols-4 md:px-12">
         {items[lang].map((item) => (
           <RevealItem key={item.n}>
-            <div className="cell">
-              <div className="num mono">{item.n}</div>
-              <h3 className="serif">{item.title}</h3>
-              <p>{item.desc}</p>
+            <div className="grid min-h-48 gap-3 border border-line bg-white p-5">
+              <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{item.n}</div>
+              <h3 className="font-heading text-4xl font-semibold uppercase leading-none tracking-[-0.03em]">{item.title}</h3>
+              <p className="leading-6 text-ink-soft">{item.desc}</p>
             </div>
           </RevealItem>
         ))}
       </RevealList>
 
-      <RevealSection className="block">
-        <h2>{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
-        <RevealList className="timeline">
+      <RevealSection className="px-6 md:px-12">
+        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
+        <RevealList className="grid">
           {faq[lang].map((f) => (
             <RevealItem key={f.n}>
-              <div className="tl-row">
-                <div className="yr serif">{f.n}</div>
-                <div className="ev">{f.q}</div>
-                <div className="dc">{f.a}</div>
+              <div className="grid gap-4 border-t border-line py-5 md:grid-cols-[120px_1fr_2fr]">
+                <div className="font-heading text-5xl font-semibold leading-none">{f.n}</div>
+                <div className="font-semibold">{f.q}</div>
+                <div className="leading-7 text-ink-soft">{f.a}</div>
               </div>
             </RevealItem>
           ))}

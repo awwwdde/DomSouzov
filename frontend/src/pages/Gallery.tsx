@@ -30,6 +30,10 @@ export default function Gallery() {
     : null;
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
+  const spanClass = (span?: string | null) => [
+    span?.includes('span2') ? 'md:col-span-2' : '',
+    span?.includes('span2h') ? 'md:row-span-2' : '',
+  ].filter(Boolean).join(' ');
 
   const filtered = galleryItems
     ? (cat === 0 ? galleryItems : galleryItems.filter((g) =>
@@ -40,44 +44,44 @@ export default function Gallery() {
 
   return (
     <>
-      <RevealSection className="page-title">
+      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
         <div>
-          <div className="crumb mono">{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</div>
-          <h1 className="serif">{lang === 'ru' ? 'Галерея' : 'Gallery'}</h1>
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</div>
+          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'Галерея' : 'Gallery'}</h1>
         </div>
-        <p className="lede">
+        <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
             ? 'Архитектура, концерты, закулисье и реставрация. Исторические снимки и съёмки современных постановок.'
             : 'Architecture, concerts, backstage and restoration. Historical photography and contemporary productions.'}
         </p>
       </RevealSection>
 
-      <RevealSection className="filters" y={14}>
-        <span className="label mono">{lang === 'ru' ? 'РУБРИКА' : 'CATEGORY'}</span>
+      <RevealSection className="flex flex-wrap items-center gap-2 px-6 md:px-12" y={14}>
+        <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'РУБРИКА' : 'CATEGORY'}</span>
         {CATS[lang].map((c, i) => (
-          <button key={i} className={`chip${cat === i ? ' active' : ''}`} onClick={() => setCat(i)}>{c}</button>
+          <button key={i} className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition ${cat === i ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:bg-paper'}`} onClick={() => setCat(i)}>{c}</button>
         ))}
       </RevealSection>
 
-      <RevealList className="gal-grid">
+      <RevealList className="grid auto-rows-[220px] gap-3 px-6 md:grid-cols-4 md:px-12">
         {galleryItems
           ? (filtered as typeof galleryItems).map((g) => (
-              <RevealItem key={g.id} className={g.span ?? ''}>
-                <div className="cell">
+              <RevealItem key={g.id} className={spanClass(g.span)}>
+                <div className="group relative h-full overflow-hidden rounded-2xl bg-paper">
                   {g.image ? (
-                    <img src={g.image} alt={l(g.caption)} />
+                    <img className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={g.image} alt={l(g.caption)} />
                   ) : (
-                    <div className="cell-ph">{l(g.caption)}</div>
+                    <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{l(g.caption)}</div>
                   )}
-                  <div className="cell-overlay">{l(g.caption)}</div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-xs font-bold uppercase tracking-[0.12em] text-white">{l(g.caption)}</div>
                 </div>
               </RevealItem>
             ))
           : (filtered as typeof GALLERY_PH).map((g, i) => (
-              <RevealItem key={i} className={g.span ?? ''}>
-                <div className="cell">
-                  <div className="cell-ph">{lang === 'ru' ? g.label_ru : g.label_en}</div>
-                  <div className="cell-overlay">{lang === 'ru' ? g.label_ru : g.label_en}</div>
+              <RevealItem key={i} className={spanClass(g.span)}>
+                <div className="relative h-full overflow-hidden rounded-2xl bg-paper">
+                  <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{lang === 'ru' ? g.label_ru : g.label_en}</div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-xs font-bold uppercase tracking-[0.12em] text-white">{lang === 'ru' ? g.label_ru : g.label_en}</div>
                 </div>
               </RevealItem>
             ))

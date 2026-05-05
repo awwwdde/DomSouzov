@@ -18,10 +18,10 @@ export default function Ticker() {
   const items = TICKERS[lang];
 
   return (
-    <div className="ticker">
+    <div className="flex gap-6 overflow-hidden border-y border-line py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
       {items.map((item, i) => (
-        <span key={i} className="ticker-item mono">
-          {i > 0 && <span className="dot" />}
+        <span key={i} className="inline-flex shrink-0 items-center gap-6">
+          {i > 0 && <span className="h-1.5 w-1.5 rounded-full bg-muted" />}
           {item}
         </span>
       ))}

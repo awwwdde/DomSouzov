@@ -26,23 +26,23 @@ export default function ImageUpload({ value, onChange, label = 'Изображе
   };
 
   return (
-    <div className="admin-form-group">
-      <label>{label}</label>
-      <div className="admin-image-upload">
+    <div className="grid gap-2">
+      <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{label}</label>
+      <div className="grid gap-3">
         {value && (
-          <img src={value} alt="preview" className="admin-image-preview" />
+          <img src={value} alt="preview" className="h-44 w-full rounded-2xl object-cover" />
         )}
         <input
+          className="min-h-11 w-full rounded-xl border border-line bg-white px-3 outline-none transition focus:border-ink"
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="URL изображения или загрузите файл"
-          style={{ width: '100%' }}
         />
-        <label className="btn" style={{ cursor: 'pointer' }}>
+        <label className="inline-flex min-h-10 w-fit cursor-pointer items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em]">
           <Upload size={14} />
           {uploading ? 'Загрузка...' : 'ЗАГРУЗИТЬ ФАЙЛ'}
-          <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+          <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
         </label>
       </div>
     </div>

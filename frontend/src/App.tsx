@@ -28,9 +28,9 @@ import AdminSettings from './pages/admin/AdminSettings';
 
 function PublicLayout() {
   return (
-    <div className="site">
+    <div className="flex min-h-screen flex-col text-ink">
       <Header />
-      <main>
+      <main className="flex-1">
         <Routes>
           <Route index element={<Home />} />
           <Route path="events" element={<Events />} />

@@ -67,52 +67,52 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
   };
 
   return (
-    <form onSubmit={handleSubmit} className="admin-form">
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input]:transition [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted [&_select]:min-h-11 [&_select]:rounded-xl [&_select]:border [&_select]:border-line [&_select]:bg-white [&_select]:px-3 [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:outline-none [&_textarea:focus]:border-ink">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Название (RU)</label>
           <input value={form.title_ru} onChange={set('title_ru')} required />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Title (EN)</label>
           <input value={form.title_en} onChange={set('title_en')} required />
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Дата (RU, напр. «19 ИЮН 2026»)</label>
           <input value={form.date} onChange={set('date')} required placeholder="19 ИЮН 2026" />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Date (EN, e.g. «19 JUN 2026»)</label>
           <input value={form.date_en} onChange={set('date_en')} required placeholder="19 JUN 2026" />
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Время (напр. «19:30»)</label>
           <input value={form.time} onChange={set('time')} required placeholder="19:30" />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>День недели RU / EN (напр. «Пт» / «Fri»)</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div className="grid grid-cols-2 gap-2">
             <input value={form.weekday_ru} onChange={set('weekday_ru')} placeholder="Пт" />
             <input value={form.weekday_en} onChange={set('weekday_en')} placeholder="Fri" />
           </div>
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Зал (RU)</label>
           <select value={form.hall_ru} onChange={set('hall_ru')}>
             <option value="Колонный зал">Колонный зал</option>
             <option value="Октябрьский зал">Октябрьский зал</option>
           </select>
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Hall (EN)</label>
           <select value={form.hall_en} onChange={set('hall_en')}>
             <option value="Hall of Columns">Hall of Columns</option>
@@ -121,34 +121,34 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Жанр (RU)</label>
           <input value={form.tag_ru} onChange={set('tag_ru')} required placeholder="Симфоническая" />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Tag (EN)</label>
           <input value={form.tag_en} onChange={set('tag_en')} required placeholder="Symphonic" />
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Цена (RU)</label>
           <input value={form.price_ru} onChange={set('price_ru')} placeholder="от 2 500 ₽" />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Price (EN)</label>
           <input value={form.price_en} onChange={set('price_en')} placeholder="from 2,500 ₽" />
         </div>
       </div>
 
-      <div className="admin-form-row">
-        <div className="admin-form-group">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
           <label>Описание (RU)</label>
           <textarea value={form.description_ru} onChange={set('description_ru')} rows={4} />
         </div>
-        <div className="admin-form-group">
+        <div className="grid gap-2">
           <label>Description (EN)</label>
           <textarea value={form.description_en} onChange={set('description_en')} rows={4} />
         </div>
@@ -160,26 +160,26 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         onChange={(url) => setForm((p) => ({ ...p, image: url }))}
       />
 
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-        <label className="admin-toggle">
+      <div className="flex flex-wrap gap-6">
+        <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" checked={form.is_featured} onChange={setCheck('is_featured')} />
           Рекомендуется (featured)
         </label>
-        <label className="admin-toggle">
+        <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" checked={form.is_active} onChange={setCheck('is_active')} />
           Активно (публикуется)
         </label>
-        <div className="admin-form-group" style={{ width: '120px' }}>
+        <div className="grid w-32 gap-2">
           <label>Порядок</label>
           <input type="number" value={form.sort_order} onChange={set('sort_order')} />
         </div>
       </div>
 
-      <div className="admin-form-actions">
-        <button type="submit" className="btn solid" disabled={saving}>
+      <div className="flex flex-wrap gap-3">
+        <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-60" disabled={saving}>
           {saving ? 'Сохранение...' : 'СОХРАНИТЬ →'}
         </button>
-        <button type="button" className="btn" onClick={onCancel}>ОТМЕНА</button>
+        <button type="button" className="inline-flex min-h-10 items-center justify-center rounded-full border border-line bg-white px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em]" onClick={onCancel}>ОТМЕНА</button>
       </div>
     </form>
   );

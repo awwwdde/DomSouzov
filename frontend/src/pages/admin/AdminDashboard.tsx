@@ -32,15 +32,15 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-head">
+    <div className="grid gap-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="sub">CMS · CONTROL PANEL</div>
-          <h1>Дашборд</h1>
+          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">CMS · CONTROL PANEL</div>
+          <h1 className="mt-2 font-heading text-[clamp(52px,7vw,104px)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]">Дашборд</h1>
         </div>
       </div>
 
-      <div className="admin-dashboard-grid">
+      <div className="grid gap-3 md:grid-cols-4">
         {stats.map((s, index) => (
           <motion.div
             key={s.to}
@@ -49,35 +49,35 @@ export default function AdminDashboard() {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.35, delay: index * 0.05 }}
           >
-            <Link to={s.to} className="admin-card-link">
-              <div className="admin-stat-card">
-              <div className="num">{s.num}</div>
-              <div className="label">{s.label}</div>
+            <Link to={s.to} className="block">
+              <div className="grid min-h-40 content-between rounded-3xl border border-line bg-white p-5 transition hover:-translate-y-1 hover:border-ink/25">
+              <div className="font-heading text-7xl font-semibold leading-none">{s.num}</div>
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{s.label}</div>
               </div>
             </Link>
           </motion.div>
         ))}
       </div>
 
-      <div className="admin-dashboard-bottom">
-        <div className="admin-panel">
-          <div className="admin-panel-title mono">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-3xl border border-line bg-white p-5">
+          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
             БЫСТРЫЕ ДЕЙСТВИЯ
           </div>
-          <div className="admin-actions-list">
+          <div className="flex flex-wrap gap-2">
             {quickLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="btn admin-quick-link">
+              <Link key={link.to} to={link.to} className="rounded-full border border-line bg-paper px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:border-ink/30 hover:bg-white">
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="admin-panel admin-panel-soft">
-          <div className="admin-panel-title mono">
+        <div className="rounded-3xl border border-line bg-white p-5">
+          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
             СТРУКТУРА CMS
           </div>
-          <ul className="admin-structure-list">
+          <ul className="space-y-2 text-sm leading-6 text-ink-soft">
             <li>— <strong>Мероприятия</strong>: концерты, события, даты, цены</li>
             <li>— <strong>Хроники</strong>: новости, статьи, интервью</li>
             <li>— <strong>Залы</strong>: Колонный, Октябрьский</li>

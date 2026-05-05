@@ -116,21 +116,21 @@ export default function AdminSettings() {
     }
   };
 
-  if (loading) return <div className="admin-page mono" style={{ color: 'var(--muted)' }}>Загрузка...</div>;
+  if (loading) return <div className="text-sm text-muted">Загрузка...</div>;
 
   return (
     <motion.div
-      className="admin-page"
+      className="grid gap-8"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="admin-page-head">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="sub">ТЕКСТЫ · КОНТАКТЫ · CMS</div>
-          <h1>Настройки</h1>
+          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">ТЕКСТЫ · КОНТАКТЫ · CMS</div>
+          <h1 className="mt-2 font-heading text-[clamp(48px,7vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.06em]">Настройки</h1>
         </div>
-        <button className="btn solid" onClick={handleSave} disabled={saving}>
+        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-60" onClick={handleSave} disabled={saving}>
           {saving ? 'Сохранение...' : saved ? '✓ СОХРАНЕНО' : 'СОХРАНИТЬ →'}
         </button>
       </div>
@@ -138,48 +138,48 @@ export default function AdminSettings() {
       {GROUPS.map((group, groupIndex) => (
         <motion.div
           key={group.label}
-          className="admin-settings-group"
+          className="rounded-3xl border border-line bg-white p-5"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.35, delay: groupIndex * 0.03 }}
         >
-          <div className="mono admin-settings-group-title">
+          <div className="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
             {group.label}
           </div>
-          <div className="admin-settings-group-items">
+          <div className="grid gap-5">
             {group.keys.map(({ key, label, multiline }) => {
               const row = getRow(key);
               return (
-                <div key={key} className="admin-settings-row">
-                  <div className="mono admin-settings-row-label">
+                <div key={key} className="grid gap-3 border-t border-line pt-5">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
                     {label}
                   </div>
-                  <div className="admin-settings-grid">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <div className="mono admin-settings-lang">RU</div>
+                      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">RU</div>
                       {multiline ? (
                         <textarea
                           value={row.value_ru}
                           onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
                           rows={3}
-                          className="admin-settings-input"
+                          className="w-full rounded-xl border border-line bg-white p-3 outline-none transition focus:border-ink"
                         />
                       ) : (
                         <>
                           <input
                             value={row.value_ru}
                             onChange={(e) => updateRow(key, 'value_ru', e.target.value)}
-                            className="admin-settings-input"
+                            className="min-h-11 w-full rounded-xl border border-line bg-white px-3 outline-none transition focus:border-ink"
                           />
                           {key === 'hero_video_url' ? (
-                            <label className="btn admin-upload-inline-btn">
+                            <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-line bg-paper px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em]">
                               {uploading[`${key}:value_ru`] ? 'Загрузка...' : 'Загрузить видео'}
                               <input
                                 type="file"
                                 accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv"
                                 onChange={(e) => handleMediaUpload(key, 'value_ru', e.target.files?.[0])}
-                                style={{ display: 'none' }}
+                                className="hidden"
                               />
                             </label>
                           ) : null}
@@ -187,29 +187,29 @@ export default function AdminSettings() {
                       )}
                     </div>
                     <div>
-                      <div className="mono admin-settings-lang">EN</div>
+                      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">EN</div>
                       {multiline ? (
                         <textarea
                           value={row.value_en}
                           onChange={(e) => updateRow(key, 'value_en', e.target.value)}
                           rows={3}
-                          className="admin-settings-input"
+                          className="w-full rounded-xl border border-line bg-white p-3 outline-none transition focus:border-ink"
                         />
                       ) : (
                         <>
                           <input
                             value={row.value_en}
                             onChange={(e) => updateRow(key, 'value_en', e.target.value)}
-                            className="admin-settings-input"
+                            className="min-h-11 w-full rounded-xl border border-line bg-white px-3 outline-none transition focus:border-ink"
                           />
                           {key === 'hero_video_url' ? (
-                            <label className="btn admin-upload-inline-btn">
+                            <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-line bg-paper px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em]">
                               {uploading[`${key}:value_en`] ? 'Uploading...' : 'Upload video'}
                               <input
                                 type="file"
                                 accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv"
                                 onChange={(e) => handleMediaUpload(key, 'value_en', e.target.files?.[0])}
-                                style={{ display: 'none' }}
+                                className="hidden"
                               />
                             </label>
                           ) : null}
@@ -224,8 +224,8 @@ export default function AdminSettings() {
         </motion.div>
       ))}
 
-      <div className="admin-settings-sticky-save">
-        <button className="btn solid" onClick={handleSave} disabled={saving}>
+      <div className="sticky bottom-4 flex justify-end">
+        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-xl disabled:opacity-60" onClick={handleSave} disabled={saving}>
           {saving ? 'Сохранение...' : saved ? '✓ СОХРАНЕНО' : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ →'}
         </button>
       </div>
