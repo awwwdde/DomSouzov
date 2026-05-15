@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage
+from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage, Partner
 from schemas import (
     Token, LoginRequest,
     SettingsUpdate, SettingItem,
@@ -14,6 +14,7 @@ from schemas import (
     NewsCreate, NewsUpdate, NewsOut,
     HallCreate, HallUpdate, HallOut,
     GalleryCreate, GalleryUpdate, GalleryOut,
+    PartnerCreate, PartnerUpdate, PartnerOut,
 )
 from auth import verify_password, create_access_token, get_current_admin, hash_password
 from config import settings as app_settings
@@ -264,5 +265,43 @@ def delete_gallery(item_id: int, db: Session = Depends(get_db), _: AdminUser = D
     if not item:
         raise HTTPException(404, "Not found")
     db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+
+# ──────────── PARTNERS ────────────
+
+@router.get("/partners", response_model=List[PartnerOut])
+def list_partners(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(Partner).order_by(Partner.sort_order).all()
+
+
+@router.post("/partners", response_model=PartnerOut)
+def create_partner(body: PartnerCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    p = Partner(**body.model_dump())
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return p
+
+
+@router.put("/partners/{partner_id}", response_model=PartnerOut)
+def update_partner(partner_id: int, body: PartnerUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    p = db.query(Partner).filter_by(id=partner_id).first()
+    if not p:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        setattr(p, k, v)
+    db.commit()
+    db.refresh(p)
+    return p
+
+
+@router.delete("/partners/{partner_id}")
+def delete_partner(partner_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    p = db.query(Partner).filter_by(id=partner_id).first()
+    if not p:
+        raise HTTPException(404, "Not found")
+    db.delete(p)
     db.commit()
     return {"ok": True}

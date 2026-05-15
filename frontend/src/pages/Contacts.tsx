@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { PageKicker } from '../components/PageKicker';
 import { RevealSection } from '../components/Reveal';
 
 export default function Contacts() {
@@ -6,10 +7,10 @@ export default function Contacts() {
 
   return (
     <>
-      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
+      <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · Контакты' : 'Home · Contacts'}</div>
-          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'Контакты' : 'Contacts'}</h1>
+          <PageKicker>{lang === 'ru' ? 'Главная · Контакты' : 'Home · Contacts'}</PageKicker>
+          <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">{lang === 'ru' ? 'Контакты' : 'Contacts'}</h1>
         </div>
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
@@ -18,12 +19,10 @@ export default function Contacts() {
         </p>
       </RevealSection>
 
-      <RevealSection className="grid gap-8 px-6 md:grid-cols-[1fr_1fr] md:px-12">
+      <RevealSection className="grid gap-10 px-5 py-16 md:grid-cols-[1fr_1fr] md:px-12">
         <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            {lang === 'ru' ? 'Расположение' : 'Location'}
-          </div>
-          <h2 className="font-heading text-[clamp(42px,5vw,78px)] font-semibold uppercase leading-[0.88] tracking-[-0.05em]">
+          <PageKicker>{lang === 'ru' ? 'Расположение' : 'Location'}</PageKicker>
+          <h2 className="font-heading text-[clamp(42px,5vw,78px)] font-bold uppercase leading-[0.88] tracking-[0.04em]">
             {lang === 'ru' ? 'Москва · Большая Дмитровка 1' : 'Moscow · Bolshaya Dmitrovka 1'}
           </h2>
           <dl className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-5 text-sm">
@@ -53,7 +52,7 @@ export default function Contacts() {
           </div>
         </div>
         <div>
-          <div className="flex min-h-[460px] items-center justify-center rounded-2xl bg-paper p-8 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{lang === 'ru' ? '[ КАРТА · МОСКВА ]' : '[ MAP · MOSCOW ]'}</div>
+          <div className="flex min-h-[460px] items-center justify-center border border-line bg-paper p-8 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{lang === 'ru' ? '[ КАРТА · МОСКВА ]' : '[ MAP · MOSCOW ]'}</div>
         </div>
       </RevealSection>
     </>

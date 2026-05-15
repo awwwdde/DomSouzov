@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
 
@@ -44,6 +45,23 @@ class Event(Base):
     is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    has_ticket = Column(Boolean, default=False)
+    ticket_url = Column(String, nullable=True)
+    is_pinned = Column(Boolean, default=False)
+    pin_order = Column(Integer, default=0)
+
+    gallery_images = relationship("EventGalleryImage", back_populates="event", order_by="EventGalleryImage.sort_order")
+
+
+class EventGalleryImage(Base):
+    __tablename__ = "event_gallery_images"
+    id = Column(Integer, primary_key=True)
+    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    image = Column(String, nullable=False)
+    caption_ru = Column(String, nullable=True)
+    caption_en = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
+    event = relationship("Event", back_populates="gallery_images")
 
 
 class NewsArticle(Base):
@@ -62,6 +80,8 @@ class NewsArticle(Base):
     is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_pinned = Column(Boolean, default=False)
+    pin_order = Column(Integer, default=0)
 
 
 class Hall(Base):
@@ -80,6 +100,16 @@ class Hall(Base):
     sort_order = Column(Integer, default=0)
 
 
+class GalleryCategory(Base):
+    __tablename__ = "gallery_categories"
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True, nullable=False)
+    name_ru = Column(String, nullable=False)
+    name_en = Column(String, nullable=False)
+    cover_image = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
+
+
 class GalleryImage(Base):
     __tablename__ = "gallery"
     id = Column(Integer, primary_key=True)
@@ -89,5 +119,19 @@ class GalleryImage(Base):
     category_en = Column(String, nullable=False, default="Architecture")
     image = Column(String, nullable=False)
     span = Column(String, nullable=True)  # "span2", "span2h", etc.
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    category_id = Column(Integer, ForeignKey("gallery_categories.id"), nullable=True)
+    is_video = Column(Boolean, default=False)
+    video_url = Column(String, nullable=True)
+
+
+class Partner(Base):
+    __tablename__ = "partners"
+    id = Column(Integer, primary_key=True)
+    name_ru = Column(String, nullable=False)
+    name_en = Column(String, nullable=False)
+    logo = Column(String, nullable=True)
+    url = Column(String, nullable=False, default="")
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)

@@ -1,92 +1,199 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { useSite } from '../context/SiteContext';
+import type { GalleryImage } from '../types';
+import { PageKicker } from '../components/PageKicker';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
+import Lightbox, { type LightboxItem } from '../components/Lightbox';
+import { useReducedMotionActive } from '../lib/motion';
 
-const CATS = {
-  ru: ['Все', 'Архитектура', 'Концерты', 'Реставрация', 'Архив'],
-  en: ['All', 'Architecture', 'Concerts', 'Restoration', 'Archive'],
-};
+const PLACEHOLDER = [
+  { label_ru: 'КОЛОННЫЙ ЗАЛ', label_en: 'HALL OF COLUMNS' },
+  { label_ru: 'ФАСАД', label_en: 'FACADE' },
+] as const;
 
-const GALLERY_PH = [
-  { label_ru: 'КОЛОННЫЙ ЗАЛ · ГЛАВНЫЙ', label_en: 'HALL OF COLUMNS · MAIN', span: 'span2 span2h', cat_ru: 'Архитектура', cat_en: 'Architecture' },
-  { label_ru: 'ФАСАД', label_en: 'FACADE', span: '', cat_ru: 'Архитектура', cat_en: 'Architecture' },
-  { label_ru: 'ХРУСТАЛЬНАЯ ЛЮСТРА', label_en: 'CRYSTAL CHANDELIER', span: '', cat_ru: 'Архитектура', cat_en: 'Architecture' },
-  { label_ru: 'АРХИВ · 1910', label_en: 'ARCHIVE · 1910', span: '', cat_ru: 'Архив', cat_en: 'Archive' },
-  { label_ru: 'РЕПЕТИЦИЯ', label_en: 'REHEARSAL', span: '', cat_ru: 'Концерты', cat_en: 'Concerts' },
-  { label_ru: 'КОНЦЕРТ · ВИД ИЗ ЯРУСА', label_en: 'CONCERT · VIEW FROM TIER', span: 'span2', cat_ru: 'Концерты', cat_en: 'Concerts' },
-  { label_ru: 'БЕЛЫЙ МРАМОР', label_en: 'WHITE MARBLE', span: '', cat_ru: 'Архитектура', cat_en: 'Architecture' },
-  { label_ru: 'ДИРИЖЁР', label_en: 'CONDUCTOR', span: '', cat_ru: 'Концерты', cat_en: 'Concerts' },
-  { label_ru: 'ФОЙЕ', label_en: 'FOYER', span: '', cat_ru: 'Архитектура', cat_en: 'Architecture' },
-  { label_ru: 'ТОРЖЕСТВЕННЫЙ ПРИЁМ', label_en: 'FORMAL RECEPTION', span: '', cat_ru: 'Концерты', cat_en: 'Concerts' },
-  { label_ru: 'КУЛИСЫ · ШИРОКИЙ ПЛАН', label_en: 'BACKSTAGE · WIDE SHOT', span: 'span2', cat_ru: 'Концерты', cat_en: 'Concerts' },
-];
+function mediaUrl(path: string | null | undefined) {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('/')) return path;
+  return `/${path}`;
+}
+
+function spanClass(span?: string | null) {
+  return [
+    span?.includes('span2') ? 'md:col-span-2' : '',
+    span?.includes('span2h') ? 'md:row-span-2' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
 
 export default function Gallery() {
   const { lang, content } = useSite();
-  const [cat, setCat] = useState(0);
-
-  const galleryItems = content?.gallery && content.gallery.length > 0
-    ? content.gallery
-    : null;
+  const categories = content?.gallery_categories ?? [];
+  const galleryItems = content?.gallery ?? [];
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
-  const spanClass = (span?: string | null) => [
-    span?.includes('span2') ? 'md:col-span-2' : '',
-    span?.includes('span2h') ? 'md:row-span-2' : '',
-  ].filter(Boolean).join(' ');
 
-  const filtered = galleryItems
-    ? (cat === 0 ? galleryItems : galleryItems.filter((g) =>
-        cat === 0 ||
-        (lang === 'ru' ? g.category.ru : g.category.en) === CATS[lang][cat]
-      ))
-    : GALLERY_PH.filter((g) => cat === 0 || (lang === 'ru' ? g.cat_ru : g.cat_en) === CATS[lang][cat]);
+  if (categories.length > 0) {
+    return (
+      <>
+        <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
+          <div>
+            <PageKicker>{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</PageKicker>
+            <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
+              {lang === 'ru' ? 'Галерея' : 'Gallery'}
+            </h1>
+          </div>
+          <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
+            {lang === 'ru'
+              ? 'Разделы коллекции — перейдите в тему, чтобы открыть полную сетку снимков.'
+              : 'Collection sections — open a theme to view the full image grid.'}
+          </p>
+        </RevealSection>
+
+        <RevealList className="mx-auto grid max-w-[1600px] gap-4 px-5 pb-20 md:grid-cols-2 md:px-12">
+          {categories.map((c) => {
+            const cover =
+              c.cover_image ||
+              galleryItems.find((g) => g.category_id === c.id && g.image)?.image ||
+              galleryItems.find((g) => (lang === 'ru' ? g.category.ru : g.category.en) === l(c.name) && g.image)?.image;
+            return (
+              <RevealItem key={c.id}>
+                <Link
+                  to={`/gallery/${c.slug}`}
+                  className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden border border-line bg-paper"
+                >
+                  {cover ? (
+                    <img
+                      src={mediaUrl(cover)}
+                      alt={l(c.name)}
+                      className="absolute inset-0 h-full w-full object-cover transition duration-[900ms] ease-ds group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-paper text-xs font-bold uppercase tracking-wider text-muted">
+                      {l(c.name)}
+                    </div>
+                  )}
+                  <div className="relative z-[1] bg-gradient-to-t from-black/75 to-transparent p-5">
+                    <span className="font-heading text-[clamp(22px,3vw,40px)] font-bold uppercase tracking-[0.04em] text-white">
+                      {l(c.name)}
+                    </span>
+                  </div>
+                </Link>
+              </RevealItem>
+            );
+          })}
+        </RevealList>
+      </>
+    );
+  }
+
+  return <LegacyGrid lang={lang} galleryItems={galleryItems} />;
+}
+
+function LegacyGrid({ lang, galleryItems }: { lang: 'ru' | 'en'; galleryItems: GalleryImage[] }) {
+  const [cat, setCat] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [idx, setIdx] = useState(0);
+  const reduced = useReducedMotionActive();
+
+  const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
+
+  const CATS = [lang === 'ru' ? 'Все' : 'All', 'Архитектура', 'Концерты', 'Реставрация', 'Архив'];
+
+  const filtered = useMemo(() => {
+    if (!galleryItems.length) return [];
+    if (cat === 0) return galleryItems;
+    const label = CATS[cat];
+    return galleryItems.filter((g) => (lang === 'ru' ? g.category.ru : g.category.en) === label);
+  }, [galleryItems, cat, CATS, lang]);
+
+  const slides: LightboxItem[] = useMemo(
+    () =>
+      filtered
+        .filter((g) => g.image)
+        .map((g) => ({ src: mediaUrl(g.image), alt: l(g.caption) })),
+    [filtered, l]
+  );
+
+  const openAt = (g: GalleryImage) => {
+    const i = slides.findIndex((s) => s.src === mediaUrl(g.image));
+    if (i >= 0) {
+      setIdx(i);
+      setOpen(true);
+    }
+  };
 
   return (
     <>
-      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
+      <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</div>
-          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'Галерея' : 'Gallery'}</h1>
+          <PageKicker>{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</PageKicker>
+          <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
+            {lang === 'ru' ? 'Галерея' : 'Gallery'}
+          </h1>
         </div>
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
-            ? 'Архитектура, концерты, закулисье и реставрация. Исторические снимки и съёмки современных постановок.'
-            : 'Architecture, concerts, backstage and restoration. Historical photography and contemporary productions.'}
+            ? 'Добавьте категории в CMS для обложек разделов или фильтруйте снимки по рубрике.'
+            : 'Add categories in the CMS for section covers, or filter shots by category.'}
         </p>
       </RevealSection>
 
-      <RevealSection className="flex flex-wrap items-center gap-2 px-6 md:px-12" y={14}>
-        <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'РУБРИКА' : 'CATEGORY'}</span>
-        {CATS[lang].map((c, i) => (
-          <button key={i} className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition ${cat === i ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:bg-paper'}`} onClick={() => setCat(i)}>{c}</button>
+      <RevealSection className="flex flex-wrap items-center gap-2 px-5 py-6 md:px-12" y={14}>
+        <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+          {lang === 'ru' ? 'РУБРИКА' : 'CATEGORY'}
+        </span>
+        {CATS.map((c, i) => (
+          <button
+            key={c}
+            type="button"
+            className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition ${cat === i ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:bg-paper'}`}
+            onClick={() => setCat(i)}
+          >
+            {c}
+          </button>
         ))}
       </RevealSection>
 
-      <RevealList className="grid auto-rows-[220px] gap-3 px-6 md:grid-cols-4 md:px-12">
-        {galleryItems
-          ? (filtered as typeof galleryItems).map((g) => (
+      <RevealList className="mx-auto grid auto-rows-[220px] max-w-[1600px] gap-3 px-5 pb-16 md:grid-cols-4 md:px-12">
+        {galleryItems.length
+          ? filtered.map((g) => (
               <RevealItem key={g.id} className={spanClass(g.span)}>
-                <div className="group relative h-full overflow-hidden rounded-2xl bg-paper">
+                <button
+                  type="button"
+                  className="group relative h-full w-full overflow-hidden border border-line bg-paper text-left"
+                  onClick={() => openAt(g)}
+                >
                   {g.image ? (
-                    <img className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={g.image} alt={l(g.caption)} />
+                    <img
+                      className={`h-full w-full object-cover ${reduced ? '' : 'transition duration-500 group-hover:scale-105'}`}
+                      src={mediaUrl(g.image)}
+                      alt={l(g.caption)}
+                    />
                   ) : (
-                    <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{l(g.caption)}</div>
+                    <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      {l(g.caption)}
+                    </div>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-xs font-bold uppercase tracking-[0.12em] text-white">{l(g.caption)}</div>
-                </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                    {l(g.caption)}
+                  </div>
+                </button>
               </RevealItem>
             ))
-          : (filtered as typeof GALLERY_PH).map((g, i) => (
-              <RevealItem key={i} className={spanClass(g.span)}>
-                <div className="relative h-full overflow-hidden rounded-2xl bg-paper">
-                  <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{lang === 'ru' ? g.label_ru : g.label_en}</div>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-xs font-bold uppercase tracking-[0.12em] text-white">{lang === 'ru' ? g.label_ru : g.label_en}</div>
+          : PLACEHOLDER.map((g, i) => (
+              <RevealItem key={i}>
+                <div className="relative h-full overflow-hidden border border-line bg-paper">
+                  <div className="flex h-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                    {lang === 'ru' ? g.label_ru : g.label_en}
+                  </div>
                 </div>
               </RevealItem>
-            ))
-        }
+            ))}
       </RevealList>
+
+      <Lightbox open={open} onClose={() => setOpen(false)} items={slides} index={idx} onIndexChange={setIdx} />
     </>
   );
 }

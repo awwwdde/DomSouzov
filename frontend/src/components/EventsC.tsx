@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { Event } from '../types';
+import { PageKicker } from './PageKicker';
 import { RevealItem, RevealList, RevealSection } from './Reveal';
 import ActionButton from './ActionButton';
 
@@ -17,14 +18,14 @@ export default function EventsC({ events: propEvents, showAll = false }: EventsC
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
   return (
-    <RevealSection className="px-6 md:px-12">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <RevealSection className="border-t border-line px-5 py-16 md:px-12">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+          <PageKicker>
             {lang === 'ru' ? 'Весна–Лето 2026 · ' : 'Spring–Summer 2026 · '}
             {events.length} {lang === 'ru' ? 'событий' : 'events'}
-          </div>
-          <h2 className="font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Афиша' : 'Programme'}</h2>
+          </PageKicker>
+          <h2 className="font-heading text-[clamp(48px,6vw,96px)] font-bold uppercase leading-[0.86] tracking-[0.04em]">{lang === 'ru' ? 'Афиша' : 'Programme'}</h2>
         </div>
         <div>
           <ActionButton to="/events" text={`${lang === 'ru' ? 'Все события' : 'All events'} →`} />
@@ -36,14 +37,14 @@ export default function EventsC({ events: propEvents, showAll = false }: EventsC
           <RevealItem key={event.id}>
             <Link
               to={`/events/${event.id}`}
-              className="flex min-h-full flex-col gap-4 border border-line bg-white p-4 transition duration-200 ease-ds hover:-translate-y-1 hover:border-ink/25"
+              className="flex min-h-full flex-col gap-4 border border-line bg-paper p-4 transition duration-200 ease-ds hover:border-ink/30"
             >
               <div className="flex justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
                 <span>N° 0{i + 1} / 0{displayed.length}</span>
                 <span>{l(event.tag).toUpperCase()}</span>
               </div>
 
-              <div className="aspect-[4/5] overflow-hidden rounded-xl bg-paper">
+              <div className="aspect-[4/5] overflow-hidden border border-line bg-paper-soft">
                 {event.image ? (
                   <img className="h-full w-full object-cover" src={event.image} alt={l(event.title)} />
                 ) : (
@@ -52,7 +53,7 @@ export default function EventsC({ events: propEvents, showAll = false }: EventsC
               </div>
 
               <div className="flex flex-1 flex-col gap-3">
-                <h3 className="font-heading text-[clamp(30px,3vw,48px)] font-semibold uppercase leading-[0.92] tracking-[-0.04em]">{l(event.title)}</h3>
+                <h3 className="font-heading text-[clamp(30px,3vw,48px)] font-bold uppercase leading-[0.92] tracking-[0.04em]">{l(event.title)}</h3>
                 <div className="text-sm leading-6 text-ink-soft">
                   {l(event.hall)} · {l(event.tag)}
                 </div>

@@ -9,7 +9,7 @@
   --color-ink-soft: #4a4a45;
   --color-muted: #777770;
   --color-line: #deded6;
-  --color-accent: #c8a35a;
+  --color-accent: #2f5d50;
   --ease-ds: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -26,7 +26,7 @@
     margin: 0;
     min-height: 100%;
     background:
-      radial-gradient(1200px 700px at 10% -10%, rgba(200, 163, 90, 0.11), transparent 58%),
+      radial-gradient(1100px 640px at 12% -8%, rgba(47, 93, 80, 0.06), transparent 55%),
       linear-gradient(180deg, #f7f7f2 0%, #ffffff 100%);
     color: #171717;
     font-family: "Manrope", system-ui, sans-serif;
@@ -86,6 +86,91 @@
   html[data-vision="true"] input,
   html[data-vision="true"] textarea,
   html[data-vision="true"] select {
-    outline-offset: 3px;
+    outline-offset: 4px;
+    outline-width: 3px;
+    outline-style: solid;
+    outline-color: var(--color-ink);
+  }
+
+  /* --- Vision Mode: темы (design.md §6.4) --- */
+  html[data-vision="true"][data-vision-theme="bw"],
+  html[data-vision="true"]:not([data-vision-theme]) {
+    --color-paper: #ffffff;
+    --color-paper-soft: #ffffff;
+    --color-ink: #000000;
+    --color-ink-soft: #000000;
+    --color-muted: #000000;
+    --color-line: #000000;
+    --color-accent: #0033cc;
+  }
+  html[data-vision="true"][data-vision-theme="wb"] {
+    --color-paper: #000000;
+    --color-paper-soft: #000000;
+    --color-ink: #ffffff;
+    --color-ink-soft: #ffffff;
+    --color-muted: #ffffff;
+    --color-line: #ffffff;
+    --color-accent: #9cd8ff;
+  }
+  html[data-vision="true"][data-vision-theme="bb"] {
+    --color-paper: #f4ecd8;
+    --color-paper-soft: #f4ecd8;
+    --color-ink: #1a1a1a;
+    --color-ink-soft: #1a1a1a;
+    --color-muted: #1a1a1a;
+    --color-line: #1a1a1a;
+    --color-accent: #003366;
+  }
+  html[data-vision="true"][data-vision-theme="by"] {
+    --color-paper: #ffffff;
+    --color-paper-soft: #ffffff;
+    --color-ink: #003366;
+    --color-ink-soft: #003366;
+    --color-muted: #003366;
+    --color-line: #003366;
+    --color-accent: #003366;
+  }
+
+  html[data-vision="true"] body {
+    background: var(--color-paper) !important;
+    color: var(--color-ink) !important;
+    font-family: var(--font-sans);
+  }
+
+  html[data-vision="true"][data-vision-font="large"] body {
+    font-size: 20px;
+  }
+  html[data-vision="true"][data-vision-font="xlarge"] body {
+    font-size: 24px;
+  }
+
+  html[data-vision="true"][data-vision-line="increased"] body {
+    line-height: 1.8;
+  }
+  html[data-vision="true"][data-vision-line="normal"] body {
+    line-height: 1.5;
+  }
+
+  html[data-vision="true"][data-vision-no-images="true"] img,
+  html[data-vision="true"][data-vision-no-images="true"] video {
+    visibility: hidden !important;
+    max-height: 0 !important;
+  }
+
+  /* Секции с классом vision-single-col при Vision Mode складываются в колонку (добавляйте на контейнеры-сетки). */
+  html[data-vision="true"] .vision-single-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem;
+  }
+
+  html[data-vision="true"] [data-vision-hide],
+  html[data-vision="true"] .ds-marquee,
+  html[data-vision="true"] [aria-hidden="true"].vision-decorative {
+    display: none !important;
+  }
+
+  html[data-vision="true"] a {
+    text-decoration: underline;
   }
 }

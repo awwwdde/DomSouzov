@@ -46,6 +46,10 @@ class EventBase(BaseModel):
     is_featured: bool = False
     is_active: bool = True
     sort_order: int = 0
+    has_ticket: bool = False
+    ticket_url: Optional[str] = None
+    is_pinned: bool = False
+    pin_order: int = 0
 
 
 class EventCreate(EventBase):
@@ -78,6 +82,8 @@ class NewsBase(BaseModel):
     is_lead: bool = False
     is_active: bool = True
     sort_order: int = 0
+    is_pinned: bool = False
+    pin_order: int = 0
 
 
 class NewsCreate(NewsBase):
@@ -136,6 +142,9 @@ class GalleryBase(BaseModel):
     span: Optional[str] = None
     sort_order: int = 0
     is_active: bool = True
+    category_id: Optional[int] = None
+    is_video: bool = False
+    video_url: Optional[str] = None
 
 
 class GalleryCreate(GalleryBase):
@@ -147,6 +156,31 @@ class GalleryUpdate(GalleryBase):
 
 
 class GalleryOut(GalleryBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+# Partners
+class PartnerBase(BaseModel):
+    name_ru: str
+    name_en: str
+    logo: Optional[str] = None
+    url: str = ""
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class PartnerCreate(PartnerBase):
+    pass
+
+
+class PartnerUpdate(PartnerBase):
+    pass
+
+
+class PartnerOut(PartnerBase):
     id: int
 
     class Config:

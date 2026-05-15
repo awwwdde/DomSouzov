@@ -1,75 +1,146 @@
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
-import { NewsArticle } from '../types';
+import type { NewsArticle } from '../types';
 import { getNewsItem } from '../api/client';
-import Reveal, { RevealSection } from '../components/Reveal';
+import { PageKicker } from '../components/PageKicker';
 import ActionButton from '../components/ActionButton';
+import Lightbox, { type LightboxItem } from '../components/Lightbox';
+import { formatNewsLongDate } from '../lib/newsDates';
+import { maskLineReveal, transitionBase, useReducedMotionActive } from '../lib/motion';
+
+function mediaUrl(path: string) {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('/')) return path;
+  return `/${path}`;
+}
 
 export default function NewsDetail() {
   const { id } = useParams<{ id: string }>();
   const { lang, content } = useSite();
   const [article, setArticle] = useState<NewsArticle | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const reduced = useReducedMotionActive();
 
   useEffect(() => {
     if (!id) return;
     const fromCache = content?.news.find((n) => n.id === Number(id));
-    if (fromCache) { setArticle(fromCache); return; }
+    if (fromCache) {
+      setArticle(fromCache);
+      return;
+    }
     getNewsItem(Number(id)).then(setArticle).catch(() => {});
   }, [id, content]);
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
+  const lightboxItems: LightboxItem[] = useMemo(() => {
+    if (!article?.image) return [];
+    return [
+      {
+        src: mediaUrl(article.image),
+        alt: l(article.title),
+      },
+    ];
+  }, [article, lang]);
+
   if (!article) {
-    return <div className="px-6 pt-28 text-sm text-muted md:px-12">{lang === 'ru' ? 'Загрузка...' : 'Loading...'}</div>;
+    return (
+      <div className="px-5 pt-28 text-sm text-muted md:px-12 md:pt-32">
+        {lang === 'ru' ? 'Загрузка...' : 'Loading...'}
+      </div>
+    );
   }
+
+  const pub = formatNewsLongDate(article, lang);
 
   return (
     <>
-      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.2fr_0.8fr] md:px-12">
-        <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
-            {' · '}
-            <Link to="/news">{lang === 'ru' ? 'Хроники' : 'Journal'}</Link>
-            {' · '}
-            {l(article.tag)}
+      <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 flex-1">
+            <PageKicker>
+              <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
+              {' · '}
+              <Link to="/news">{lang === 'ru' ? 'Хроники' : 'Journal'}</Link>
+              {' · '}
+              <span>{l(article.tag)}</span>
+            </PageKicker>
+            <h1 className="font-heading text-[clamp(52px,9vw,124px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
+              {l(article.title)}
+            </h1>
+            {l(article.excerpt).trim() ? (
+              <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink-soft md:text-lg">{l(article.excerpt)}</p>
+            ) : null}
           </div>
-          <h1 className="font-heading text-[clamp(54px,8vw,124px)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]">{l(article.title)}</h1>
-        </div>
-        <div className="self-end">
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            {l(article.tag)}
-          </div>
-          <p className="text-xl leading-8 text-ink-soft">
-            {l(article.excerpt)}
-          </p>
-        </div>
-      </RevealSection>
-
-      <Reveal className="grid gap-8 px-6 md:grid-cols-[1fr_280px] md:px-12">
-        <article>
-          {article.image && (
-            <div className="mb-8 aspect-[16/9] overflow-hidden rounded-2xl bg-paper">
-              <img className="h-full w-full object-cover" src={article.image} alt={l(article.title)} />
+          <div className="shrink-0 text-right">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
+              {lang === 'ru' ? 'Дата' : 'Date'}
             </div>
-          )}
-          <div className="max-w-3xl space-y-5 text-lg leading-8 text-ink-soft">
-            {l(article.content)
-              .split('\n')
-              .filter(Boolean)
-              .map((para, i) => <p key={i}>{para}</p>)}
+            <time
+              className="mt-2 block font-heading text-[clamp(20px,2.5vw,32px)] font-bold tabular-nums text-ink"
+              dateTime={article.created_at ?? undefined}
+            >
+              {pub || '—'}
+            </time>
           </div>
-        </article>
+        </div>
+      </header>
 
-        <aside className="h-fit border border-line bg-white p-5">
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            {lang === 'ru' ? 'Рубрика' : 'Category'}
+      <section className="mx-auto max-w-[1600px] px-5 py-12 md:px-12 lg:py-16">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:gap-16">
+          <div className="space-y-8">
+            {article.image ? (
+              <motion.button
+                type="button"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-40px' }}
+                variants={maskLineReveal(reduced)}
+                transition={transitionBase}
+                className="relative block w-full overflow-hidden border border-line bg-paper text-left"
+                onClick={() => setLightboxOpen(true)}
+              >
+                <img
+                  src={mediaUrl(article.image)}
+                  alt={l(article.title)}
+                  className="aspect-[4/3] w-full object-cover"
+                />
+              </motion.button>
+            ) : null}
           </div>
-          <div className="mb-5 font-heading text-3xl font-semibold uppercase leading-none">{l(article.tag)}</div>
-          <ActionButton to="/news" text={`← ${lang === 'ru' ? 'Все статьи' : 'All articles'}`} />
-        </aside>
-      </Reveal>
+
+          <aside className="lg:sticky lg:top-28 lg:self-start">
+            <PageKicker>{lang === 'ru' ? 'Материал' : 'Article'}</PageKicker>
+            <div className="mb-8 border-b border-line pb-8 text-sm text-ink-soft">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+                {lang === 'ru' ? 'Рубрика' : 'Category'}
+              </div>
+              <div className="mt-2 font-heading text-2xl font-bold uppercase tracking-[0.04em]">{l(article.tag)}</div>
+            </div>
+            <div className="max-w-prose space-y-5 text-[15px] leading-[1.65] text-ink-soft">
+              {l(article.content)
+                .split('\n')
+                .filter(Boolean)
+                .map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+            </div>
+            <div className="mt-10">
+              <ActionButton to="/news" text={`← ${lang === 'ru' ? 'Все материалы' : 'All articles'}`} />
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <Lightbox
+        open={lightboxOpen && lightboxItems.length > 0}
+        onClose={() => setLightboxOpen(false)}
+        items={lightboxItems}
+        index={0}
+        onIndexChange={() => {}}
+      />
     </>
   );
 }

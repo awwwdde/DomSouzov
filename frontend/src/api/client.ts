@@ -85,6 +85,12 @@ export const adminApi = {
   updateGallery: (id: number, data: unknown) => api.put(`/admin/gallery/${id}`, data).then((r) => r.data),
   deleteGallery: (id: number) => api.delete(`/admin/gallery/${id}`).then((r) => r.data),
 
+  // Partners
+  getPartners: () => api.get('/admin/partners').then((r) => r.data),
+  createPartner: (data: unknown) => api.post('/admin/partners', data).then((r) => r.data),
+  updatePartner: (id: number, data: unknown) => api.put(`/admin/partners/${id}`, data).then((r) => r.data),
+  deletePartner: (id: number) => api.delete(`/admin/partners/${id}`).then((r) => r.data),
+
   // Upload
   uploadFile: async (file: File): Promise<string> => {
     try {

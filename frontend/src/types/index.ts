@@ -3,6 +3,13 @@ export interface BilingualString {
   en: string;
 }
 
+export interface EventGalleryImage {
+  id: number;
+  image: string;
+  caption: BilingualString | null;
+  order: number;
+}
+
 export interface Event {
   id: number;
   title: BilingualString;
@@ -15,6 +22,11 @@ export interface Event {
   description: BilingualString;
   image: string | null;
   is_featured: boolean;
+  has_ticket?: boolean;
+  ticket_url?: string | null;
+  is_pinned?: boolean;
+  pin_order?: number;
+  gallery?: EventGalleryImage[];
 }
 
 export interface NewsArticle {
@@ -25,6 +37,9 @@ export interface NewsArticle {
   content: BilingualString;
   image: string | null;
   is_lead: boolean;
+  is_pinned?: boolean;
+  pin_order?: number;
+  created_at?: string | null;
 }
 
 export interface Hall {
@@ -38,12 +53,32 @@ export interface Hall {
   image: string | null;
 }
 
+export interface GalleryCategory {
+  id: number;
+  slug: string;
+  name: BilingualString;
+  cover_image: string | null;
+  order: number;
+}
+
 export interface GalleryImage {
   id: number;
   caption: BilingualString;
   category: BilingualString;
   image: string;
   span: string | null;
+  category_id?: number | null;
+  is_video?: boolean;
+  video_url?: string | null;
+}
+
+export interface Partner {
+  id: number;
+  name: BilingualString;
+  logo: string | null;
+  url: string;
+  sort_order: number;
+  is_active?: boolean;
 }
 
 export interface SiteSettings {
@@ -56,6 +91,8 @@ export interface SiteContent {
   news: NewsArticle[];
   halls: Hall[];
   gallery: GalleryImage[];
+  gallery_categories: GalleryCategory[];
+  partners: Partner[];
 }
 
 export type Lang = 'ru' | 'en';

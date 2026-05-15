@@ -11,9 +11,11 @@ if BACKEND_DIR not in sys.path:
 
 from config import settings
 from database import engine, Base
+from migrate_db import migrate_sqlite
 from routers import public, admin
 
 Base.metadata.create_all(bind=engine)
+migrate_sqlite()
 
 app = FastAPI(title="Дом Союзов CMS API", version="1.0.0")
 

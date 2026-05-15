@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
-import { CalendarDays, Cog, ExternalLink, GalleryHorizontal, LayoutDashboard, Landmark, Newspaper } from 'lucide-react';
+import { CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, LayoutDashboard, Landmark, Newspaper } from 'lucide-react';
 
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
@@ -10,6 +10,7 @@ const NAV = [
   { path: '/admin/news', label: 'Хроники', icon: Newspaper },
   { path: '/admin/halls', label: 'Залы', icon: Landmark },
   { path: '/admin/gallery', label: 'Галерея', icon: GalleryHorizontal },
+  { path: '/admin/partners', label: 'Партнёры', icon: Handshake },
   { path: '/admin/settings', label: 'Настройки', icon: Cog },
 ];
 

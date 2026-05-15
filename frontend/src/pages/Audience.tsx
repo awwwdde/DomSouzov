@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { PageKicker } from '../components/PageKicker';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 export default function Audience() {
@@ -42,10 +43,10 @@ export default function Audience() {
 
   return (
     <>
-      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
+      <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · Зрителям' : 'Home · For Visitors'}</div>
-          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'Зрителям' : 'For Visitors'}</h1>
+          <PageKicker>{lang === 'ru' ? 'Главная · Зрителям' : 'Home · For Visitors'}</PageKicker>
+          <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">{lang === 'ru' ? 'Зрителям' : 'For Visitors'}</h1>
         </div>
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
@@ -54,20 +55,20 @@ export default function Audience() {
         </p>
       </RevealSection>
 
-      <RevealList className="grid gap-3 px-6 md:grid-cols-4 md:px-12">
+      <RevealList className="grid border-t border-line px-5 pb-16 md:px-12">
         {items[lang].map((item) => (
           <RevealItem key={item.n}>
-            <div className="grid min-h-48 gap-3 border border-line bg-white p-5">
-              <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{item.n}</div>
-              <h3 className="font-heading text-4xl font-semibold uppercase leading-none tracking-[-0.03em]">{item.title}</h3>
-              <p className="leading-6 text-ink-soft">{item.desc}</p>
+            <div className="grid gap-4 border-b border-line py-6 last:border-b-0 md:grid-cols-[100px_1fr_2fr] md:py-7">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">{item.n}</div>
+              <h3 className="font-heading text-[clamp(26px,3vw,40px)] font-bold uppercase leading-[1] tracking-[0.04em]">{item.title}</h3>
+              <p className="leading-7 text-ink-soft">{item.desc}</p>
             </div>
           </RevealItem>
         ))}
       </RevealList>
 
-      <RevealSection className="px-6 md:px-12">
-        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
+      <RevealSection className="border-t border-line px-5 py-16 md:px-12">
+        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-bold uppercase leading-[0.86] tracking-[0.04em]">{lang === 'ru' ? 'Частые вопросы' : 'FAQ'}</h2>
         <RevealList className="grid">
           {faq[lang].map((f) => (
             <RevealItem key={f.n}>

@@ -19,6 +19,8 @@ const FALLBACK: SiteContent = {
   news: [],
   halls: [],
   gallery: [],
+  gallery_categories: [],
+  partners: [],
 };
 
 export function SiteProvider({ children }: { children: ReactNode }) {
@@ -29,7 +31,13 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const load = () => {
     setLoading(true);
     getContent()
-      .then(setContent)
+      .then((data) =>
+        setContent({
+          ...data,
+          partners: data.partners ?? [],
+          gallery_categories: data.gallery_categories ?? [],
+        })
+      )
       .catch(() => setContent(FALLBACK))
       .finally(() => setLoading(false));
   };

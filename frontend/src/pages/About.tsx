@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { PageKicker } from '../components/PageKicker';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 const TIMELINE = {
@@ -24,10 +25,10 @@ export default function About() {
 
   return (
     <>
-      <RevealSection className="grid gap-6 px-6 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12">
+      <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{lang === 'ru' ? 'Главная · О Доме' : 'Home · About'}</div>
-          <h1 className="font-heading text-[clamp(64px,10vw,150px)] font-semibold uppercase leading-[0.82] tracking-[-0.06em]">{lang === 'ru' ? 'О Доме Союзов' : 'About the House'}</h1>
+          <PageKicker>{lang === 'ru' ? 'Главная · О Доме' : 'Home · About'}</PageKicker>
+          <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">{lang === 'ru' ? 'О Доме Союзов' : 'About the House'}</h1>
         </div>
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
@@ -36,8 +37,8 @@ export default function About() {
         </p>
       </RevealSection>
 
-      <RevealSection className="grid gap-8 px-6 md:grid-cols-[1fr_1.2fr] md:px-12">
-        <div className="min-h-[360px] rounded-2xl bg-gradient-to-br from-neutral-200 to-neutral-400">
+      <RevealSection className="grid gap-8 px-5 py-16 md:grid-cols-[1fr_1.2fr] md:px-12">
+        <div className="min-h-[360px] border border-line bg-paper-soft">
           <div className="flex h-full items-center justify-center p-8 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">[ {lang === 'ru' ? 'ИСТОРИЧЕСКОЕ ФОТО · 1800-е' : 'HISTORICAL PHOTO · 1800s'} ]</div>
         </div>
         <div className="max-w-3xl">
@@ -62,8 +63,8 @@ export default function About() {
         </div>
       </RevealSection>
 
-      <RevealSection className="px-6 md:px-12">
-        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Хронология' : 'Timeline'}</h2>
+      <RevealSection className="border-t border-line px-5 py-16 md:px-12">
+        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-bold uppercase leading-[0.86] tracking-[0.04em]">{lang === 'ru' ? 'Хронология' : 'Timeline'}</h2>
         <RevealList className="grid">
           {tl.map((item) => (
             <RevealItem key={item.year}>

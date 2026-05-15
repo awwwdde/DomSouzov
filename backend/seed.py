@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from database import SessionLocal, engine, Base
-from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage
+from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage, GalleryCategory
 from auth import hash_password
 from config import settings
 
@@ -207,6 +207,62 @@ def seed():
                          image="", span="span2", sort_order=6),
         ]
         db.add_all(gallery)
+
+    if db.query(GalleryCategory).count() == 0:
+        db.add_all(
+            [
+                GalleryCategory(
+                    slug="halls",
+                    name_ru="Залы",
+                    name_en="Halls",
+                    cover_image=None,
+                    sort_order=0,
+                ),
+                GalleryCategory(
+                    slug="facade",
+                    name_ru="Фасад",
+                    name_en="Facade",
+                    cover_image=None,
+                    sort_order=1,
+                ),
+                GalleryCategory(
+                    slug="events",
+                    name_ru="Мероприятия",
+                    name_en="Events",
+                    cover_image=None,
+                    sort_order=2,
+                ),
+            ]
+        )
+
+    legal_keys = [
+        (
+            "legal_full_name",
+            'ГБУК г. Москвы "Дом Союзов"',
+            'Moscow State Cultural Institution "House of Unions"',
+        ),
+        ("legal_inn", "7700000000", "7700000000"),
+        ("legal_ogrn", "1027700000000", "1027700000000"),
+        ("legal_address", "г. Москва, ул. Большая Дмитровка, д. 1", "1 Bolshaya Dmitrovka, Moscow"),
+        ("legal_kpp", "", ""),
+        ("contact_phone", "+7 (495) 000-00-00", "+7 (495) 000-00-00"),
+        ("contact_email", "info@dom-soyuzov.ru", "info@dom-soyuzov.ru"),
+        ("contact_hours_ru", "Вт–Вс · 10:00—22:00", ""),
+        ("contact_hours_en", "", "Tue–Sun · 10:00—22:00"),
+        (
+            "contact_address_ru",
+            "Большая Дмитровка 1, Москва",
+            "",
+        ),
+        (
+            "contact_address_en",
+            "",
+            "1 Bolshaya Dmitrovka, Moscow",
+        ),
+    ]
+    for key, val_ru, val_en in legal_keys:
+        if not db.query(SiteSettings).filter_by(key=key).first():
+            db.add(SiteSettings(key=key, value_ru=val_ru or None, value_en=val_en or None))
 
     db.commit()
     db.close()
