@@ -1,0 +1,29 @@
+# Уменьшаем build-контекст и не тащим dev-артефакты внутрь образа.
+.git
+.gitignore
+.github
+.vscode
+.cursor
+.env
+*.md
+
+# Node
+**/node_modules
+**/dist
+
+# Python
+**/__pycache__
+**/*.pyc
+**/venv
+**/.venv
+
+# Локальные данные
+**/*.db
+uploads/
+*.zip
+
+# Корневой Windows-only тулинг — в проде не нужен.
+scripts/
+package.json
+package-lock.json
+docker-compose.yml
