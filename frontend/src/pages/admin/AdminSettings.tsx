@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ComponentType } from 'react';
 import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDown,
   ArrowLeft,
@@ -70,7 +70,9 @@ type PageDef = {
   description: string;
   group: 'Страницы' | 'Документы' | 'Общее';
   /** Иконка для bento-карточки. */
-  icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  // Тип компонента-иконки из lucide-react. `size?: number` исключал
+  // lucide-react@>=0.x с `size?: string | number`, билд падал TS2322.
+  icon: LucideIcon;
   /** Расположение в bento: ширина и высота в ячейках сетки (1 или 2). */
   span?: { col?: 1 | 2; row?: 1 | 2 };
   /** Внутренний URL, на который ведёт эта страница (для ссылки «Открыть»). */
@@ -859,7 +861,12 @@ function ListEditor({
   };
 
   const updateItem = (idx: number, patch: Partial<ListItem>) => {
-    const next = items.map((it, i) => (i === idx ? { ...it, ...patch } : it));
+    // Partial<ListItem> расширяет values до `... | undefined`, TS отвергает
+    // присвоение обратно в ListItem[]. Приводим явно — реально undefined
+    // в patch попасть не должен, спред оставит исходное значение.
+    const next = items.map((it, i) =>
+      i === idx ? { ...it, ...patch } : it,
+    ) as ListItem[];
     commit(next);
   };
 
