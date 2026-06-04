@@ -5,7 +5,18 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from database import SessionLocal, engine, Base
-from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage, GalleryCategory
+from models import (
+    AdminUser,
+    SiteSettings,
+    Event,
+    NewsArticle,
+    Hall,
+    GalleryImage,
+    GalleryCategory,
+    AboutHoverTip,
+    AboutScatteredPhoto,
+    AboutTimelineEvent,
+)
 from auth import hash_password
 from config import settings
 
@@ -63,6 +74,30 @@ def seed():
         ("metro_ru",
          "Охотный ряд · Театральная · Площадь Революции",
          "Okhotny Ryad · Teatralnaya · Ploschad Revolyutsii"),
+        # ── About page ──
+        ("about_hero_video_url", "", ""),
+        ("about_hero_video_poster", "", ""),
+        ("about_hero_kicker",
+         "Большая Дмитровка · с 1784",
+         "Bolshaya Dmitrovka · since 1784"),
+        ("about_hero_title",
+         "О Доме Союзов",
+         "About the House"),
+        ("about_intro_text",
+         "Дом Союзов — памятник классицизма конца XVIII века в самом сердце Москвы. Колонный зал, выстроенный архитектором Матвеем Казаковым, знаменит своей акустикой и 28 коринфскими колоннами белого мрамора. На этой сцене звучали Чайковский, Лист и Рахманинов; здесь проходили важнейшие литературные вечера, торжественные церемонии и съёмки.",
+         "House of Unions is a late 18th-century classicist landmark in the heart of Moscow. The Hall of Columns, built by architect Matvey Kazakov, is famed for its acoustics and 28 Corinthian columns of white marble. Tchaikovsky, Liszt and Rachmaninoff have performed on this stage; landmark literary evenings, ceremonies and filming take place here."),
+        ("about_photos_kicker",
+         "Архив",
+         "Archive"),
+        ("about_photos_heading",
+         "Дом в моменте",
+         "The House in the moment"),
+        ("about_timeline_kicker",
+         "Хронология",
+         "Timeline"),
+        ("about_timeline_heading",
+         "Годы Дома Союзов",
+         "Years of the House"),
     ]
     for key, val_ru, val_en in defaults:
         if not db.query(SiteSettings).filter_by(key=key).first():
@@ -263,6 +298,93 @@ def seed():
     for key, val_ru, val_en in legal_keys:
         if not db.query(SiteSettings).filter_by(key=key).first():
             db.add(SiteSettings(key=key, value_ru=val_ru or None, value_en=val_en or None))
+
+    # ── About hover-tips (стартовый набор; реальные медиа загружаются в админке) ──
+    if db.query(AboutHoverTip).count() == 0:
+        for tip in [
+            AboutHoverTip(
+                phrase_ru="28 коринфских колонн",
+                phrase_en="28 Corinthian columns",
+                media_url="",
+                media_type="image",
+                caption_ru="Колоннада Колонного зала",
+                caption_en="The colonnade of the Hall of Columns",
+                sort_order=1,
+            ),
+            AboutHoverTip(
+                phrase_ru="Матвеем Казаковым",
+                phrase_en="Matvey Kazakov",
+                media_url="",
+                media_type="image",
+                caption_ru="Архитектор Матвей Казаков, 1784",
+                caption_en="Architect Matvey Kazakov, 1784",
+                sort_order=2,
+            ),
+            AboutHoverTip(
+                phrase_ru="Чайковский",
+                phrase_en="Tchaikovsky",
+                media_url="",
+                media_type="image",
+                caption_ru="П. И. Чайковский на сцене Колонного зала",
+                caption_en="P. I. Tchaikovsky on the Hall of Columns stage",
+                sort_order=3,
+            ),
+        ]:
+            db.add(tip)
+
+    # ── About scattered photos (стартовая раскладка) ──
+    if db.query(AboutScatteredPhoto).count() == 0:
+        layout = [
+            (1, 5, 0, 0.15, 0.10),
+            (8, 4, 80, -0.25, 0.20),
+            (3, 6, 220, 0.10, 0.35),
+            (9, 4, 360, -0.20, 0.50),
+            (1, 4, 500, 0.05, 0.65),
+            (7, 5, 620, -0.15, 0.80),
+        ]
+        for i, (col_start, col_span, offset_y, parallax_speed, reveal_progress) in enumerate(layout):
+            db.add(AboutScatteredPhoto(
+                image="",
+                caption_ru=f"Фото {i + 1}",
+                caption_en=f"Photo {i + 1}",
+                col_start=col_start,
+                col_span=col_span,
+                offset_y=offset_y,
+                parallax_speed=parallax_speed,
+                reveal_progress=reveal_progress,
+                sort_order=i + 1,
+            ))
+
+    # ── About timeline ──
+    if db.query(AboutTimelineEvent).count() == 0:
+        for i, (year, title_ru, title_en, desc_ru, desc_en) in enumerate([
+            ("1784", "Перестройка Казаковым", "Kazakov's reconstruction",
+             "Матвей Казаков создаёт Колонный зал: 28 коринфских колонн, белый мрамор, пять хрустальных люстр.",
+             "Matvey Kazakov creates the Hall of Columns: 28 Corinthian columns, white marble, five crystal chandeliers."),
+            ("1844", "Выступление Ференца Листа", "Ferenc Liszt's performance",
+             "Один из первых знаменитых гастрольных концертов зала.",
+             "One of the hall's first great touring concerts."),
+            ("1891", "П. И. Чайковский", "P. I. Tchaikovsky",
+             "Композитор многократно дирижирует собственными произведениями.",
+             "The composer conducts his own works on multiple occasions."),
+            ("1930", "Переход к профсоюзам", "Transferred to the unions",
+             "Здание получает современное имя — Дом Союзов.",
+             "The building receives its modern name — House of Unions."),
+            ("1953", "Государственная сцена", "A state stage",
+             "Зал становится одной из главных церемониальных сцен страны.",
+             "The hall becomes one of the country's principal ceremonial stages."),
+            ("2024", "Реставрация", "Restoration",
+             "Современная реставрация с бережным сохранением исторической акустики и лепнины Казакова.",
+             "Contemporary restoration carefully preserves Kazakov's mouldings and the historical acoustics."),
+        ]):
+            db.add(AboutTimelineEvent(
+                year=year,
+                title_ru=title_ru,
+                title_en=title_en,
+                description_ru=desc_ru,
+                description_en=desc_en,
+                sort_order=i + 1,
+            ))
 
     db.commit()
     db.close()

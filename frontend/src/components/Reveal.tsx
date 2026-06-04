@@ -214,8 +214,8 @@ export function HighlightOnView({ segments, className }: HighlightOnViewProps) {
             <motion.span
               key={i}
               className="inline text-inherit"
-              initial={reduced ? { color: '#2f5d50' } : { color: '#4a4a45' }}
-              whileInView={reduced ? undefined : { color: '#2f5d50' }}
+              initial={reduced ? { color: '#0a0a0a' } : { color: '#4a4a45' }}
+              whileInView={reduced ? undefined : { color: '#0a0a0a' }}
               viewport={{ once: true, amount: 0.2 }}
               transition={
                 reduced

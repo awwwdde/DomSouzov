@@ -99,29 +99,16 @@ export function Section({
 }
 
 /* ------------------------------------------------------------------ */
-/* KickerRow — линия 40px + точка 6px + метка (Часть 1.4 спецификации). */
+/* KickerRow — отключён по запросу: маленький caps-кикер с линейкой    */
+/* убран по всему сайту. Компонент сохранён ради обратной совместимости */
+/* всех импортов и просто ничего не рендерит.                          */
 /* ------------------------------------------------------------------ */
-export function KickerRow({
-  children,
-  tone = 'dark-on-light',
-  className = '',
-}: {
-  children: ReactNode;
+export function KickerRow(_props: {
+  children?: ReactNode;
   tone?: 'dark-on-light' | 'light-on-dark';
   className?: string;
 }) {
-  const kickerColor = tone === 'light-on-dark' ? 'text-paper/55' : 'text-muted';
-  return (
-    <div className={`mb-4 flex min-w-0 items-center gap-3 ${className}`}>
-      <span className="inline-block h-px w-10 shrink-0 bg-accent md:w-[40px]" aria-hidden />
-      <span className="inline-block size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-      <div
-        className={`flex min-w-0 flex-wrap items-center gap-x-1 text-[10px] font-bold uppercase tracking-[0.22em] ${kickerColor}`}
-      >
-        {children}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ------------------------------------------------------------------ */

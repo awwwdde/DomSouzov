@@ -83,8 +83,9 @@ function PartnerForm({ item, onSave, onCancel }: { item: unknown; onSave: () => 
       </div>
       <ImageUpload label="Логотип" value={form.logo} onChange={(url) => setForm((p) => ({ ...p, logo: url }))} />
       <div className="grid gap-2">
-        <label>Ссылка (https://…)</label>
+        <label>Сайт партнёра (https://…)</label>
         <input value={form.url} onChange={setField('url')} placeholder="https://example.org" type="url" />
+        <span className="text-[11px] text-muted">Клик по логотипу на сайте откроет эту ссылку в новой вкладке.</span>
       </div>
       <div className="grid max-w-[200px] gap-2">
         <label>Порядок</label>

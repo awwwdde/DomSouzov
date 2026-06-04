@@ -4,7 +4,19 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import Dict, Any
 from database import get_db
-from models import SiteSettings, Event, NewsArticle, Hall, GalleryImage, Partner, EventGalleryImage, GalleryCategory
+from models import (
+    SiteSettings,
+    Event,
+    NewsArticle,
+    Hall,
+    GalleryImage,
+    Partner,
+    EventGalleryImage,
+    GalleryCategory,
+    AboutHoverTip,
+    AboutScatteredPhoto,
+    AboutTimelineEvent,
+)
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -33,6 +45,24 @@ def get_all_content(db: Session = Depends(get_db)) -> Dict[str, Any]:
     gallery = db.query(GalleryImage).filter(GalleryImage.is_active == True).order_by(GalleryImage.sort_order).all()
     partners = db.query(Partner).filter(Partner.is_active == True).order_by(Partner.sort_order).all()
     gallery_cats = db.query(GalleryCategory).order_by(GalleryCategory.sort_order).all()
+    about_tips = (
+        db.query(AboutHoverTip)
+        .filter(AboutHoverTip.is_active == True)
+        .order_by(AboutHoverTip.sort_order)
+        .all()
+    )
+    about_photos = (
+        db.query(AboutScatteredPhoto)
+        .filter(AboutScatteredPhoto.is_active == True)
+        .order_by(AboutScatteredPhoto.sort_order)
+        .all()
+    )
+    about_timeline = (
+        db.query(AboutTimelineEvent)
+        .filter(AboutTimelineEvent.is_active == True)
+        .order_by(AboutTimelineEvent.sort_order)
+        .all()
+    )
 
     return {
         "settings": settings,
@@ -42,6 +72,11 @@ def get_all_content(db: Session = Depends(get_db)) -> Dict[str, Any]:
         "gallery": [_gallery_out(g) for g in gallery],
         "gallery_categories": [_gallery_cat_out(c) for c in gallery_cats],
         "partners": [_partner_out(p) for p in partners],
+        "about": {
+            "hover_tips": [_about_tip_out(t) for t in about_tips],
+            "scattered_photos": [_about_photo_out(p) for p in about_photos],
+            "timeline": [_about_timeline_out(e) for e in about_timeline],
+        },
     }
 
 
@@ -194,4 +229,40 @@ def _partner_out(p: Partner) -> dict:
         "url": p.url or "",
         "sort_order": p.sort_order,
         "is_active": p.is_active,
+    }
+
+
+def _about_tip_out(t: AboutHoverTip) -> dict:
+    return {
+        "id": t.id,
+        "phrase": {"ru": t.phrase_ru, "en": t.phrase_en},
+        "media_url": t.media_url,
+        "media_type": t.media_type or "image",
+        "caption": {"ru": t.caption_ru or "", "en": t.caption_en or ""},
+        "sort_order": t.sort_order,
+    }
+
+
+def _about_photo_out(p: AboutScatteredPhoto) -> dict:
+    return {
+        "id": p.id,
+        "image": p.image,
+        "caption": {"ru": p.caption_ru or "", "en": p.caption_en or ""},
+        "col_start": p.col_start,
+        "col_span": p.col_span,
+        "offset_y": p.offset_y,
+        "parallax_speed": p.parallax_speed,
+        "reveal_progress": p.reveal_progress,
+        "sort_order": p.sort_order,
+    }
+
+
+def _about_timeline_out(e: AboutTimelineEvent) -> dict:
+    return {
+        "id": e.id,
+        "year": e.year,
+        "title": {"ru": e.title_ru, "en": e.title_en},
+        "description": {"ru": e.description_ru or "", "en": e.description_en or ""},
+        "image": e.image,
+        "sort_order": e.sort_order,
     }

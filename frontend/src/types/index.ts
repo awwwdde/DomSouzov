@@ -85,6 +85,42 @@ export interface SiteSettings {
   [key: string]: BilingualString;
 }
 
+export interface AboutHoverTip {
+  id: number;
+  phrase: BilingualString;
+  media_url: string;
+  media_type: 'image' | 'video' | 'gif';
+  caption: BilingualString;
+  sort_order: number;
+}
+
+export interface AboutScatteredPhoto {
+  id: number;
+  image: string;
+  caption: BilingualString;
+  col_start: number;
+  col_span: number;
+  offset_y: number;
+  parallax_speed: number;
+  reveal_progress: number;
+  sort_order: number;
+}
+
+export interface AboutTimelineEvent {
+  id: number;
+  year: string;
+  title: BilingualString;
+  description: BilingualString;
+  image: string | null;
+  sort_order: number;
+}
+
+export interface AboutContent {
+  hover_tips: AboutHoverTip[];
+  scattered_photos: AboutScatteredPhoto[];
+  timeline: AboutTimelineEvent[];
+}
+
 export interface SiteContent {
   settings: SiteSettings;
   events: Event[];
@@ -93,6 +129,7 @@ export interface SiteContent {
   gallery: GalleryImage[];
   gallery_categories: GalleryCategory[];
   partners: Partner[];
+  about?: AboutContent;
 }
 
 export type Lang = 'ru' | 'en';

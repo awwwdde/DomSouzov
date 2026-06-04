@@ -76,7 +76,7 @@ export default function GalleryCategory() {
         </h1>
         <Link
           to="/gallery"
-          className="mt-8 inline-flex text-[10px] font-bold uppercase tracking-[0.18em] text-ink underline-offset-4 transition hover:text-accent"
+          className="mt-8 inline-flex text-[10px] font-bold uppercase tracking-[0.18em] text-ink underline-offset-4 transition hover:underline hover:underline-offset-4"
         >
           ← {lang === 'ru' ? 'К галерее' : 'Back to gallery'}
         </Link>
@@ -103,7 +103,7 @@ export default function GalleryCategory() {
           </p>
           <Link
             to="/gallery"
-            className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted transition hover:text-accent"
+            className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted transition hover:underline hover:underline-offset-4"
           >
             ← {lang === 'ru' ? 'Все разделы' : 'All sections'}
           </Link>

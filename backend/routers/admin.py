@@ -6,7 +6,18 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from models import AdminUser, SiteSettings, Event, NewsArticle, Hall, GalleryImage, Partner
+from models import (
+    AdminUser,
+    SiteSettings,
+    Event,
+    NewsArticle,
+    Hall,
+    GalleryImage,
+    Partner,
+    AboutHoverTip,
+    AboutScatteredPhoto,
+    AboutTimelineEvent,
+)
 from schemas import (
     Token, LoginRequest,
     SettingsUpdate, SettingItem,
@@ -15,6 +26,9 @@ from schemas import (
     HallCreate, HallUpdate, HallOut,
     GalleryCreate, GalleryUpdate, GalleryOut,
     PartnerCreate, PartnerUpdate, PartnerOut,
+    AboutHoverTipCreate, AboutHoverTipUpdate, AboutHoverTipOut,
+    AboutScatteredPhotoCreate, AboutScatteredPhotoUpdate, AboutScatteredPhotoOut,
+    AboutTimelineEventCreate, AboutTimelineEventUpdate, AboutTimelineEventOut,
 )
 from auth import verify_password, create_access_token, get_current_admin, hash_password
 from config import settings as app_settings
@@ -303,5 +317,119 @@ def delete_partner(partner_id: int, db: Session = Depends(get_db), _: AdminUser 
     if not p:
         raise HTTPException(404, "Not found")
     db.delete(p)
+    db.commit()
+    return {"ok": True}
+
+
+# ──────────── ABOUT · HOVER TIPS ────────────
+
+@router.get("/about/hover-tips", response_model=List[AboutHoverTipOut])
+def list_about_tips(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(AboutHoverTip).order_by(AboutHoverTip.sort_order).all()
+
+
+@router.post("/about/hover-tips", response_model=AboutHoverTipOut)
+def create_about_tip(body: AboutHoverTipCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = AboutHoverTip(**body.model_dump())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/about/hover-tips/{tip_id}", response_model=AboutHoverTipOut)
+def update_about_tip(tip_id: int, body: AboutHoverTipUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutHoverTip).filter_by(id=tip_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/about/hover-tips/{tip_id}")
+def delete_about_tip(tip_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutHoverTip).filter_by(id=tip_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+
+# ──────────── ABOUT · SCATTERED PHOTOS ────────────
+
+@router.get("/about/photos", response_model=List[AboutScatteredPhotoOut])
+def list_about_photos(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(AboutScatteredPhoto).order_by(AboutScatteredPhoto.sort_order).all()
+
+
+@router.post("/about/photos", response_model=AboutScatteredPhotoOut)
+def create_about_photo(body: AboutScatteredPhotoCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = AboutScatteredPhoto(**body.model_dump())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/about/photos/{photo_id}", response_model=AboutScatteredPhotoOut)
+def update_about_photo(photo_id: int, body: AboutScatteredPhotoUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutScatteredPhoto).filter_by(id=photo_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/about/photos/{photo_id}")
+def delete_about_photo(photo_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutScatteredPhoto).filter_by(id=photo_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+
+# ──────────── ABOUT · TIMELINE EVENTS ────────────
+
+@router.get("/about/timeline", response_model=List[AboutTimelineEventOut])
+def list_about_timeline(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(AboutTimelineEvent).order_by(AboutTimelineEvent.sort_order).all()
+
+
+@router.post("/about/timeline", response_model=AboutTimelineEventOut)
+def create_about_timeline(body: AboutTimelineEventCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = AboutTimelineEvent(**body.model_dump())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/about/timeline/{event_id}", response_model=AboutTimelineEventOut)
+def update_about_timeline(event_id: int, body: AboutTimelineEventUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutTimelineEvent).filter_by(id=event_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/about/timeline/{event_id}")
+def delete_about_timeline(event_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    item = db.query(AboutTimelineEvent).filter_by(id=event_id).first()
+    if not item:
+        raise HTTPException(404, "Not found")
+    db.delete(item)
     db.commit()
     return {"ok": True}

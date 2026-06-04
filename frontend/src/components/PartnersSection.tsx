@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { Partner } from '../types';
 import { RevealItem, RevealList } from './Reveal';
+import { Section } from './Section';
 import { useReducedMotionActive } from '../lib/motion';
 
 type Props = {
@@ -12,58 +13,86 @@ export default function PartnersSection({ partners, lang }: Props) {
   const reduced = useReducedMotionActive();
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
-  const rows = [...partners].filter((p) => p.is_active !== false).sort((a, b) => a.sort_order - b.sort_order);
+  const rows = [...partners]
+    .filter((p) => p.is_active !== false)
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   if (rows.length === 0) return null;
 
   return (
-    <section className="border-t border-line bg-paper px-5 py-16 md:px-12 md:py-24">
-      <div className="mb-10 flex items-center gap-3">
-        <span className="inline-block h-px w-8 bg-accent" aria-hidden />
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
-          {lang === 'ru' ? 'Партнёры' : 'Partners'}
-        </span>
+    <Section tone="paper" spacing="md" className="border-t border-line">
+      <div className="mb-12 md:mb-16">
+        <h2 className="font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+          {lang === 'ru' ? 'Наши партнёры' : 'Our partners'}
+        </h2>
       </div>
-      <RevealList className="flex flex-wrap items-center justify-start gap-x-10 gap-y-12 md:gap-x-16 md:gap-y-14">
+
+      {/* Чистая сетка: только логотипы, без рамок и заливок. */}
+      {/* 2 ряда на десктопе: 6 колонок × 2 = до 12 партнёров.       */}
+      <RevealList className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 md:grid-cols-4 md:gap-x-12 md:gap-y-16 lg:grid-cols-6">
         {rows.map((p) => (
           <RevealItem key={p.id} y={12} className="will-change-transform">
-            <PartnerLogo partner={p} label={l(p.name)} reduced={reduced} />
+            <PartnerItem partner={p} label={l(p.name)} reduced={reduced} />
           </RevealItem>
         ))}
       </RevealList>
-    </section>
+    </Section>
   );
 }
 
-function PartnerLogo({ partner, label, reduced }: { partner: Partner; label: string; reduced: boolean }) {
+/* ----------------------------------------------------------------- */
+/* PartnerItem — голый логотип без карточки.                          */
+/* При наведении лого становится контрастным; клик ведёт на сайт.    */
+/* ----------------------------------------------------------------- */
+function PartnerItem({
+  partner,
+  label,
+  reduced,
+}: {
+  partner: Partner;
+  label: string;
+  reduced: boolean;
+}) {
   const href = partner.url?.trim();
-  const inner = (
-    <motion.div
-      className="flex h-14 w-[min(160px,40vw)] items-center justify-center md:h-16 md:w-[180px]"
-      whileHover={reduced ? undefined : { scale: 1.02 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    >
+
+  const logo = (
+    <div className="flex h-20 w-full items-center justify-center md:h-24">
       {partner.logo ? (
-        <img
+        <motion.img
           src={partner.logo}
           alt={label}
-          className={[
-            'max-h-full max-w-full object-contain transition duration-500 ease-ds',
-            reduced ? 'opacity-100 grayscale-0' : 'opacity-55 grayscale hover:opacity-100 hover:grayscale-0',
-          ].join(' ')}
+          className="max-h-full max-w-[80%] object-contain"
+          initial={false}
+          animate={{
+            opacity: reduced ? 1 : 0.7,
+            filter: reduced ? 'grayscale(0)' : 'grayscale(1)',
+          }}
+          whileHover={
+            reduced ? undefined : { opacity: 1, filter: 'grayscale(0)' }
+          }
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : (
-        <span className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{label}</span>
+        <span className="font-heading text-[clamp(13px,1.1vw,17px)] font-bold uppercase tracking-[0.06em] text-ink">
+          {label}
+        </span>
       )}
-    </motion.div>
+    </div>
   );
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="block">
-        {inner}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block cursor-pointer"
+        aria-label={label}
+        title={label}
+      >
+        {logo}
       </a>
     );
   }
-  return inner;
+  return logo;
 }

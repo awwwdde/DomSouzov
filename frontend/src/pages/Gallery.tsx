@@ -28,9 +28,13 @@ function spanClass(span?: string | null) {
 }
 
 export default function Gallery() {
-  const { lang, content } = useSite();
+  const { lang, content, t } = useSite();
   const categories = content?.gallery_categories ?? [];
   const galleryItems = content?.gallery ?? [];
+  const title = t('gallery_title') || (lang === 'ru' ? 'Галерея' : 'Gallery');
+  const lead = t('gallery_lead') || (lang === 'ru'
+    ? 'Разделы коллекции — перейдите в тему, чтобы открыть полную сетку снимков.'
+    : 'Collection sections — open a theme to view the full image grid.');
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
@@ -41,14 +45,10 @@ export default function Gallery() {
           <div>
             <PageKicker>{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</PageKicker>
             <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
-              {lang === 'ru' ? 'Галерея' : 'Gallery'}
+              {title}
             </h1>
           </div>
-          <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
-            {lang === 'ru'
-              ? 'Разделы коллекции — перейдите в тему, чтобы открыть полную сетку снимков.'
-              : 'Collection sections — open a theme to view the full image grid.'}
-          </p>
+          <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">{lead}</p>
         </RevealSection>
 
         <RevealList className="mx-auto grid max-w-[1600px] gap-4 px-5 pb-20 md:grid-cols-2 md:px-12">

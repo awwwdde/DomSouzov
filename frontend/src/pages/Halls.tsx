@@ -5,8 +5,12 @@ import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import ActionButton from '../components/ActionButton';
 
 export default function Halls() {
-  const { lang, content } = useSite();
+  const { lang, content, t } = useSite();
   const halls = content?.halls ?? [];
+  const title = t('halls_title') || (lang === 'ru' ? 'Залы' : 'Halls');
+  const lead = t('halls_lead') || (lang === 'ru'
+    ? 'Два исторических зала. Коринфские колонны и пять хрустальных люстр в главном — камерная плотность в Октябрьском. Каждый зал может быть арендован.'
+    : 'Two historic halls. Corinthian columns and five crystal chandeliers in the principal; chamber intimacy in the October. Each hall is available for hire.');
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
@@ -16,20 +20,16 @@ export default function Halls() {
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Залы' : 'Home · Halls'}</PageKicker>
           <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
-            {lang === 'ru' ? 'Залы' : 'Halls'}
+            {title}
           </h1>
         </div>
         <div className="flex flex-col items-start gap-6 self-end md:items-end">
-          <p className="max-w-2xl text-lg leading-8 text-ink-soft md:text-right">
-            {lang === 'ru'
-              ? 'Два исторических зала. Коринфские колонны и пять хрустальных люстр в главном — камерная плотность в Октябрьском. Каждый зал может быть арендован.'
-              : 'Two historic halls. Corinthian columns and five crystal chandeliers in the principal; chamber intimacy in the October. Each hall is available for hire.'}
-          </p>
+          <p className="max-w-2xl text-lg leading-8 text-ink-soft md:text-right">{lead}</p>
           <ActionButton
             to="/organizers"
             text={lang === 'ru' ? 'Аренда и условия' : 'Hire & terms'}
-            backgroundColor="#2f5d50"
-            textColor="#f7f7f2"
+            backgroundColor="#0a0a0a"
+            textColor="#f0ebe0"
           />
         </div>
       </RevealSection>
@@ -57,12 +57,6 @@ export default function Halls() {
                   i % 2 === 1 ? 'md:order-1 md:border-r' : 'md:border-l'
                 }`}
               >
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="inline-block h-px w-10 bg-accent" aria-hidden />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
-                    {lang === 'ru' ? `Зал № ${String(i + 1).padStart(2, '0')}` : `Hall ${String(i + 1).padStart(2, '0')}`}
-                  </span>
-                </div>
                 <h2 className="font-heading text-[clamp(36px,5vw,84px)] font-bold uppercase leading-[0.92] tracking-[0.03em] text-ink">
                   {l(hall.name)}
                 </h2>
@@ -92,7 +86,7 @@ export default function Halls() {
                 <div className="mt-10">
                   <Link
                     to="/organizers"
-                    className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-ink transition hover:text-accent"
+                    className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-ink transition hover:underline hover:underline-offset-4"
                   >
                     {lang === 'ru' ? 'Подробнее об аренде' : 'More about hire'}
                     <span aria-hidden>→</span>

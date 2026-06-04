@@ -53,7 +53,7 @@ export function EventRowStrip({
             {dayMonth}
           </span>
         </div>
-        <h2 className="relative z-[1] font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] transition-colors duration-[900ms] ease-ds group-hover:text-accent md:max-w-[40ch]">
+        <h2 className="relative z-[1] font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] transition-colors duration-[900ms] ease-ds group-hover:underline group-hover:underline-offset-4 md:max-w-[40ch]">
           {title}
         </h2>
         <p className="relative z-[1] text-sm text-ink-soft">

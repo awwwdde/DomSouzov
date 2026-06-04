@@ -39,13 +39,13 @@ export default function CookieBanner() {
           {lang === 'ru'
             ? 'Используем cookies для работы сайта и аналитики.'
             : 'We use cookies for site functionality and analytics.'}{' '}
-          <Link to="/privacy-policy" className="font-semibold underline underline-offset-4 text-paper hover:text-accent">
+          <Link to="/privacy-policy" className="font-semibold underline underline-offset-4 text-paper hover:underline hover:underline-offset-4">
             {lang === 'ru' ? 'Политика конфиденциальности' : 'Privacy policy'}
           </Link>
         </p>
         <button
           type="button"
-          className="inline-flex min-h-11 shrink-0 items-center justify-center bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-paper"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center bg-paper px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-paper/90"
           onClick={accept}
         >
           {lang === 'ru' ? 'Принять' : 'Accept'}

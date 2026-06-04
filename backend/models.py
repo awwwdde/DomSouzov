@@ -135,3 +135,62 @@ class Partner(Base):
     url = Column(String, nullable=False, default="")
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+
+
+# ──────────── ABOUT PAGE ────────────
+
+class AboutHoverTip(Base):
+    """Акцентная фраза в intro-тексте страницы About с прикреплённым медиа.
+
+    Если `phrase_ru` встречается в `about_intro_text_ru` (site_settings),
+    фронт оборачивает её во всплывающий popover с этим медиа.
+    """
+    __tablename__ = "about_hover_tips"
+    id = Column(Integer, primary_key=True)
+    phrase_ru = Column(String, nullable=False)
+    phrase_en = Column(String, nullable=False)
+    media_url = Column(String, nullable=False)
+    # image / video / gif — определяет, как фронт рендерит popover
+    media_type = Column(String, nullable=False, default="image")
+    caption_ru = Column(String, nullable=True)
+    caption_en = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class AboutScatteredPhoto(Base):
+    """Фото из секции «случайных» фотографий со scroll-параллаксом.
+
+    Позиции и скорости параллакса задаются админом, чтобы получить эффект
+    «фотки появляются в разных местах с разной скоростью».
+    """
+    __tablename__ = "about_scattered_photos"
+    id = Column(Integer, primary_key=True)
+    image = Column(String, nullable=False)
+    caption_ru = Column(String, nullable=True)
+    caption_en = Column(String, nullable=True)
+    # 12-колоночная сетка: с какой колонки и сколько колонок занимает (1..12)
+    col_start = Column(Integer, default=1)
+    col_span = Column(Integer, default=4)
+    # Вертикальный сдвиг от естественной позиции в %, чтобы расположить «вразброс»
+    offset_y = Column(Integer, default=0)
+    # Скорость параллакса: −1..1, отрицательная = едет быстрее вверх
+    parallax_speed = Column(Float, default=0.0)
+    # 0..1 — какую долю прогресса секции фото должно догнать прежде чем появиться
+    reveal_progress = Column(Float, default=0.0)
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class AboutTimelineEvent(Base):
+    """Событие хронологии Дома Союзов (зигзаг-таймлайн)."""
+    __tablename__ = "about_timeline_events"
+    id = Column(Integer, primary_key=True)
+    year = Column(String, nullable=False)        # "1784"
+    title_ru = Column(String, nullable=False)
+    title_en = Column(String, nullable=False)
+    description_ru = Column(Text, nullable=True)
+    description_en = Column(Text, nullable=True)
+    image = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)

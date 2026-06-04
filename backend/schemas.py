@@ -185,3 +185,86 @@ class PartnerOut(PartnerBase):
 
     class Config:
         from_attributes = True
+
+
+# About — hover-фразы со всплывающим медиа
+class AboutHoverTipBase(BaseModel):
+    phrase_ru: str
+    phrase_en: str
+    media_url: str
+    media_type: str = "image"
+    caption_ru: Optional[str] = None
+    caption_en: Optional[str] = None
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class AboutHoverTipCreate(AboutHoverTipBase):
+    pass
+
+
+class AboutHoverTipUpdate(AboutHoverTipBase):
+    pass
+
+
+class AboutHoverTipOut(AboutHoverTipBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+# About — фото со scroll-параллаксом
+class AboutScatteredPhotoBase(BaseModel):
+    image: str
+    caption_ru: Optional[str] = None
+    caption_en: Optional[str] = None
+    col_start: int = 1
+    col_span: int = 4
+    offset_y: int = 0
+    parallax_speed: float = 0.0
+    reveal_progress: float = 0.0
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class AboutScatteredPhotoCreate(AboutScatteredPhotoBase):
+    pass
+
+
+class AboutScatteredPhotoUpdate(AboutScatteredPhotoBase):
+    pass
+
+
+class AboutScatteredPhotoOut(AboutScatteredPhotoBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+# About — события таймлайна
+class AboutTimelineEventBase(BaseModel):
+    year: str
+    title_ru: str
+    title_en: str
+    description_ru: Optional[str] = None
+    description_en: Optional[str] = None
+    image: Optional[str] = None
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class AboutTimelineEventCreate(AboutTimelineEventBase):
+    pass
+
+
+class AboutTimelineEventUpdate(AboutTimelineEventBase):
+    pass
+
+
+class AboutTimelineEventOut(AboutTimelineEventBase):
+    id: int
+
+    class Config:
+        from_attributes = True

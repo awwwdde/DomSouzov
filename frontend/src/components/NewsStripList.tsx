@@ -48,7 +48,7 @@ export function NewsRowStrip({
             {dayMonth}
           </time>
         </div>
-        <h2 className="relative z-[1] font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] transition-colors duration-[900ms] ease-ds group-hover:text-accent md:max-w-[50ch]">
+        <h2 className="relative z-[1] font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] transition-colors duration-[900ms] ease-ds group-hover:underline group-hover:underline-offset-4 md:max-w-[50ch]">
           {title}
         </h2>
         <p className="relative z-[1] line-clamp-3 text-sm leading-6 text-ink-soft">{l(article.excerpt)}</p>

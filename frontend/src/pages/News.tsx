@@ -6,8 +6,12 @@ import NewsStripList from '../components/NewsStripList';
 import { formatNewsShortDate, newsDateKey } from '../lib/newsDates';
 
 export default function News() {
-  const { lang, content } = useSite();
+  const { lang, content, t: tr } = useSite();
   const news = content?.news ?? [];
+  const heroTitle = tr('news_title') || (lang === 'ru' ? 'Хроники' : 'Journal');
+  const heroLead = tr('news_lead') || (lang === 'ru'
+    ? 'Журнал Дома Союзов: события, интервью, репортажи, история места.'
+    : 'The House of Unions journal: events, interviews, features, the history of the place.');
 
   const [tagIdx, setTagIdx] = useState(0);
   const [dateKey, setDateKey] = useState<string | null>(null);
@@ -46,14 +50,10 @@ export default function News() {
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Хроники' : 'Home · Journal'}</PageKicker>
           <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
-            {lang === 'ru' ? 'Хроники' : 'Journal'}
+            {heroTitle}
           </h1>
         </div>
-        <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
-          {lang === 'ru'
-            ? 'Журнал Дома Союзов: события, интервью, репортажи, история места.'
-            : 'The House of Unions journal: events, interviews, features, the history of the place.'}
-        </p>
+        <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">{heroLead}</p>
       </RevealSection>
 
       <div className="sticky top-16 z-30 border-b border-line bg-paper/95 px-5 py-4 backdrop-blur-sm md:top-[72px] md:px-12">

@@ -31,6 +31,9 @@ export default function SmoothScrollProvider({ children, routeKey }: Props) {
       touchMultiplier: 1.1,
     });
     lenisRef.current = lenis;
+    if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) {
+      (window as unknown as { __lenis: Lenis }).__lenis = lenis;
+    }
 
     const raf = (time: number) => {
       lenis.raf(time);

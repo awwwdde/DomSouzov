@@ -3,13 +3,19 @@
 @theme {
   --font-sans: "Manrope", system-ui, sans-serif;
   --font-heading: "Roboto Condensed", "Arial Narrow", "Manrope", system-ui, sans-serif;
-  --color-paper: #f7f7f2;
-  --color-paper-soft: #ffffff;
-  --color-ink: #171717;
-  --color-ink-soft: #4a4a45;
-  --color-muted: #777770;
-  --color-line: #deded6;
-  --color-accent: #2f5d50;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Ticket palette: тёплый кремовый paper + плотный чёрный ink. */
+  --color-paper: #f0ebe0;
+  --color-paper-soft: #f7f3e8;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #2a2a25;
+  --color-muted: #8a857a;
+  --color-line: #d6cfbf;
+  /* Accent === ink: визуально выключен, остаётся как именованная роль. */
+  --color-accent: #0a0a0a;
+  /* Focus/error — единственное место, где живёт зелёный/красный. */
+  --color-focus: #2f5d50;
+  --color-error: #b03a2e;
   --ease-ds: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -25,13 +31,18 @@
   body {
     margin: 0;
     min-height: 100%;
-    background:
-      radial-gradient(1100px 640px at 12% -8%, rgba(47, 93, 80, 0.06), transparent 55%),
-      linear-gradient(180deg, #f7f7f2 0%, #ffffff 100%);
-    color: #171717;
+    background: var(--color-paper);
+    color: var(--color-ink);
     font-family: "Manrope", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: geometricPrecision;
+  }
+
+  /* Focus — единственный зелёный hit на странице. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
 
   a {

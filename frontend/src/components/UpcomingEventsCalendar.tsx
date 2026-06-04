@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from './ActionButton';
-import { DURATION, EASE_DS, transitionBase, useReducedMotionActive } from '../lib/motion';
+import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
 import { addDays, dateKey, parseEventDateForEvent, startOfDay } from '../lib/eventDates';
 import type { Event, Lang } from '../types';
 
@@ -21,6 +21,18 @@ const RU_MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрел
 const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const RU_WEEKDAYS = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 const EN_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const RU_WEEKDAYS_MON = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+const EN_WEEKDAYS_MON = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+const FILTERS_RU = ['Все', 'Симфония', 'Камерная', 'Хор', 'Литература', 'Конференция'];
+const FILTERS_EN = ['All', 'Symphony', 'Chamber', 'Choir', 'Literature', 'Conference'];
+const FILTER_TOKENS: Record<number, string[]> = {
+  1: ['Симфония', 'Симфоническая', 'Symphony', 'Symphonic'],
+  2: ['Камерная', 'Chamber'],
+  3: ['Хор', 'Хоровая', 'Choir', 'Choral'],
+  4: ['Литература', 'Литературный', 'Literary'],
+  5: ['Конференция', 'Conference'],
+};
 
 const addMonths = (date: Date, months: number) => new Date(date.getFullYear(), date.getMonth() + months, 1);
 const weekStart = (date: Date) => addDays(startOfDay(date), -((date.getDay() + 6) % 7));
@@ -93,19 +105,13 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
     <section className="border-y border-line bg-paper px-5 py-10 md:px-12 md:py-12">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-3">
-            <span className="inline-block h-px w-8 bg-accent" aria-hidden />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
-              {lang === 'ru' ? 'Ближайшие даты' : 'Upcoming dates'}
-            </span>
-          </div>
           <h2 className="font-heading text-[clamp(26px,3.5vw,40px)] font-bold uppercase leading-none tracking-[0.04em] text-ink">
             {lang === 'ru' ? 'Календарь' : 'Calendar'}
           </h2>
         </div>
         <Link
           to="/events"
-          className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink underline decoration-line underline-offset-4 transition hover:text-accent"
+          className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink underline decoration-line underline-offset-4 transition hover:underline hover:underline-offset-4"
         >
           {lang === 'ru' ? 'Полная афиша →' : 'Full programme →'}
         </Link>
@@ -171,7 +177,7 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
                 >
                   <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{ev.time}</span>
                   <div>
-                    <div className="font-heading text-lg font-bold uppercase tracking-[0.04em] text-ink transition group-hover:text-accent md:text-xl">
+                    <div className="font-heading text-lg font-bold uppercase tracking-[0.04em] text-ink transition group-hover:underline group-hover:underline-offset-4 md:text-xl">
                       {l(ev.title)}
                     </div>
                     <div className="mt-1 text-xs text-ink-soft">{l(ev.hall)}</div>
@@ -188,22 +194,30 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
 
 function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
   const reduced = useReducedMotionActive();
-  const [calendarDate, setCalendarDate] = useState(() => startOfDay(new Date()));
-  const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const [cursor, setCursor] = useState<Date>(today);
+  const [view, setView] = useState<'week' | 'month'>('week');
+  const [selected, setSelected] = useState<Date | null>(null);
+  const [filterIdx, setFilterIdx] = useState(0);
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
-  const fallbackEvents = useMemo(() => events.slice(0, 10), [events]);
-  const calendarDates = calendarView === 'week' ? getWeekDates(calendarDate) : getMonthDates(calendarDate);
+
+  const matchesFilter = (event: Event) => {
+    if (filterIdx === 0) return true;
+    const tokens = FILTER_TOKENS[filterIdx] ?? [];
+    return tokens.some((t) => event.tag.ru.includes(t) || event.tag.en.includes(t));
+  };
+
   const parsedEvents = useMemo(
     () =>
       sortParsed(
-        events.map((event) => ({
-          event,
-          date: parseEventDateForEvent(event, lang),
-        }))
+        events
+          .filter(matchesFilter)
+          .map((event) => ({ event, date: parseEventDateForEvent(event, lang) }))
       ),
-    [events, lang]
+    [events, lang, filterIdx]
   );
+
   const eventCountByDate = useMemo(() => {
     const acc: Record<string, number> = {};
     parsedEvents.forEach((item) => {
@@ -213,193 +227,319 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
     });
     return acc;
   }, [parsedEvents]);
-  const visibleEvents = parsedEvents
-    .filter((item) => item.date && calendarDates.some((date) => dateKey(date) === dateKey(item.date as Date)))
-    .map((item) => item.event);
-  const calendarEvents = visibleEvents.length > 0 ? visibleEvents : fallbackEvents;
-  const currentWeekDates = getWeekDates(new Date());
-  const selectedDateKey = dateKey(calendarDate);
-  const visibleRange = formatRange(calendarDates, lang);
-  const calendarTitle =
-    calendarView === 'week'
-      ? lang === 'ru'
-        ? `Неделя ${visibleRange}`
-        : `Week of ${visibleRange}`
-      : lang === 'ru'
-        ? `${RU_MONTHS_NOM[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`
-        : `${EN_MONTHS[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
 
-  const shiftCalendar = (direction: -1 | 1) => {
-    setCalendarDate((current) =>
-      calendarView === 'week' ? addDays(current, direction * 7) : addMonths(current, direction)
+  const weekDates = useMemo(() => getWeekDates(cursor), [cursor]);
+
+  const monthGridCells = useMemo<(Date | null)[]>(() => {
+    const firstOfMonth = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const lead = (firstOfMonth.getDay() + 6) % 7;
+    const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+    const monthDates = Array.from(
+      { length: daysInMonth },
+      (_, i) => new Date(cursor.getFullYear(), cursor.getMonth(), i + 1)
     );
+    const trailing = (7 - ((lead + daysInMonth) % 7)) % 7;
+    return [
+      ...Array.from<null>({ length: lead }).fill(null),
+      ...monthDates,
+      ...Array.from<null>({ length: trailing }).fill(null),
+    ];
+  }, [cursor]);
+
+  const gridCells = view === 'week' ? weekDates : monthGridCells;
+  const listedEvents = useMemo(() => {
+    if (selected) {
+      const k = dateKey(selected);
+      return parsedEvents.filter((item) => item.date && dateKey(item.date) === k).map((item) => item.event);
+    }
+    return parsedEvents.map((item) => item.event);
+  }, [parsedEvents, selected]);
+
+  const shift = (dir: -1 | 1) => {
+    setCursor((current) => (view === 'week' ? addDays(current, dir * 7) : addMonths(current, dir)));
   };
 
+  const goToday = () => {
+    setCursor(today);
+    setSelected(today);
+  };
+
+  const handleSelectDay = (date: Date) => {
+    if (selected && dateKey(selected) === dateKey(date)) {
+      setSelected(null);
+    } else {
+      setSelected(date);
+      if (view === 'month' && (date.getMonth() !== cursor.getMonth() || date.getFullYear() !== cursor.getFullYear())) {
+        setCursor(date);
+      }
+    }
+  };
+
+  const titleText =
+    view === 'week'
+      ? lang === 'ru'
+        ? `Неделя ${formatRange(weekDates, lang)}`
+        : `Week of ${formatRange(weekDates, lang)}`
+      : lang === 'ru'
+        ? `${RU_MONTHS_NOM[cursor.getMonth()]} ${cursor.getFullYear()}`
+        : `${EN_MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`;
+
+  const filterLabels = lang === 'ru' ? FILTERS_RU : FILTERS_EN;
+  const weekdayLabels = lang === 'ru' ? RU_WEEKDAYS_MON : EN_WEEKDAYS_MON;
+
+  const listHeader = selected
+    ? lang === 'ru'
+      ? `${selected.getDate()} ${RU_MONTHS[selected.getMonth()]} ${selected.getFullYear()}`
+      : `${EN_MONTHS[selected.getMonth()]} ${selected.getDate()}, ${selected.getFullYear()}`
+    : lang === 'ru'
+      ? 'Все мероприятия'
+      : 'All events';
+
   return (
-    <section className="relative w-full overflow-visible bg-white px-5 py-6 md:px-12 md:py-8">
-      <div className="sticky top-0 z-50 w-full bg-white pb-4 pt-3 md:pt-4">
-        <motion.div
-          className="relative border-y border-line py-4"
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={reduced ? { duration: 0 } : { ...transitionBase, delay: 0.08 }}
-        >
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-                {calendarView === 'week'
-                  ? lang === 'ru'
-                    ? 'Текущая сетка недели'
-                    : 'Current week grid'
-                  : lang === 'ru'
-                    ? 'Сетка месяца'
-                    : 'Month grid'}
-              </div>
-              <div className="mt-1 font-heading text-[clamp(24px,3vw,42px)] font-medium uppercase leading-none tracking-[-0.03em]">
-                {calendarTitle}
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+    <section className="bg-paper px-5 pb-20 md:px-12">
+      <motion.div
+        className="border-y border-line bg-paper py-6 md:py-7"
+        initial={reduced ? false : { opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={reduced ? { duration: 0 } : { duration: DURATION.fast, ease: EASE_DS }}
+      >
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="font-heading text-[clamp(28px,4vw,52px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+              {titleText}
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              aria-label={lang === 'ru' ? 'Предыдущий период' : 'Previous period'}
+              onClick={() => shift(-1)}
+              className="inline-flex h-10 w-10 items-center justify-center border border-line bg-white text-ink transition hover:border-ink"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={goToday}
+              className="inline-flex h-10 items-center border border-line bg-white px-4 text-[10px] font-bold uppercase tracking-[0.16em] text-ink transition hover:border-ink"
+            >
+              {lang === 'ru' ? 'Сегодня' : 'Today'}
+            </button>
+            <button
+              type="button"
+              aria-label={lang === 'ru' ? 'Следующий период' : 'Next period'}
+              onClick={() => shift(1)}
+              className="inline-flex h-10 w-10 items-center justify-center border border-line bg-white text-ink transition hover:border-ink"
+            >
+              <ChevronRight size={16} />
+            </button>
+            <div className="ml-1 inline-flex h-10 border border-line bg-white">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center border border-line bg-paper transition hover:border-ink"
-                onClick={() => shiftCalendar(-1)}
-                aria-label={lang === 'ru' ? 'Предыдущий период' : 'Previous period'}
+                onClick={() => setView('week')}
+                className={[
+                  'px-4 text-[10px] font-bold uppercase tracking-[0.16em] transition',
+                  view === 'week' ? 'bg-ink text-white' : 'text-ink hover:bg-paper-soft',
+                ].join(' ')}
               >
-                <ChevronLeft size={16} />
+                {lang === 'ru' ? 'Неделя' : 'Week'}
               </button>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center border border-line bg-paper transition hover:border-ink"
-                onClick={() => shiftCalendar(1)}
-                aria-label={lang === 'ru' ? 'Следующий период' : 'Next period'}
+                onClick={() => setView('month')}
+                className={[
+                  'px-4 text-[10px] font-bold uppercase tracking-[0.16em] transition',
+                  view === 'month' ? 'bg-ink text-white' : 'text-ink hover:bg-paper-soft',
+                ].join(' ')}
               >
-                <ChevronRight size={16} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-h-9 items-center gap-2 border border-ink bg-ink px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-transparent hover:text-ink"
-                onClick={() => setCalendarView((current) => (current === 'week' ? 'month' : 'week'))}
-              >
-                {calendarView === 'week'
-                  ? lang === 'ru'
-                    ? 'Весь месяц'
-                    : 'Full month'
-                  : lang === 'ru'
-                    ? 'Неделя'
-                    : 'Week'}
-                {calendarView === 'week' ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
-              </button>
-              <button
-                type="button"
-                className="border border-line bg-paper px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition hover:border-ink"
-                onClick={() => {
-                  setCalendarDate(startOfDay(new Date()));
-                  setCalendarView('week');
-                }}
-              >
-                {lang === 'ru'
-                  ? `Сегодня ${RU_WEEKDAYS[new Date().getDay()]} ${new Date().getDate()} ${RU_MONTHS[new Date().getMonth()]}`
-                  : `Today ${EN_WEEKDAYS[new Date().getDay()]} ${EN_MONTHS[new Date().getMonth()]} ${new Date().getDate()}`}
+                {lang === 'ru' ? 'Месяц' : 'Month'}
               </button>
             </div>
           </div>
+        </div>
 
-          <LayoutGroup id="calendar-day-grid">
-            <motion.div
-              layout={!reduced}
-              className="grid grid-cols-7 gap-x-2 gap-y-3 md:gap-x-4"
-              initial={reduced ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={reduced ? { duration: 0 } : { duration: DURATION.fast, ease: EASE_DS }}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+            {lang === 'ru' ? 'ФИЛЬТР' : 'FILTER'}
+          </span>
+          {filterLabels.map((f, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setFilterIdx(i)}
+              className={[
+                'rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition',
+                filterIdx === i ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:border-ink',
+              ].join(' ')}
             >
-              {calendarDates.map((date) => {
-                const key = dateKey(date);
-                const eventsCount = eventCountByDate[key] ?? 0;
-                const isToday = key === dateKey(new Date());
-                const isSelected = key === selectedDateKey;
-                const isCurrentWeek = currentWeekDates.some((weekDate) => dateKey(weekDate) === key);
+              {f}
+            </button>
+          ))}
+        </div>
+      </motion.div>
 
-                return (
-                  <motion.button
-                    key={key}
-                    type="button"
-                    layout={!reduced}
-                    layoutId={`cal-day-${key}`}
-                    className={[
-                      'group relative grid min-h-16 content-start gap-2 px-2 py-2 text-left transition md:min-h-20 md:px-3',
-                      eventsCount > 0 ? 'text-ink' : 'text-ink-soft',
-                      isSelected ? 'bg-ink text-white' : 'bg-transparent hover:bg-ink/[0.04]',
-                      isToday && !isSelected ? 'shadow-[inset_0_-2px_0_#171717]' : '',
-                      calendarView === 'month' && !isCurrentWeek ? 'opacity-70' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    onClick={() => {
-                      setCalendarDate(date);
-                      setCalendarView('week');
-                    }}
-                    whileHover={reduced ? undefined : { y: -2 }}
-                    transition={
-                      reduced
-                        ? { layout: { duration: 0 }, duration: 0 }
-                        : { layout: { duration: DURATION.base, ease: EASE_DS }, duration: 0.2 }
-                    }
-                  >
-                    {isSelected ? (
-                      <motion.span
-                        layoutId="day-ring"
-                        className="pointer-events-none absolute inset-0 z-10 rounded-sm ring-2 ring-accent ring-offset-2 ring-offset-transparent"
-                        transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34 }}
-                      />
-                    ) : null}
-                    <span
-                      className={['text-[10px] font-semibold uppercase tracking-[0.12em]', isSelected ? 'text-white/70' : 'text-muted'].join(
-                        ' '
-                      )}
-                    >
-                      {lang === 'ru' ? RU_WEEKDAYS[date.getDay()] : EN_WEEKDAYS[date.getDay()]}
-                    </span>
-                    <span className="font-heading text-2xl font-medium leading-none tracking-[-0.02em] md:text-4xl">
-                      {date.getDate()}
-                    </span>
-                    {eventsCount > 0 ? (
-                      <span
-                        className={[
-                          'mt-1 inline-flex h-5 w-fit min-w-5 items-center justify-center px-1 text-[10px] font-semibold leading-none',
-                          isSelected ? 'bg-white text-ink' : 'bg-ink text-white',
-                        ].join(' ')}
-                        aria-label={lang === 'ru' ? `${eventsCount} событий` : `${eventsCount} events`}
-                      >
-                        {eventsCount}
-                      </span>
-                    ) : null}
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-          </LayoutGroup>
-        </motion.div>
+      <div className="mt-8 grid grid-cols-7 border-b border-line">
+        {weekdayLabels.map((wd) => (
+          <div
+            key={wd}
+            className="px-2 pb-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-muted md:text-left md:px-3"
+          >
+            {wd}
+          </div>
+        ))}
       </div>
 
-      {calendarEvents.length > 0 ? (
-        <LayoutGroup id="calendar-events">
+      <LayoutGroup id="calendar-day-grid">
+        <motion.div
+          layout={!reduced}
+          className="grid grid-cols-7 border-l border-t border-line bg-white"
+          initial={reduced ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reduced ? { duration: 0 } : { duration: DURATION.fast, ease: EASE_DS }}
+        >
+          {gridCells.map((d, idx) => {
+            if (!d) {
+              return (
+                <div
+                  key={`empty-${idx}`}
+                  className="min-h-16 border-b border-r border-line bg-paper-soft/40 md:min-h-24"
+                  aria-hidden
+                />
+              );
+            }
+            const k = dateKey(d);
+            const count = eventCountByDate[k] ?? 0;
+            const isToday = k === dateKey(today);
+            const isSelected = !!selected && k === dateKey(selected);
+            const isOutOfMonth = view === 'month' && d.getMonth() !== cursor.getMonth();
+            const isPast = d.getTime() < today.getTime();
+
+            return (
+              <motion.button
+                key={k}
+                type="button"
+                onClick={() => handleSelectDay(d)}
+                whileHover={reduced ? undefined : { y: -1 }}
+                transition={reduced ? { duration: 0 } : { duration: 0.18, ease: EASE_DS }}
+                className={[
+                  'group relative flex min-h-16 flex-col items-stretch gap-1 border-b border-r border-line px-2 py-2 text-left transition md:min-h-24 md:px-3 md:py-3',
+                  isSelected
+                    ? 'bg-ink text-white'
+                    : isOutOfMonth
+                      ? 'bg-paper-soft/40 text-ink-soft/50'
+                      : isPast
+                        ? 'bg-white text-ink-soft hover:bg-paper-soft'
+                        : 'bg-white text-ink hover:bg-paper-soft',
+                  isToday && !isSelected ? 'shadow-[inset_0_-3px_0_0_#0a0a0a]' : '',
+                ].join(' ')}
+                aria-label={
+                  lang === 'ru'
+                    ? `${d.getDate()} ${RU_MONTHS[d.getMonth()]}, событий: ${count}`
+                    : `${EN_MONTHS[d.getMonth()]} ${d.getDate()}, events: ${count}`
+                }
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span
+                    className={[
+                      'font-heading text-xl font-bold leading-none md:text-2xl',
+                      isSelected ? 'text-white' : '',
+                    ].join(' ')}
+                  >
+                    {d.getDate()}
+                  </span>
+                  {count > 0 ? (
+                    <span
+                      className={[
+                        'inline-flex h-5 min-w-5 items-center justify-center px-1 text-[10px] font-bold leading-none',
+                        isSelected ? 'bg-white text-ink' : 'bg-ink text-white',
+                      ].join(' ')}
+                    >
+                      {count}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-auto hidden flex-col gap-0.5 md:flex">
+                  {parsedEvents
+                    .filter((item) => item.date && dateKey(item.date) === k)
+                    .slice(0, 2)
+                    .map((item) => (
+                      <span
+                        key={item.event.id}
+                        className={[
+                          'truncate text-[10px] font-semibold uppercase tracking-[0.06em]',
+                          isSelected ? 'text-white/85' : 'text-ink-soft',
+                        ].join(' ')}
+                      >
+                        · {l(item.event.title)}
+                      </span>
+                    ))}
+                  {count > 2 ? (
+                    <span
+                      className={[
+                        'text-[9px] font-bold uppercase tracking-[0.14em]',
+                        isSelected ? 'text-white/70' : 'text-muted',
+                      ].join(' ')}
+                    >
+                      +{count - 2}
+                    </span>
+                  ) : null}
+                </div>
+              </motion.button>
+            );
+          })}
+        </motion.div>
+      </LayoutGroup>
+
+      <div className="mt-10 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
+        <h3 className="font-heading text-[clamp(22px,2.8vw,36px)] font-bold uppercase leading-none tracking-[0.02em] text-ink">
+          {listHeader}
+        </h3>
+        {selected ? (
+          <button
+            type="button"
+            onClick={() => setSelected(null)}
+            className="border border-line bg-white px-4 py-2 font-heading text-sm font-bold uppercase tracking-[0.08em] text-ink transition hover:border-ink"
+          >
+            {lang === 'ru' ? 'Сбросить день' : 'Clear day'}
+          </button>
+        ) : null}
+      </div>
+
+      <AnimatePresence mode="popLayout">
+        {listedEvents.length === 0 ? (
           <motion.div
-            className="mt-6 grid w-full gap-0"
+            key="empty"
+            initial={reduced ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduced ? undefined : { opacity: 0, y: -6 }}
+            transition={reduced ? { duration: 0 } : { duration: DURATION.fast, ease: EASE_DS }}
+            className="border-b border-line py-10 text-center text-sm text-ink-soft"
+          >
+            {selected
+              ? lang === 'ru'
+                ? 'На эту дату событий нет.'
+                : 'No events on this date.'
+              : filterIdx === 0
+                ? lang === 'ru'
+                  ? 'Мероприятий пока нет.'
+                  : 'No events yet.'
+                : lang === 'ru'
+                  ? 'По выбранному фильтру событий нет.'
+                  : 'No events match the selected filter.'}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="list"
+            className="grid w-full gap-0"
             role="list"
             initial={reduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={reduced ? { duration: 0 } : { duration: 0.45, ease: EASE_DS }}
           >
-            <div className="mb-3 flex items-center justify-between gap-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-              <span>{lang === 'ru' ? 'События периода' : 'Events in period'}</span>
-              <span>
-                {visibleEvents.length > 0 ? calendarEvents.length : lang === 'ru' ? 'Ближайшие' : 'Nearest'}
-              </span>
-            </div>
-
-            {calendarEvents.map((event, index) => {
+            {listedEvents.map((event, index) => {
               const eventDate = parseEventDateForEvent(event, lang);
               const day = eventDate?.getDate() ?? l(event.date).match(/\d{1,2}/)?.[0] ?? '';
               const month = eventDate
@@ -411,87 +551,80 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
               return (
                 <div
                   key={event.id}
-                  role="listitem"
-                  className="sticky top-[174px] bg-white md:top-[190px]"
+                  className="sticky top-[105px] bg-white md:top-[120px]"
                   style={{ zIndex: index + 1 }}
                 >
-                  <motion.article
-                    layout={!reduced}
-                    layoutId={`event-${event.id}`}
-                    className="grid min-h-[340px] items-center gap-5 border-t border-line bg-white px-4 py-6 md:grid-cols-[minmax(118px,0.42fr)_minmax(300px,580px)_minmax(0,1fr)] md:gap-7 md:px-6 md:py-8"
-                    initial={reduced ? false : { opacity: 0, y: 34, scale: 0.99 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, amount: 0.22 }}
-                    transition={
-                      reduced
-                        ? { layout: { duration: 0 }, duration: 0 }
-                        : {
-                            duration: DURATION.base,
-                            delay: Math.min(index * 0.04, 0.18),
-                            ease: EASE_DS,
-                            layout: { duration: DURATION.base, ease: EASE_DS },
-                          }
-                    }
-                  >
-                    <div className="flex items-end gap-3 pl-1 md:grid md:gap-2 md:pl-2 md:self-start">
-                      <span className="font-heading text-[clamp(56px,8vw,118px)] font-medium uppercase leading-[0.82] tracking-[-0.07em]">
-                        {day}
-                      </span>
-                      <span className="pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted md:pb-0">
-                        {month}
-                      </span>
-                    </div>
+                <motion.article
+                  role="listitem"
+                  className="grid min-h-[420px] items-center gap-5 border-t border-line bg-white px-4 py-6 md:grid-cols-[minmax(110px,0.35fr)_minmax(260px,520px)_minmax(0,1fr)] md:gap-7 md:px-6 md:py-8"
+                  initial={reduced ? false : { opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={
+                    reduced
+                      ? { duration: 0 }
+                      : {
+                          duration: DURATION.base,
+                          delay: Math.min(index * 0.04, 0.2),
+                          ease: EASE_DS,
+                        }
+                  }
+                >
+                  <div className="flex items-end gap-3 pl-1 md:grid md:gap-2 md:pl-2 md:self-start">
+                    <span className="font-heading text-[clamp(56px,7vw,100px)] font-bold uppercase leading-[0.82] tracking-[-0.05em] text-ink">
+                      {day}
+                    </span>
+                    <span className="pb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted md:pb-0">
+                      {month}
+                    </span>
+                  </div>
 
-                    <div className="aspect-[580/394] w-full overflow-hidden bg-ink/[0.04]">
-                      {event.image ? (
-                        <motion.img
-                          className="h-full w-full object-cover"
-                          src={event.image}
-                          alt={l(event.title)}
-                          initial={reduced ? false : { scale: 1.04 }}
-                          whileInView={{ scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={reduced ? { duration: 0 } : { duration: 1.1, ease: EASE_DS }}
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center p-4 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                          {l(event.tag)}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="self-center">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-                        <span>{event.weekday[lang]}</span>
-                        <span>{event.time}</span>
-                        <span>{l(event.hall)}</span>
-                      </div>
-                      <h3 className="mt-3 max-w-3xl font-heading text-[clamp(25px,3.4vw,52px)] font-medium uppercase leading-[0.98] tracking-[-0.035em]">
-                        {l(event.title)}
-                      </h3>
-                      <p className="mt-4 max-w-xl text-sm leading-6 text-ink-soft md:text-base">
-                        {l(event.tag)} · {l(event.price)}
-                      </p>
-                      <ActionButton
-                        to={`/events/${event.id}`}
-                        text={lang === 'ru' ? 'Подробнее' : 'Details'}
-                        backgroundColor="#171717"
-                        textColor="#ffffff"
-                        strokeColor="#171717"
-                        className="mt-5"
+                  <div className="aspect-[580/394] w-full overflow-hidden bg-paper-soft">
+                    {event.image ? (
+                      <motion.img
+                        className="h-full w-full object-cover"
+                        src={event.image}
+                        alt={l(event.title)}
+                        initial={reduced ? false : { scale: 1.04 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={reduced ? { duration: 0 } : { duration: 1.1, ease: EASE_DS }}
                       />
+                    ) : (
+                      <div className="flex h-full items-center justify-center p-4 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
+                        {l(event.tag)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="self-center">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+                      <span>{event.weekday[lang]}</span>
+                      <span>{event.time}</span>
+                      <span>{l(event.hall)}</span>
                     </div>
-                  </motion.article>
+                    <h4 className="mt-3 max-w-3xl font-heading text-[clamp(22px,2.8vw,40px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
+                      {l(event.title)}
+                    </h4>
+                    <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft md:text-base">
+                      {l(event.tag)} · {l(event.price)}
+                    </p>
+                    <ActionButton
+                      to={`/events/${event.id}`}
+                      text={lang === 'ru' ? 'Подробнее' : 'Details'}
+                      backgroundColor="#0a0a0a"
+                      textColor="#ffffff"
+                      strokeColor="#0a0a0a"
+                      className="mt-5"
+                    />
+                  </div>
+                </motion.article>
                 </div>
               );
             })}
           </motion.div>
-        </LayoutGroup>
-      ) : (
-        <div className="border-y border-line py-5 text-sm text-ink-soft">
-          {lang === 'ru' ? 'Афиша скоро обновится.' : 'Programme will be updated soon.'}
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </section>
   );
 }
