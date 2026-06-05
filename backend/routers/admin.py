@@ -47,8 +47,10 @@ ALLOWED_VIDEO_TYPES = {
     "video/x-m4v",
     "application/mp4",
 }
+ALLOWED_DOC_TYPES = {"application/pdf"}
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "ogg", "mov", "m4v", "avi", "mkv"}
+ALLOWED_DOC_EXTENSIONS = {"pdf"}
 
 
 # ──────────── AUTH ────────────
@@ -88,14 +90,23 @@ async def upload_file(
     current: AdminUser = Depends(get_current_admin),
 ):
     ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "bin"
-    is_known_mime = file.content_type in ALLOWED_IMAGE_TYPES or file.content_type in ALLOWED_VIDEO_TYPES
-    is_known_ext = ext in ALLOWED_IMAGE_EXTENSIONS or ext in ALLOWED_VIDEO_EXTENSIONS
+    is_known_mime = (
+        file.content_type in ALLOWED_IMAGE_TYPES
+        or file.content_type in ALLOWED_VIDEO_TYPES
+        or file.content_type in ALLOWED_DOC_TYPES
+    )
+    is_known_ext = (
+        ext in ALLOWED_IMAGE_EXTENSIONS
+        or ext in ALLOWED_VIDEO_EXTENSIONS
+        or ext in ALLOWED_DOC_EXTENSIONS
+    )
     is_octet_stream = file.content_type == "application/octet-stream"
 
     if not is_known_mime and not (is_known_ext and is_octet_stream) and not is_known_ext:
         raise HTTPException(
             400,
-            "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF. Allowed videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV",
+            "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF. "
+            "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF",
         )
 
     filename = f"{uuid.uuid4().hex}.{ext}"

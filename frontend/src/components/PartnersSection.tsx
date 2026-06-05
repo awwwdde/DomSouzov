@@ -27,9 +27,8 @@ export default function PartnersSection({ partners, lang }: Props) {
         </h2>
       </div>
 
-      {/* Чистая сетка: только логотипы, без рамок и заливок. */}
-      {/* 2 ряда на десктопе: 6 колонок × 2 = до 12 партнёров.       */}
-      <RevealList className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 md:grid-cols-4 md:gap-x-12 md:gap-y-16 lg:grid-cols-6">
+      {/* Крупная сетка логотипов: до 4 в ряд, бокс выше — лого читаемые. */}
+      <RevealList className="grid grid-cols-2 gap-x-10 gap-y-14 sm:grid-cols-2 md:grid-cols-3 md:gap-x-14 md:gap-y-16 lg:grid-cols-4">
         {rows.map((p) => (
           <RevealItem key={p.id} y={12} className="will-change-transform">
             <PartnerItem partner={p} label={l(p.name)} reduced={reduced} />
@@ -56,24 +55,20 @@ function PartnerItem({
   const href = partner.url?.trim();
 
   const logo = (
-    <div className="flex h-20 w-full items-center justify-center md:h-24">
+    <div className="flex h-28 w-full items-center justify-center md:h-32">
       {partner.logo ? (
         <motion.img
           src={partner.logo}
           alt={label}
-          className="max-h-full max-w-[80%] object-contain"
+          className="max-h-full max-w-full object-contain"
+          loading="lazy"
           initial={false}
-          animate={{
-            opacity: reduced ? 1 : 0.7,
-            filter: reduced ? 'grayscale(0)' : 'grayscale(1)',
-          }}
-          whileHover={
-            reduced ? undefined : { opacity: 1, filter: 'grayscale(0)' }
-          }
+          animate={{ opacity: reduced ? 1 : 0.92 }}
+          whileHover={reduced ? undefined : { opacity: 1, scale: 1.03 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : (
-        <span className="font-heading text-[clamp(13px,1.1vw,17px)] font-bold uppercase tracking-[0.06em] text-ink">
+        <span className="font-heading text-[clamp(16px,1.4vw,22px)] font-bold uppercase tracking-[0.06em] text-ink">
           {label}
         </span>
       )}

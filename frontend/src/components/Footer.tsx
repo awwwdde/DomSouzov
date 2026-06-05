@@ -13,36 +13,28 @@ import { useReducedMotionActive } from '../lib/motion';
 /*  Ряд 4: copyright + правовые ссылки.                          */
 /* ============================================================ */
 
-const COL_AFISHA = [
-  { ru: 'Симфонические концерты', en: 'Symphonic concerts', to: '/events' },
-  { ru: 'Камерная музыка', en: 'Chamber music', to: '/events' },
-  { ru: 'Хоровая программа', en: 'Choral programme', to: '/events' },
-  { ru: 'Литературные вечера', en: 'Literary evenings', to: '/events' },
-  { ru: 'Календарь', en: 'Calendar', to: '/events' },
+// Честный сайтмап: каждая ссылка ведёт на реально существующую страницу.
+const COL_PROGRAMME = [
+  { ru: 'Афиша', en: 'Programme', to: '/events' },
+  { ru: 'Новости', en: 'News', to: '/news' },
+  { ru: 'Галерея', en: 'Gallery', to: '/gallery' },
 ];
 const COL_HALLS = [
-  { ru: 'Колонный зал', en: 'Hall of Columns', to: '/halls' },
-  { ru: 'Октябрьский зал', en: 'October Hall', to: '/halls' },
-  { ru: 'Малый зал', en: 'Small Hall', to: '/halls' },
-  { ru: 'Технический райдер', en: 'Technical rider', to: '/halls' },
+  { ru: 'Залы', en: 'Halls', to: '/halls' },
+  { ru: 'О Доме', en: 'About', to: '/about' },
 ];
-const COL_ABOUT = [
-  { ru: 'История', en: 'History', to: '/about' },
-  { ru: 'Архитектура', en: 'Architecture', to: '/about' },
-  { ru: 'Команда', en: 'Team', to: '/about' },
-  { ru: 'Пресс-релизы', en: 'Press', to: '/news' },
+const COL_RENT = [
+  { ru: 'Организаторам', en: 'For organizers', to: '/organizers' },
+  { ru: 'Зрителям', en: 'For visitors', to: '/audience' },
 ];
-const COL_EVENTS = [
-  { ru: 'Все события', en: 'All events', to: '/events' },
-  { ru: 'Премьеры', en: 'Premieres', to: '/events' },
-  { ru: 'Гастроли', en: 'Tours', to: '/events' },
-  { ru: 'Выпускные', en: 'Graduations', to: '/events' },
+const COL_INFO = [
+  { ru: 'Контакты', en: 'Contacts', to: '/contacts' },
 ];
 
 const TILE_LINKS = [
-  { ru: 'Галерея', en: 'Gallery', to: '/gallery' },
+  { ru: 'Афиша', en: 'Programme', to: '/events' },
+  { ru: 'Залы', en: 'Halls', to: '/halls' },
   { ru: 'Организаторам', en: 'For organizers', to: '/organizers' },
-  { ru: 'Зрителям', en: 'For visitors', to: '/audience' },
   { ru: 'Контакты', en: 'Contacts', to: '/contacts' },
 ];
 
@@ -54,6 +46,16 @@ export default function Footer() {
   const [subscribed, setSubscribed] = useState(false);
 
   const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
+
+  // Ссылки соцсетей из CMS (ключи social_vk / social_tg / social_yt).
+  // Показываем только заполненные — без «мёртвых» href="#".
+  const socials = (
+    [
+      { label: 'VK', href: t('social_vk') },
+      { label: 'Telegram', href: t('social_tg') },
+      { label: 'YouTube', href: t('social_yt') },
+    ] as const
+  ).filter((s) => s.href && s.href.trim().length > 0);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -135,10 +137,10 @@ export default function Footer() {
 
         {/* 4 колонки навигации */}
         <div className="grid gap-10 border-b border-paper/10 py-10 md:grid-cols-4 md:gap-10 md:py-14">
-          <FooterColumn title={lang === 'ru' ? 'Афиша' : 'Programme'} items={COL_AFISHA} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'Залы' : 'Halls'} items={COL_HALLS} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'О Доме' : 'About'} items={COL_ABOUT} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'События' : 'Events'} items={COL_EVENTS} l={l} />
+          <FooterColumn title={lang === 'ru' ? 'Афиша' : 'Programme'} items={COL_PROGRAMME} l={l} />
+          <FooterColumn title={lang === 'ru' ? 'Дом' : 'House'} items={COL_HALLS} l={l} />
+          <FooterColumn title={lang === 'ru' ? 'Аренда' : 'Rental'} items={COL_RENT} l={l} />
+          <FooterColumn title={lang === 'ru' ? 'Информация' : 'Information'} items={COL_INFO} l={l} />
         </div>
 
         {/* Плитки-разделы */}
@@ -198,9 +200,21 @@ export default function Footer() {
               {lang === 'ru' ? 'Соцсети' : 'Social'}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.18em]">
-              <a href="#" className="border-b border-paper/30 pb-px text-paper transition hover:border-paper">VK</a>
-              <a href="#" className="border-b border-paper/30 pb-px text-paper transition hover:border-paper">Telegram</a>
-              <a href="#" className="border-b border-paper/30 pb-px text-paper transition hover:border-paper">YouTube</a>
+              {socials.length > 0 ? (
+                socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border-b border-paper/30 pb-px text-paper transition hover:border-accent hover:text-accent"
+                  >
+                    {s.label}
+                  </a>
+                ))
+              ) : (
+                <span className="text-paper/45">{lang === 'ru' ? 'Скоро' : 'Soon'}</span>
+              )}
             </div>
           </div>
         </div>

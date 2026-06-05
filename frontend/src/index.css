@@ -11,10 +11,12 @@
   --color-ink-soft: #2a2a25;
   --color-muted: #8a857a;
   --color-line: #d6cfbf;
-  /* Accent === ink: визуально выключен, остаётся как именованная роль. */
-  --color-accent: #0a0a0a;
-  /* Focus/error — единственное место, где живёт зелёный/красный. */
-  --color-focus: #2f5d50;
+  /* Accent — глубокий изумруд: премиальность, дороговизна. */
+  --color-accent: #1f5f4e;
+  --color-accent-soft: #2f6d5b;
+  --color-accent-deep: #14463a;
+  /* Focus/error. */
+  --color-focus: #1f5f4e;
   --color-error: #b03a2e;
   --ease-ds: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -26,6 +28,10 @@
 
   html {
     scroll-behavior: smooth;
+    /* Запрет scroll-anchoring: при SPA-переходе браузер не должен
+       восстанавливать прежнюю позицию, когда верхний контент дорастает
+       (иначе верхние секции остаются выше вьюпорта и не появляются). */
+    overflow-anchor: none;
   }
 
   body {

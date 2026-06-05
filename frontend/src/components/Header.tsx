@@ -48,6 +48,16 @@ export default function Header() {
     return () => document.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
+  // Блокировка скролла body, пока открыто меню (важно для мобильного оверлея).
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
 
   const handleNav = (to: string) => {
@@ -96,7 +106,7 @@ export default function Header() {
             </button>
             <Link
               to="/events"
-              className="hidden h-11 items-center justify-center rounded-full bg-ink px-5 text-[11px] font-bold uppercase tracking-[0.18em] text-paper transition hover:bg-ink-soft md:inline-flex"
+              className="hidden h-11 items-center justify-center rounded-full bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.18em] text-paper transition hover:bg-accent-deep md:inline-flex"
             >
               {lang === 'ru' ? 'Билеты' : 'Tickets'}
             </Link>
@@ -122,11 +132,11 @@ export default function Header() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
               transition={{ duration: reduced ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-x-0 top-full overflow-hidden border-t border-line bg-paper-soft shadow-[0_18px_40px_-24px_rgba(20,20,19,0.35)]"
+              className="absolute inset-x-0 top-full max-h-[calc(100vh-80px)] overflow-y-auto border-t border-line bg-paper-soft shadow-[0_18px_40px_-24px_rgba(20,20,19,0.35)] md:max-h-none md:overflow-visible"
               aria-label={lang === 'ru' ? 'Основное меню' : 'Main'}
             >
               <motion.div
-                className="mx-auto flex w-full max-w-[1800px] items-stretch gap-x-8 overflow-x-auto px-5 py-5 md:w-[95%] md:gap-x-12 md:px-6 md:py-6 lg:gap-x-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="mx-auto flex w-full max-w-[1800px] flex-col items-stretch px-5 py-4 md:w-[95%] md:flex-row md:gap-x-12 md:overflow-x-auto md:px-6 md:py-6 lg:gap-x-16 md:[scrollbar-width:none] md:[-ms-overflow-style:none] md:[&::-webkit-scrollbar]:hidden"
                 variants={{
                   hidden: {},
                   visible: {
@@ -149,12 +159,21 @@ export default function Header() {
                       visible: { opacity: 1 },
                     }}
                     transition={{ duration: reduced ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="group relative shrink-0 whitespace-nowrap bg-transparent text-left font-heading text-[clamp(20px,2.4vw,34px)] font-bold uppercase leading-none tracking-[0.02em] text-ink transition"
+                    className="group relative shrink-0 whitespace-nowrap border-b border-line bg-transparent py-4 text-left font-heading text-2xl font-bold uppercase leading-none tracking-[0.02em] text-ink transition last:border-b-0 hover:text-accent md:border-b-0 md:py-0 md:text-[clamp(20px,2.4vw,34px)] md:hover:text-ink"
                   >
                     <span className="block">{l(item)}</span>
-                    <span className="mt-2 block h-px w-full origin-left scale-x-0 bg-accent transition-transform duration-300 ease-out group-hover:scale-x-100" aria-hidden />
+                    <span className="mt-2 hidden h-px w-full origin-left scale-x-0 bg-accent transition-transform duration-300 ease-out group-hover:scale-x-100 md:block" aria-hidden />
                   </motion.button>
                 ))}
+
+                {/* Билеты в мобильном меню (на десктопе кнопка есть в шапке). */}
+                <button
+                  type="button"
+                  onClick={() => handleNav('/events')}
+                  className="mt-5 inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-paper transition md:hidden"
+                >
+                  {lang === 'ru' ? 'Билеты' : 'Tickets'}
+                </button>
               </motion.div>
             </motion.nav>
           )}
