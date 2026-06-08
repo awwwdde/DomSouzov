@@ -5,6 +5,7 @@ import { useSite } from '../context/SiteContext';
 import type { Event, EventGalleryImage } from '../types';
 import { getEvent } from '../api/client';
 import { PageKicker } from '../components/PageKicker';
+import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { formatDayMonthFromEvent } from '../lib/eventDates';
@@ -70,8 +71,44 @@ export default function EventDetail() {
 
   const dayHeader = formatDayMonthFromEvent(event, lang);
 
+  const seoTitle = `${l(event.title)} — ${l(event.date)} · ${SITE_NAME}`;
+  const seoDesc =
+    lead ||
+    (lang === 'ru'
+      ? `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Москва.`
+      : `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Moscow.`);
+  const seoImage = event.image ? mediaUrl(event.image) : undefined;
+
   return (
     <>
+      <Seo
+        title={seoTitle}
+        description={seoDesc}
+        path={`events/${event.id}`}
+        image={seoImage}
+        type="event"
+        lang={lang}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Event',
+          name: l(event.title),
+          startDate: l(event.date),
+          description: seoDesc,
+          image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
+          location: {
+            '@type': 'Place',
+            name: `${SITE_NAME}, ${l(event.hall)}`,
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Большая Дмитровка, 1',
+              addressLocality: 'Москва',
+              addressCountry: 'RU',
+            },
+          },
+          organizer: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+          url: `${SITE_URL}/events/${event.id}`,
+        }}
+      />
       <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0 flex-1">

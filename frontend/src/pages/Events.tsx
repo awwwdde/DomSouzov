@@ -1,6 +1,7 @@
 import { useSite } from '../context/SiteContext';
 import UpcomingEventsCalendar from '../components/UpcomingEventsCalendar';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 
 export default function Events() {
@@ -13,6 +14,7 @@ export default function Events() {
 
   return (
     <>
+      <Seo title={`${title} — Дом Союзов`} description={lead} path="events" lang={lang} />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Мероприятия' : 'Home · Events'}</PageKicker>

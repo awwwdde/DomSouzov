@@ -40,23 +40,27 @@
 ### Осталось по Фазе 1
 - [ ] **Реально перейти на Postgres** на проде: поднять БД, прописать `DATABASE_URL` в `backend/.env`, запустить `migrate_to_postgres.py` с прод-кредами, проверить.
 - [ ] **Форма подписки в футере** — сейчас фейковая (показывает «спасибо», никуда не шлёт). Решить: подключить к бэкенду (новый endpoint + таблица) ИЛИ убрать. (Вопрос открыт.)
-- [ ] **Загрузить настоящие PDF** тех.райдера и залов через админку (поля `organizers_rider_pdf`, `organizers_halls_pdf` в настройках), плюс UI для них в `AdminSettings`.
-- [ ] Заполнить реальные ссылки соцсетей в CMS (`social_vk`/`social_tg`/`social_yt`).
+- [x] UI в `AdminSettings` для PDF (тип поля `file`) и соцсетей готов. → На проде: **загрузить реальные PDF** (тех.райдер/залы) и **заполнить ссылки соцсетей** через админку.
 - [ ] Поправить текст лида на «Организаторам» в CMS (`organizers_lead`) — сейчас в БД короткая заглушка «В распоряжении организаторов:».
 
 ### Фаза 2 — SEO (ядро задачи «находиться в поиске»)
-- [ ] **Пререндеринг** публичных страниц при сборке (vite-react-ssg или аналог): статические маршруты + динамические `/events/:id`, `/news/:id`, `/gallery/:slug` (getStaticPaths из API). Пересборка по вебхуку из админки при публикации.
-- [ ] **react-helmet-async**: на каждую страницу `<title>`, `description`, `canonical`, `og:*`, `twitter:*`, `hreflang` ru/en. Для событий/новостей — из полей БД.
-- [ ] **JSON-LD**: `Organization`+`Place` везде; `Event` на карточке события (даёт rich-сниппеты мероприятий); `Article`/`NewsArticle` на новостях; `BreadcrumbList`.
-- [ ] **robots.txt** + динамический **sitemap.xml** (из БД). Submit в Яндекс.Вебмастер и Google Search Console.
+Подход вместо vite-пререндера: **серверная инъекция мета в FastAPI** (прод = единый контейнер FastAPI+SPA) + **react-helmet** на клиенте. ✅ Сделано:
+- [x] **Серверная инъекция** (`backend/seo.py` + `main.py` spa_fallback): краулер получает правильные `<title>/description/og/twitter/JSON-LD` прямо в HTML для всех страниц, `/events/{id}`, `/news/{id}`, `/gallery/{slug}`; дублей нет; неизвестные маршруты → noindex.
+- [x] **react-helmet-async** + компонент `Seo.tsx` на всех публичных страницах; правовые — `noindex`.
+- [x] **JSON-LD**: Organization (главная), Event (событие), NewsArticle (новость).
+- [x] **robots.txt** + динамический **sitemap.xml** (из БД, с событиями/новостями).
+- [x] `index.html`: дефолтные title/description/og/theme-color.
+- [ ] **Положить `frontend/public/og-default.jpg`** (дефолтная картинка шеринга — сейчас ссылка есть, файла нет).
 - [ ] **Яндекс.Метрика** + Google Analytics (counter id через CMS).
-- [ ] `index.html`: единый `<title>` → дефолт; добавить базовые og.
+- [ ] На проде: submit `sitemap.xml` в Яндекс.Вебмастер и Google Search Console; проверить, что `SITE_URL`/CORS = реальный домен.
 
 ### Фаза 3 — доп.правки / прод-готовность
-- [ ] Страница **404** + ErrorBoundary на загрузку контента.
+- [x] Страница **404** (`NotFound.tsx`, маршрут `*`, noindex).
+- [x] favicon → `/logo-house.svg`.
+- [ ] ErrorBoundary на загрузку контента.
 - [ ] Картинки: WebP, `loading="lazy"` везде; Lighthouse ≥ 90 (Perf/SEO/A11y).
-- [ ] Код-сплит бандла (сейчас один чанк 556KB / 169KB gzip).
-- [ ] `favicon.svg` (в `index.html` ссылка есть — файла нет), apple-touch-icon, manifest.
+- [ ] Код-сплит бандла (сейчас один чанк 575KB / 176KB gzip).
+- [ ] apple-touch-icon, manifest.
 - [ ] Безопасность: CORS на прод-домен, заголовки (CSP/HSTS) в `frontend/nginx.conf`, rate-limit на `/api/admin/login`, сменить дефолтные `SECRET_KEY`/`ADMIN_PASSWORD`.
 - [ ] Деплой: проверить корневой `Dockerfile`/`docker-compose.yml` (single-container SPA+API), `STATIC_DIR`, бэкап БД.
 - [ ] Финальная проверка двуязычности (RU/EN) и режима для слабовидящих на новых страницах.

@@ -25,6 +25,7 @@ import NewsDetail from './pages/NewsDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import PersonalDataConsent from './pages/PersonalDataConsent';
 import Terms from './pages/Terms';
+import NotFound from './pages/NotFound';
 
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -62,6 +63,7 @@ function PublicLayout() {
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="personal-data-consent" element={<PersonalDataConsent />} />
               <Route path="terms" element={<Terms />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
         </main>

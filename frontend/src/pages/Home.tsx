@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ActionButton from '../components/ActionButton';
+import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import Marquee from '../components/Marquee';
 import PartnersSection from '../components/PartnersSection';
 import { Container, Section } from '../components/Section';
@@ -71,6 +72,29 @@ export default function Home() {
 
   return (
     <div className="w-full bg-paper">
+      <Seo
+        title={
+          lang === 'ru'
+            ? 'Дом Союзов — Колонный зал, Большая Дмитровка 1, Москва'
+            : 'House of Unions — Hall of Columns, Moscow'
+        }
+        description={thesis}
+        path=""
+        lang={lang}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'PerformingArtsTheater',
+          name: SITE_NAME,
+          alternateName: 'House of Unions',
+          url: SITE_URL,
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Большая Дмитровка, 1',
+            addressLocality: 'Москва',
+            addressCountry: 'RU',
+          },
+        }}
+      />
       {/* ============================================================ */}
       {/* 1. HERO — full-bleed медиа (или типографический fallback)     */}
       {/* ============================================================ */}

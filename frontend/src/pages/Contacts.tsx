@@ -1,5 +1,6 @@
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 
 export default function Contacts() {
@@ -7,6 +8,16 @@ export default function Contacts() {
 
   return (
     <>
+      <Seo
+        title={lang === 'ru' ? 'Контакты — Дом Союзов' : 'Contacts — House of Unions'}
+        description={
+          lang === 'ru'
+            ? 'Адрес, телефон, билетная касса и схема проезда: Большая Дмитровка 1, Москва.'
+            : 'Address, phone, box office and directions: Bolshaya Dmitrovka 1, Moscow.'
+        }
+        path="contacts"
+        lang={lang}
+      />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Контакты' : 'Home · Contacts'}</PageKicker>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 import NewsStripList from '../components/NewsStripList';
 import { formatNewsShortDate, newsDateKey } from '../lib/newsDates';
@@ -46,6 +47,7 @@ export default function News() {
 
   return (
     <>
+      <Seo title={`${heroTitle} — Дом Союзов`} description={heroLead} path="news" lang={lang} />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Хроники' : 'Home · Journal'}</PageKicker>

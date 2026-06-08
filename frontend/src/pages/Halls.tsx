@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import ActionButton from '../components/ActionButton';
 
@@ -16,6 +17,7 @@ export default function Halls() {
 
   return (
     <>
+      <Seo title={`${title} — Дом Союзов`} description={lead} path="halls" lang={lang} />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Залы' : 'Home · Halls'}</PageKicker>

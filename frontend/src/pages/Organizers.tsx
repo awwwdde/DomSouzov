@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileText, LayoutGrid, ArrowUpRight } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 
 /* ============================================================ */
@@ -34,6 +35,12 @@ export default function Organizers() {
 
   return (
     <div className="bg-paper">
+      <Seo
+        title={lang === 'ru' ? 'Организаторам — аренда залов Дома Союзов' : 'For Organizers — venue hire · House of Unions'}
+        description={lead}
+        path="organizers"
+        lang={lang}
+      />
       {/* HERO */}
       <RevealSection className="grid gap-8 border-b border-line px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-20 md:pt-32">
         <div>

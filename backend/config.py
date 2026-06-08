@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     TEST_SUPERUSER_PASSWORD: str = "superadmin123"
     UPLOAD_DIR: str = "uploads"
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    # Публичный адрес сайта — для canonical, og:url, sitemap.xml.
+    SITE_URL: str = "https://union.awwwdde.art"
 
     @property
     def cors_origins_list(self) -> List[str]:

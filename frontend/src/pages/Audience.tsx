@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
 type RawItem = Record<string, unknown>;
@@ -49,6 +50,12 @@ export default function Audience() {
 
   return (
     <div className="bg-paper">
+      <Seo
+        title={lang === 'ru' ? 'Зрителям — Дом Союзов' : 'For Visitors — House of Unions'}
+        description={lead}
+        path="audience"
+        lang={lang}
+      />
       {/* HERO */}
       <RevealSection className="grid gap-8 border-b border-line px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-20 md:pt-32">
         <div>

@@ -34,7 +34,7 @@ import { adminApi } from '../../api/client';
 /* Только те ключи, которые реально читаются фронтендом.               */
 /* ------------------------------------------------------------------ */
 
-type FieldType = 'text' | 'textarea' | 'image' | 'video' | 'list';
+type FieldType = 'text' | 'textarea' | 'image' | 'video' | 'file' | 'list';
 
 /** Подполе одного элемента списка. По умолчанию двуязычное. */
 type ListSubField = {
@@ -215,53 +215,16 @@ const PAGES: PageDef[] = [
     sections: [
       heroPair('organizers_title', 'organizers_lead'),
       {
-        title: 'Услуги (блок верхнего списка)',
+        title: 'Короткий текст под кнопками',
         fields: [
-          {
-            key: 'organizers_services',
-            label: 'Карточки услуг',
-            type: 'list',
-            itemLabel: 'Добавить услугу',
-            itemFields: [
-              { key: 'num', label: 'Индекс (N° 01, и т.п.)', bilingual: false },
-              { key: 'title', label: 'Заголовок' },
-              { key: 'desc', label: 'Описание', multiline: true },
-            ],
-          },
+          { key: 'organizers_note', label: 'Пояснение к кнопкам', type: 'textarea', rows: 3, hint: 'Кратко: что делать организатору (скачать райдер / отправить запрос).' },
         ],
       },
       {
-        title: 'Процесс бронирования',
+        title: 'Документы (PDF — открываются в новой вкладке)',
         fields: [
-          { key: 'organizers_steps_heading', label: 'Заголовок секции', type: 'text' },
-          {
-            key: 'organizers_steps',
-            label: 'Шаги процесса',
-            type: 'list',
-            itemLabel: 'Добавить шаг',
-            itemFields: [
-              { key: 'n', label: 'Номер (01, 02…)', bilingual: false },
-              { key: 'ev', label: 'Название шага' },
-              { key: 'dc', label: 'Описание', multiline: true },
-            ],
-          },
-        ],
-      },
-      {
-        title: 'Техническое оснащение',
-        fields: [
-          { key: 'organizers_tech_heading', label: 'Заголовок секции', type: 'text' },
-          {
-            key: 'organizers_tech',
-            label: 'Карточки оснащения',
-            type: 'list',
-            itemLabel: 'Добавить карточку',
-            itemFields: [
-              { key: 'n', label: 'Номер (01, 02…)', bilingual: false },
-              { key: 'title', label: 'Заголовок' },
-              { key: 'desc', label: 'Описание', multiline: true },
-            ],
-          },
+          { key: 'organizers_rider_pdf', label: 'Технический райдер (PDF)', type: 'file', single: true, hint: 'Кнопка «Просмотреть технический райдер».' },
+          { key: 'organizers_halls_pdf', label: 'Презентация залов (PDF)', type: 'file', single: true, hint: 'Кнопка «Залы». Если пусто — кнопка ведёт на страницу /halls.' },
         ],
       },
     ],
@@ -276,34 +239,16 @@ const PAGES: PageDef[] = [
     sections: [
       heroPair('audience_title', 'audience_lead'),
       {
-        title: 'Памятка зрителю',
+        title: 'Правила нахождения (карточки)',
         fields: [
           {
             key: 'audience_items',
-            label: 'Пункты памятки',
+            label: 'Правила',
             type: 'list',
-            itemLabel: 'Добавить пункт',
+            itemLabel: 'Добавить правило',
             itemFields: [
-              { key: 'n', label: 'Индекс (N° 01…)', bilingual: false },
               { key: 'title', label: 'Заголовок' },
               { key: 'desc', label: 'Описание', multiline: true },
-            ],
-          },
-        ],
-      },
-      {
-        title: 'Частые вопросы',
-        fields: [
-          { key: 'audience_faq_heading', label: 'Заголовок секции', type: 'text' },
-          {
-            key: 'audience_faq',
-            label: 'Вопросы и ответы',
-            type: 'list',
-            itemLabel: 'Добавить вопрос',
-            itemFields: [
-              { key: 'n', label: 'Номер (01, 02…)', bilingual: false },
-              { key: 'q', label: 'Вопрос' },
-              { key: 'a', label: 'Ответ', multiline: true },
             ],
           },
         ],
@@ -364,6 +309,14 @@ const PAGES: PageDef[] = [
           { key: 'legal_ogrn', label: 'ОГРН', type: 'text', single: true },
           { key: 'legal_kpp', label: 'КПП', type: 'text', single: true },
           { key: 'legal_address', label: 'Юридический адрес', type: 'text', single: true },
+        ],
+      },
+      {
+        title: 'Соцсети (ссылки; пустые скрываются)',
+        fields: [
+          { key: 'social_vk', label: 'ВКонтакте', type: 'text', single: true, hint: 'Полная ссылка https://vk.com/...' },
+          { key: 'social_tg', label: 'Telegram', type: 'text', single: true, hint: 'Полная ссылка https://t.me/...' },
+          { key: 'social_yt', label: 'YouTube', type: 'text', single: true, hint: 'Полная ссылка https://youtube.com/...' },
         ],
       },
     ],
@@ -429,6 +382,7 @@ const PAGE_GROUPS: Array<{ name: string; ids: string[] }> = [
 
 const ACCEPT_IMAGE = 'image/*';
 const ACCEPT_VIDEO = 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv';
+const ACCEPT_PDF = 'application/pdf,.pdf';
 
 /* ------------------------------------------------------------------ */
 
@@ -675,6 +629,56 @@ function FieldEditor({
           itemLabel={field.itemLabel ?? 'Добавить элемент'}
           onChange={(json) => onChange('value_ru', json)}
         />
+      </div>
+    );
+  }
+
+  if (field.type === 'file') {
+    return (
+      <div className="grid gap-3 border-t border-line pt-5 first:border-t-0 first:pt-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <FileText size={14} className="text-muted" />
+          <span className="text-sm font-semibold text-ink">{field.label}</span>
+          {field.hint ? <span className="w-full text-xs text-muted md:w-auto md:flex-1">{field.hint}</span> : null}
+        </div>
+
+        {row.value_ru ? (
+          <a
+            href={row.value_ru}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 self-start rounded-xl border border-line bg-paper px-3 py-2 text-sm text-ink transition hover:border-ink"
+          >
+            <FileText size={14} /> Открыть текущий PDF ↗
+          </a>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-line bg-paper px-4 py-4 text-xs text-muted">
+            PDF не загружен
+          </div>
+        )}
+
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <input
+            type="text"
+            value={row.value_ru}
+            onChange={(e) => {
+              onChange('value_ru', e.target.value);
+              onChange('value_en', e.target.value);
+            }}
+            placeholder="URL PDF или загрузите файл"
+            className="min-h-11 w-full rounded-xl border border-line bg-white px-3 outline-none transition focus:border-ink"
+          />
+          <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-line bg-paper px-4 text-sm font-semibold text-ink transition hover:border-ink">
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+            {uploading ? 'Загрузка…' : 'Загрузить PDF'}
+            <input
+              type="file"
+              accept={ACCEPT_PDF}
+              onChange={(e) => onUpload(e.target.files?.[0])}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
     );
   }

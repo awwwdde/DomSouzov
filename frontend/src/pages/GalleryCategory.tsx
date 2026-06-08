@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import type { GalleryImage } from '../types';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { maskLineReveal, transitionBase, useReducedMotionActive } from '../lib/motion';
@@ -86,6 +87,17 @@ export default function GalleryCategory() {
 
   return (
     <>
+      <Seo
+        title={`${l(category.name)} — Галерея · Дом Союзов`}
+        description={
+          lang === 'ru'
+            ? `${l(category.name)} — фотогалерея Дома Союзов.`
+            : `${l(category.name)} — photo gallery of the House of Unions.`
+        }
+        path={`gallery/${category.slug}`}
+        image={category.cover_image || undefined}
+        lang={lang}
+      />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useSite } from '../context/SiteContext';
 import type { GalleryImage } from '../types';
 import { PageKicker } from '../components/PageKicker';
+import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { useReducedMotionActive } from '../lib/motion';
@@ -38,9 +39,14 @@ export default function Gallery() {
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
+  const gallerySeo = (
+    <Seo title={`${title} — Дом Союзов`} description={lead} path="gallery" lang={lang} />
+  );
+
   if (categories.length > 0) {
     return (
       <>
+        {gallerySeo}
         <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
           <div>
             <PageKicker>{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</PageKicker>
@@ -88,7 +94,12 @@ export default function Gallery() {
     );
   }
 
-  return <LegacyGrid lang={lang} galleryItems={galleryItems} />;
+  return (
+    <>
+      {gallerySeo}
+      <LegacyGrid lang={lang} galleryItems={galleryItems} />
+    </>
+  );
 }
 
 function LegacyGrid({ lang, galleryItems }: { lang: 'ru' | 'en'; galleryItems: GalleryImage[] }) {

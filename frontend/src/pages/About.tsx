@@ -4,6 +4,7 @@ import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
 import { Section } from '../components/Section';
 import ActionButton from '../components/ActionButton';
+import Seo from '../components/Seo';
 import type { AboutHoverTip, AboutScatteredPhoto, AboutTimelineEvent } from '../types';
 
 /* ================================================================ */
@@ -36,8 +37,20 @@ export default function About() {
 
   const about = content?.about ?? { hover_tips: [], scattered_photos: [], timeline: [] };
 
+  const aboutDesc =
+    (introText && introText.replace(/\s+/g, ' ').trim().slice(0, 200)) ||
+    (lang === 'ru'
+      ? 'История, архитектура и сегодняшний день Дома Союзов и Колонного зала в центре Москвы.'
+      : 'History, architecture and the present day of the House of Unions and its Hall of Columns in Moscow.');
+
   return (
     <div className="w-full overflow-x-hidden bg-paper text-ink">
+      <Seo
+        title={lang === 'ru' ? 'О Доме — Дом Союзов' : 'About — House of Unions'}
+        description={aboutDesc}
+        path="about"
+        lang={lang}
+      />
       <HeroStage video={heroVideo} poster={heroPoster} kicker={heroKicker} title={heroTitle} reduced={reduced} />
       <IntroStage text={introText} tips={about.hover_tips} lang={lang} reduced={reduced} />
       <ScatteredPhotosStage

@@ -5,6 +5,7 @@ import { useSite } from '../context/SiteContext';
 import type { NewsArticle } from '../types';
 import { getNewsItem } from '../api/client';
 import { PageKicker } from '../components/PageKicker';
+import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { formatNewsLongDate } from '../lib/newsDates';
@@ -55,8 +56,29 @@ export default function NewsDetail() {
 
   const pub = formatNewsLongDate(article, lang);
 
+  const seoDesc = (l(article.excerpt).trim() || l(article.content).trim().slice(0, 200)) || l(article.title);
+  const seoImage = article.image ? mediaUrl(article.image) : undefined;
+
   return (
     <>
+      <Seo
+        title={`${l(article.title)} · ${SITE_NAME}`}
+        description={seoDesc}
+        path={`news/${article.id}`}
+        image={seoImage}
+        type="article"
+        lang={lang}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'NewsArticle',
+          headline: l(article.title),
+          description: seoDesc,
+          image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
+          datePublished: article.created_at ?? undefined,
+          publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+          mainEntityOfPage: `${SITE_URL}/news/${article.id}`,
+        }}
+      />
       <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0 flex-1">
