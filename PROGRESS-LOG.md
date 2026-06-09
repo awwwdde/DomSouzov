@@ -117,6 +117,13 @@
 - Плавность: `duration:1.1` и `easing` в `SmoothScrollProvider.tsx`.
 - ⚠️ Пользователю: Ctrl+Shift+R, проверить плавность колеса и переходы.
 
+## Сессия 2 — ФИКС деплоя: миграции колонок на Postgres
+
+- Симптом на проде: `psycopg2.errors.UndefinedColumn: column events.age_rating does not exist` при seed.
+- Причина: `migrate_db.py` добавлял колонки ТОЛЬКО для SQLite (на Postgres функция выходила сразу), а `create_all` не дополняет существующие таблицы новыми колонками; плюс миграция не вызывалась в `seed.py`.
+- Фикс: `migrate_db.py` теперь идемпотентно добавляет колонки и на Postgres (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) — events.age_rating, news.gallery, has_ticket/ticket_url/is_pinned/pin_order, gallery.category_id/is_video/video_url. Вызов `migrate_sqlite()` добавлен в `seed.py` после create_all. Проверено локально (idempotent на 2 прогона).
+- Пользователю: commit + push + redeploy.
+
 ## Сессия 2 — Postgres + админ через .env (интеграция с awwwdde-panel)
 
 - Изучил инфраструктуру `C:\Users\vlad\Documents\542\awwwdde` (панель деплоя). Выводы:

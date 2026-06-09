@@ -19,10 +19,14 @@ from models import (
 )
 from auth import hash_password
 from config import settings
+from migrate_db import migrate_sqlite
 
 
 def seed():
     Base.metadata.create_all(bind=engine)
+    # Добавляем недостающие колонки в уже существующие таблицы (важно на Postgres,
+    # где create_all не дополняет схему при добавлении новых полей в модели).
+    migrate_sqlite()
     db = SessionLocal()
 
     # ── Админ из окружения (env = источник истины) ──
