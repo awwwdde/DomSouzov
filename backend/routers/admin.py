@@ -112,7 +112,26 @@ async def upload_file(
             "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF",
         )
 
+    # Лимит размера — ДО чтения в память (файлы лежат в БД как bytea).
+    max_bytes = app_settings.MAX_UPLOAD_MB * 1024 * 1024
+    declared = getattr(file, "size", None)
+    is_video_ext = ext in ALLOWED_VIDEO_EXTENSIONS
+    if declared and declared > max_bytes:
+        hint = " Для видео используйте внешнюю ссылку (поле URL)." if is_video_ext else ""
+        raise HTTPException(
+            413,
+            f"Файл слишком большой ({declared // (1024 * 1024)} МБ). "
+            f"Максимум — {app_settings.MAX_UPLOAD_MB} МБ.{hint}",
+        )
+
     content = await file.read()
+    if len(content) > max_bytes:
+        hint = " Для видео используйте внешнюю ссылку (поле URL)." if is_video_ext else ""
+        raise HTTPException(
+            413,
+            f"Файл слишком большой ({len(content) // (1024 * 1024)} МБ). "
+            f"Максимум — {app_settings.MAX_UPLOAD_MB} МБ.{hint}",
+        )
     filename = f"{uuid.uuid4().hex}.{ext}"
     content_type = file.content_type or "application/octet-stream"
 
