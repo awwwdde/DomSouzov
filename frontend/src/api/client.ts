@@ -40,6 +40,14 @@ export const getHalls = (): Promise<Hall[]> =>
 export const getGallery = (): Promise<GalleryImage[]> =>
   api.get('/gallery').then((r) => r.data);
 
+export const subscribeNewsletter = async (email: string): Promise<void> => {
+  try {
+    await api.post('/subscribe', { email });
+  } catch (error) {
+    throw new Error(extractApiErrorMessage(error));
+  }
+};
+
 // Admin Auth
 export const adminLogin = (email: string, password: string) =>
   api.post('/admin/login', { email, password }).then((r) => {
@@ -108,6 +116,9 @@ export const adminApi = {
   uploadImage: async (file: File): Promise<string> => {
     return adminApi.uploadFile(file);
   },
+
+  // Newsletter
+  getSubscribers: () => api.get('/admin/subscribers').then((r) => r.data),
 
   changePassword: (current_password: string, new_password: string) =>
     api.post('/admin/change-password', { current_password, new_password }).then((r) => r.data),

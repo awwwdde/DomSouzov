@@ -51,7 +51,7 @@ export default function Lightbox({ open, onClose, items, index, onIndexChange }:
   if (!open || !safeLen || !current) return null;
 
   const el = (
-    <div className="fixed inset-0 z-[400] flex flex-col bg-ink/95" role="dialog" aria-modal="true" aria-label="Gallery">
+    <div data-lenis-prevent className="fixed inset-0 z-[400] flex flex-col bg-ink/95" role="dialog" aria-modal="true" aria-label="Gallery">
       <button
         type="button"
         className="absolute right-4 top-4 z-[402] flex h-12 w-12 items-center justify-center text-2xl text-paper/90 transition hover:text-paper"

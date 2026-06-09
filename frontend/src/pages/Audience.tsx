@@ -38,10 +38,10 @@ const DEFAULT_ITEMS: RawItem[] = [
 const ICONS: LucideIcon[] = [Ticket, Clock, ShoppingBag, Volume2, Camera, Shirt, Users, Coffee, Accessibility];
 
 export default function Audience() {
-  const { lang, t, list, pickItem } = useSite();
-  const title = t('audience_title') || (lang === 'ru' ? 'Зрителям' : 'For Visitors');
+  const { lang, tStrict, list, pickItem } = useSite();
+  const title = tStrict('audience_title') || (lang === 'ru' ? 'Зрителям' : 'For Visitors');
   const lead =
-    t('audience_lead') ||
+    tStrict('audience_lead') ||
     (lang === 'ru'
       ? 'Несколько простых правил, чтобы вечер в Доме Союзов прошёл комфортно для вас и для всех гостей.'
       : 'A few simple rules so that your evening at the House of Unions is comfortable for you and for every guest.');

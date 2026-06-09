@@ -1,64 +1,39 @@
 import { useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
-import { getLenis } from './SmoothScrollProvider';
+import { motion } from 'framer-motion';
+import { EASE_DS, useReducedMotionActive } from '../lib/motion';
+import { scrollToTopInstant } from './SmoothScrollProvider';
 
-/** Жёсткий сброс скролла наверх, синхронизированный с Lenis.
- *  Порядок важен: сперва двигаем Lenis к 0 (resize → scrollTo), и только
- *  потом нативный scrollTo(0) — он «последнее слово», иначе lenis.resize()
- *  возвращает прежний animatedScroll в окно (desync window≠lenis). */
-function resetScroll() {
-  const lenis = getLenis();
-  if (lenis) {
-    lenis.resize();
-    lenis.scrollTo(0, { immediate: true, force: true });
-  }
-  window.scrollTo(0, 0);
-}
-
-/** Сбрасывает скролл в момент монтирования новой страницы.
- *  Рендерится ВНУТРИ keyed-блока, поэтому с `AnimatePresence mode="wait"`
- *  срабатывает строго после размонтирования предыдущей страницы. */
+/** Сброс скролла наверх при монтировании новой страницы (окно + Lenis).
+ *  Дублирует сброс из SmoothScrollProvider на случай различий в тайминге. */
 function ScrollToTop() {
   useLayoutEffect(() => {
-    // Сразу + на кадрах + таймерами: Lenis/scroll-anchoring могут вернуть
-    // позицию, пока верхний контент дорастает. Финальный сброс — в
-    // onAnimationComplete родительского motion.div (после exit/enter).
-    resetScroll();
-    const r1 = requestAnimationFrame(() => {
-      resetScroll();
-      requestAnimationFrame(resetScroll);
-    });
-    const t1 = window.setTimeout(resetScroll, 60);
-    const t2 = window.setTimeout(resetScroll, 200);
-    return () => {
-      cancelAnimationFrame(r1);
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    scrollToTopInstant();
+    // на следующем кадре повторяем — высота новой страницы уже посчитана
+    const r = requestAnimationFrame(scrollToTopInstant);
+    return () => cancelAnimationFrame(r);
   }, []);
   return null;
 }
 
+/** Простой переход: новая страница монтируется СРАЗУ (key=pathname),
+ *  только плавное проявление по opacity. Никакого mode="wait" (он мог
+ *  «зависать» — старая уходила, новая не монтировалась → пустая страница)
+ *  и никакого transform (контент не уезжает). */
 export function PageAnimationLayout() {
   const location = useLocation();
   const reduced = useReducedMotionActive();
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        className="flex min-h-0 w-full flex-1 flex-col"
-        initial={reduced ? false : { opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduced ? undefined : { opacity: 0, y: -10 }}
-        transition={{ duration: reduced ? 0 : DURATION.fast, ease: EASE_DS }}
-        onAnimationComplete={resetScroll}
-      >
-        <ScrollToTop />
-        <Outlet />
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={location.pathname}
+      className="flex min-h-0 w-full flex-1 flex-col"
+      initial={reduced ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduced ? 0 : 0.28, ease: EASE_DS }}
+    >
+      <ScrollToTop />
+      <Outlet />
+    </motion.div>
   );
 }

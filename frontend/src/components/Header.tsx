@@ -108,7 +108,7 @@ export default function Header() {
               to="/events"
               className="hidden h-11 items-center justify-center rounded-full bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.18em] text-paper transition hover:bg-accent-deep md:inline-flex"
             >
-              {lang === 'ru' ? 'Билеты' : 'Tickets'}
+              {lang === 'ru' ? 'Мероприятия' : 'Programme'}
             </Link>
             <button
               type="button"
@@ -132,11 +132,12 @@ export default function Header() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
               transition={{ duration: reduced ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-x-0 top-full max-h-[calc(100vh-80px)] overflow-y-auto border-t border-line bg-paper-soft shadow-[0_18px_40px_-24px_rgba(20,20,19,0.35)] md:max-h-none md:overflow-visible"
+              data-lenis-prevent
+              className="absolute inset-x-0 top-full max-h-[calc(100vh-80px)] overflow-y-auto border-t border-line bg-paper-soft shadow-[0_18px_40px_-24px_rgba(20,20,19,0.35)] lg:max-h-none lg:overflow-visible"
               aria-label={lang === 'ru' ? 'Основное меню' : 'Main'}
             >
               <motion.div
-                className="mx-auto flex w-full max-w-[1800px] flex-col items-stretch px-5 py-4 md:w-[95%] md:flex-row md:gap-x-12 md:overflow-x-auto md:px-6 md:py-6 lg:gap-x-16 md:[scrollbar-width:none] md:[-ms-overflow-style:none] md:[&::-webkit-scrollbar]:hidden"
+                className="mx-auto flex w-full max-w-[1800px] flex-col items-stretch px-5 py-4 lg:w-[95%] lg:flex-row lg:gap-x-16 lg:overflow-x-auto lg:px-6 lg:py-6 lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden"
                 variants={{
                   hidden: {},
                   visible: {
@@ -159,10 +160,10 @@ export default function Header() {
                       visible: { opacity: 1 },
                     }}
                     transition={{ duration: reduced ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="group relative shrink-0 whitespace-nowrap border-b border-line bg-transparent py-4 text-left font-heading text-2xl font-bold uppercase leading-none tracking-[0.02em] text-ink transition last:border-b-0 hover:text-accent md:border-b-0 md:py-0 md:text-[clamp(20px,2.4vw,34px)] md:hover:text-ink"
+                    className="group relative shrink-0 whitespace-nowrap border-b border-line bg-transparent py-4 text-left font-heading text-2xl font-bold uppercase leading-none tracking-[0.02em] text-ink transition last:border-b-0 hover:text-accent lg:border-b-0 lg:py-0 lg:text-[clamp(20px,2.4vw,34px)] lg:hover:text-ink"
                   >
                     <span className="block">{l(item)}</span>
-                    <span className="mt-2 hidden h-px w-full origin-left scale-x-0 bg-accent transition-transform duration-300 ease-out group-hover:scale-x-100 md:block" aria-hidden />
+                    <span className="mt-2 hidden h-px w-full origin-left scale-x-0 bg-accent transition-transform duration-300 ease-out group-hover:scale-x-100 lg:block" aria-hidden />
                   </motion.button>
                 ))}
 
@@ -172,7 +173,7 @@ export default function Header() {
                   onClick={() => handleNav('/events')}
                   className="mt-5 inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-paper transition md:hidden"
                 >
-                  {lang === 'ru' ? 'Билеты' : 'Tickets'}
+                  {lang === 'ru' ? 'Мероприятия' : 'Programme'}
                 </button>
               </motion.div>
             </motion.nav>

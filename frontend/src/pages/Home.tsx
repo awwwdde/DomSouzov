@@ -9,6 +9,7 @@ import { Container, Section } from '../components/Section';
 import { RevealItem, RevealList } from '../components/Reveal';
 import { DURATION, transitionBase, useReducedMotionActive } from '../lib/motion';
 import { formatDayMonthFromEvent, sortEventsByDate } from '../lib/eventDates';
+import { eventCategoryIcon } from '../lib/eventCategory';
 import { pickHomeEvents, pickHomeNews } from '../lib/homePick';
 import { useSite } from '../context/SiteContext';
 import type { Event, NewsArticle } from '../types';
@@ -55,6 +56,8 @@ export default function Home() {
   const marqueeItems = list<RawItem>('home_marquee', DEFAULT_MARQUEE)
     .map((m) => pickItem(m, 'text'))
     .filter(Boolean);
+
+  const promos = list<RawItem>('home_promos', []);
 
   const thesis = t('home_thesis') || (lang === 'ru'
     ? 'Дом Союзов — историческая концертная и церемониальная площадка в центре Москвы. Колонный зал работает с 1784 года: классические концерты, публичные дискуссии, торжественные церемонии и съёмки.'
@@ -172,9 +175,9 @@ export default function Home() {
             <ActionButton
               to="/events"
               text={lang === 'ru' ? 'Билеты и афиша' : 'Tickets & programme'}
-              backgroundColor="#0a0a0a"
-              textColor="#f0ebe0"
-              strokeColor="#0a0a0a"
+              backgroundColor="#1f5f4e"
+              textColor="#f7f3e8"
+              strokeColor="#1f5f4e"
             />
             <ActionButton
               to="/about"
@@ -192,7 +195,7 @@ export default function Home() {
       {/* ============================================================ */}
       <Marquee
         items={marqueeItems}
-        variant="dark"
+        variant="accent"
         duration={28}
         aria-label={lang === 'ru' ? 'Анонс' : 'Highlights'}
       />
@@ -334,6 +337,28 @@ export default function Home() {
       ) : null}
 
       {/* ============================================================ */}
+      {/* ПРОМО-БАННЕРЫ (из CMS)                                        */}
+      {/* ============================================================ */}
+      {promos.length > 0 ? (
+        <Section tone="paper" spacing="md" bordered>
+          <RevealList className={`grid gap-6 ${promos.length === 1 ? '' : promos.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
+            {promos.map((p, i) => (
+              <RevealItem key={`promo-${i}`} y={16}>
+                <PromoBanner
+                  image={pickItem(p, 'image')}
+                  title={pickItem(p, 'title')}
+                  text={pickItem(p, 'text')}
+                  cta={pickItem(p, 'cta')}
+                  link={pickItem(p, 'link')}
+                  full={promos.length === 1}
+                />
+              </RevealItem>
+            ))}
+          </RevealList>
+        </Section>
+      ) : null}
+
+      {/* ============================================================ */}
       {/* 7. ПАРНЫЕ БЛОКИ — Организаторам / Зрителям                    */}
       {/* ============================================================ */}
       <Section tone="paper" spacing="md" bordered>
@@ -426,32 +451,43 @@ function EditorialCardGrid({
         const title = l(ev.title);
         const tag = l(ev.tag);
         const date = formatDayMonthFromEvent(ev, lang);
+        const Icon = eventCategoryIcon(ev.tag.ru || ev.tag.en);
+        const buyHref = ev.has_ticket && ev.ticket_url ? ev.ticket_url : null;
 
         return (
           <RevealItem key={`event-${ev.id}`} y={16}>
-            <MotionLink
-              to={href}
+            <motion.div
               className="group flex h-full flex-col"
               variants={{ rest: {}, hover: {} }}
               initial="rest"
               whileHover="hover"
             >
-              <div className="flex items-baseline justify-between gap-4 border-b border-ink pb-3">
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft">
+              <Link to={href} className="flex items-baseline justify-between gap-4 border-b border-ink pb-3">
+                <span className="inline-flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft">
+                  <Icon size={14} strokeWidth={1.7} className="text-accent" />
                   {tag}
                 </span>
                 <span className="font-mono text-[clamp(18px,1.5vw,24px)] font-medium leading-none tabular-nums text-ink">
                   {date}
                 </span>
-              </div>
-              <h3 className="mt-5 mb-6 font-heading text-[clamp(18px,1.35vw,22px)] font-black uppercase leading-[1.05] tracking-[0.01em] text-ink transition group-hover:underline group-hover:underline-offset-4">
-                {title}
-              </h3>
-              <div className="relative mt-auto aspect-[4/5] w-full overflow-hidden">
+              </Link>
+              <Link to={href}>
+                <h3 className="mt-5 mb-6 font-heading text-[clamp(18px,1.35vw,22px)] font-black uppercase leading-[1.05] tracking-[0.01em] text-ink transition group-hover:text-accent">
+                  {title}
+                </h3>
+              </Link>
+              <Link to={href} className="relative aspect-[4/5] w-full overflow-hidden">
+                {ev.age_rating ? (
+                  <span className="absolute right-3 top-3 z-10 rounded-full bg-ink/85 px-2.5 py-1 text-[10px] font-bold tabular-nums text-paper backdrop-blur-sm">
+                    {ev.age_rating}
+                  </span>
+                ) : null}
                 {ev.image ? (
                   <motion.img
                     src={ev.image}
                     alt={title}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                     variants={{
                       rest: { scale: 1 },
@@ -465,8 +501,26 @@ function EditorialCardGrid({
                 ) : (
                   <TicketStamp title={title} />
                 )}
+              </Link>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Link
+                  to={href}
+                  className="inline-flex min-h-9 items-center rounded-full border border-ink px-4 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-ink hover:text-paper"
+                >
+                  {lang === 'ru' ? 'Подробнее' : 'Details'}
+                </Link>
+                {buyHref ? (
+                  <a
+                    href={buyHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-9 items-center rounded-full bg-accent px-4 text-[10px] font-bold uppercase tracking-[0.14em] text-paper transition hover:bg-accent-deep"
+                  >
+                    {lang === 'ru' ? 'Купить билет' : 'Buy tickets'}
+                  </a>
+                ) : null}
               </div>
-            </MotionLink>
+            </motion.div>
           </RevealItem>
         );
       })}
@@ -511,6 +565,8 @@ function NewsGrid({
                   <motion.img
                     src={nw.image}
                     alt={title}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                     variants={{
                       rest: { scale: 1 },
@@ -597,6 +653,60 @@ function InfoBlock({
         />
       </div>
     </div>
+  );
+}
+
+/* ============================================================ */
+/* PromoBanner — рекламный блок из CMS (фон + заголовок + CTA). */
+/* ============================================================ */
+function PromoBanner({
+  image,
+  title,
+  text,
+  cta,
+  link,
+  full,
+}: {
+  image: string;
+  title: string;
+  text: string;
+  cta: string;
+  link: string;
+  full: boolean;
+}) {
+  const inner = (
+    <div className={`group relative flex ${full ? 'min-h-[380px] md:min-h-[420px]' : 'min-h-[320px]'} flex-col justify-end overflow-hidden bg-ink`}>
+      {image ? (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover opacity-80 transition duration-700 group-hover:scale-[1.04] group-hover:opacity-90"
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/35 to-transparent" aria-hidden />
+      <div className="relative p-7 md:p-9">
+        {title ? (
+          <h3 className="font-heading text-[clamp(24px,2.6vw,40px)] font-bold uppercase leading-[1] tracking-[0.02em] text-paper">
+            {title}
+          </h3>
+        ) : null}
+        {text ? <p className="mt-3 max-w-md text-sm leading-6 text-paper/80">{text}</p> : null}
+        {cta ? (
+          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-paper transition group-hover:bg-accent-deep">
+            {cta} →
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+  if (!link) return inner;
+  if (link.startsWith('/')) return <Link to={link} className="block">{inner}</Link>;
+  return (
+    <a href={link} target="_blank" rel="noopener noreferrer" className="block">
+      {inner}
+    </a>
   );
 }
 

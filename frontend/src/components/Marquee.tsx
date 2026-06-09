@@ -7,8 +7,8 @@ type MarqueeProps = {
   ariaLabel?: string;
   duration?: number;
   className?: string;
-  /** `dark` — фон ink, текст paper (§2.4). */
-  variant?: 'light' | 'dark';
+  /** `dark` — фон ink; `accent` — фирменный зелёный фон. */
+  variant?: 'light' | 'dark' | 'accent';
 };
 
 export default function Marquee({
@@ -25,11 +25,17 @@ export default function Marquee({
   const effectiveDuration = reduced ? duration : hovered ? duration * 2.2 : duration;
 
   const isDark = variant === 'dark';
-  const textClass = isDark
+  const isAccent = variant === 'accent';
+  const onColor = isDark || isAccent;
+  const textClass = onColor
     ? 'font-heading text-[clamp(22px,3.4vw,46px)] font-bold uppercase tracking-[-0.01em] text-paper'
     : 'font-heading text-[clamp(28px,4.6vw,68px)] font-semibold uppercase leading-none tracking-[-0.04em] text-ink';
-  const dotClass = isDark ? 'h-2 w-2 rounded-full bg-paper/40' : 'h-2 w-2 rounded-full bg-ink';
-  const sectionTone = isDark ? 'border-paper/10 bg-ink' : 'border-line bg-paper';
+  const dotClass = onColor ? 'h-2 w-2 rounded-full bg-paper/50' : 'h-2 w-2 rounded-full bg-ink';
+  const sectionTone = isAccent
+    ? 'border-accent-deep bg-accent'
+    : isDark
+      ? 'border-paper/10 bg-ink'
+      : 'border-line bg-paper';
 
   return (
     <section

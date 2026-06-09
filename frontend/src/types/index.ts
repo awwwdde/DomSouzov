@@ -24,6 +24,7 @@ export interface Event {
   is_featured: boolean;
   has_ticket?: boolean;
   ticket_url?: string | null;
+  age_rating?: string | null;
   is_pinned?: boolean;
   pin_order?: number;
   gallery?: EventGalleryImage[];
@@ -36,6 +37,7 @@ export interface NewsArticle {
   excerpt: BilingualString;
   content: BilingualString;
   image: string | null;
+  gallery?: string[];
   is_lead: boolean;
   is_pinned?: boolean;
   pin_order?: number;

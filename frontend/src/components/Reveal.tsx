@@ -6,6 +6,7 @@ import {
   STAGGER,
   maskLineReveal,
   transitionBase,
+  useInViewFailsafe,
   useReducedMotionActive,
 } from '../lib/motion';
 
@@ -27,12 +28,13 @@ function itemVariants(reduced: boolean, y: number) {
 
 export default function Reveal({ children, delay = 0, y = 18, className }: RevealProps) {
   const reduced = useReducedMotionActive();
+  const { ref, show } = useInViewFailsafe<HTMLDivElement>(viewport.amount);
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={viewport}
+      animate={show ? 'show' : 'hidden'}
       variants={itemVariants(reduced, y)}
       transition={reduced ? { duration: 0 } : { ...transitionBase, delay }}
     >
@@ -43,12 +45,13 @@ export default function Reveal({ children, delay = 0, y = 18, className }: Revea
 
 export function RevealSection({ children, delay = 0, y = 22, className }: RevealProps) {
   const reduced = useReducedMotionActive();
+  const { ref, show } = useInViewFailsafe<HTMLElement>(viewport.amount);
   return (
     <motion.section
+      ref={ref}
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={viewport}
+      animate={show ? 'show' : 'hidden'}
       variants={itemVariants(reduced, y)}
       transition={reduced ? { duration: 0 } : { ...transitionBase, delay }}
     >
@@ -59,12 +62,13 @@ export function RevealSection({ children, delay = 0, y = 22, className }: Reveal
 
 export function RevealList({ children, className }: Pick<RevealProps, 'children' | 'className'>) {
   const reduced = useReducedMotionActive();
+  const { ref, show } = useInViewFailsafe<HTMLDivElement>(viewport.amount);
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={viewport}
+      animate={show ? 'show' : 'hidden'}
       variants={{
         hidden: {},
         show: {
@@ -120,13 +124,14 @@ export function RevealText({
 }: RevealTextProps) {
   const reduced = useReducedMotionActive();
   const Parent = motionComponents[as] ?? motion.div;
+  const { ref, show } = useInViewFailsafe<HTMLDivElement>(viewport.amount);
 
   return (
     <Parent
+      ref={ref}
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={viewport}
+      animate={show ? 'show' : 'hidden'}
       variants={{
         hidden: {},
         show: {
@@ -160,12 +165,13 @@ type RevealMaskProps = {
 
 export function RevealMask({ children, className, delay = 0, direction = 'up' }: RevealMaskProps) {
   const reduced = useReducedMotionActive();
+  const { ref, show } = useInViewFailsafe<HTMLDivElement>(viewport.amount);
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={viewport}
+      animate={show ? 'show' : 'hidden'}
       variants={maskLineReveal(reduced, direction)}
       transition={reduced ? { duration: 0 } : { ...transitionBase, delay }}
     >

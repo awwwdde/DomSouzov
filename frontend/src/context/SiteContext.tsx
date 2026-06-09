@@ -7,6 +7,10 @@ interface SiteContextValue {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (key: string) => string;
+  /** Значение ТОЛЬКО для текущего языка, без подмены русским.
+   *  Нужно там, где у компонента есть свой англоязычный фолбэк —
+   *  иначе при пустом EN-переводе на странице протекал бы русский текст. */
+  tStrict: (key: string) => string;
   /** Возвращает массив элементов, сохранённых ListEditor в админке.
    *  Каждое подполе либо строка, либо `{ru, en}`. Помощник `pickItem`
    *  достаёт значение для текущего языка.                              */
@@ -59,6 +63,13 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     return entry[lang] || entry['ru'] || '';
   };
 
+  const tStrict = (key: string): string => {
+    if (!content) return '';
+    const entry = content.settings[key];
+    if (!entry) return '';
+    return entry[lang] || '';
+  };
+
   const list = <T,>(key: string, fallback: T[]): T[] => {
     if (!content) return fallback;
     const raw = content.settings[key]?.ru;
@@ -84,7 +95,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SiteContext.Provider value={{ content, lang, setLang, t, list, pickItem, loading, refresh: load }}>
+    <SiteContext.Provider value={{ content, lang, setLang, t, tStrict, list, pickItem, loading, refresh: load }}>
       {children}
     </SiteContext.Provider>
   );

@@ -1,15 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { useSite } from '../context/SiteContext';
-import type { Event, EventGalleryImage } from '../types';
+import type { Event } from '../types';
 import { getEvent } from '../api/client';
 import { PageKicker } from '../components/PageKicker';
 import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
-import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { formatDayMonthFromEvent } from '../lib/eventDates';
-import { maskLineReveal, transitionBase, useReducedMotionActive } from '../lib/motion';
 
 function mediaUrl(path: string) {
   if (!path) return '';
@@ -21,9 +18,7 @@ export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const { lang, content } = useSite();
   const [event, setEvent] = useState<Event | null>(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const reduced = useReducedMotionActive();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -37,30 +32,6 @@ export default function EventDetail() {
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
-  const galleryItems = event?.gallery ?? [];
-
-  const lightboxSlides: LightboxItem[] = useMemo(() => {
-    if (!event) return [];
-    return galleryItems.map((img) => {
-      const caption = img.caption ? l(img.caption) : undefined;
-      return {
-        src: mediaUrl(img.image),
-        alt: caption || l(event.title),
-        caption,
-      };
-    });
-  }, [event, galleryItems, lang]);
-
-  const lead =
-    event && l(event.description).trim()
-      ? (l(event.description).split('\n')[0]?.slice(0, 220) ?? '')
-      : '';
-
-  const openLightboxAt = (i: number) => {
-    setLightboxIndex(i);
-    setLightboxOpen(true);
-  };
-
   if (!event) {
     return (
       <div className="px-5 pt-28 text-sm text-muted md:px-12 md:pt-32">
@@ -70,10 +41,27 @@ export default function EventDetail() {
   }
 
   const dayHeader = formatDayMonthFromEvent(event, lang);
+  const descParas = l(event.description).split('\n').map((s) => s.trim()).filter(Boolean);
 
-  const seoTitle = `${l(event.title)} — ${l(event.date)} · ${SITE_NAME}`;
+  const shareUrl = encodeURIComponent(`${SITE_URL}/events/${event.id}`);
+  const shareText = encodeURIComponent(l(event.title));
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(`${SITE_URL}/events/${event.id}`).then(
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      },
+      () => {},
+    );
+  };
+
+  // Похожие события: тот же жанр, кроме текущего, до 3.
+  const related = (content?.events ?? [])
+    .filter((e) => e.id !== event.id && e.tag.ru === event.tag.ru)
+    .slice(0, 3);
+
   const seoDesc =
-    lead ||
+    descParas[0]?.slice(0, 220) ||
     (lang === 'ru'
       ? `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Москва.`
       : `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Moscow.`);
@@ -82,7 +70,7 @@ export default function EventDetail() {
   return (
     <>
       <Seo
-        title={seoTitle}
+        title={`${l(event.title)} — ${l(event.date)} · ${SITE_NAME}`}
         description={seoDesc}
         path={`events/${event.id}`}
         image={seoImage}
@@ -117,12 +105,11 @@ export default function EventDetail() {
               {' · '}
               <Link to="/events">{lang === 'ru' ? 'Афиша' : 'Programme'}</Link>
               {' · '}
-              <span>{lang === 'ru' ? 'Событие' : 'Event'}</span>
+              <span>{l(event.tag)}</span>
             </PageKicker>
-            <h1 className="font-heading text-[clamp(52px,9vw,124px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
+            <h1 className="font-heading text-[clamp(44px,7vw,104px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
               {l(event.title)}
             </h1>
-            {lead ? <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink-soft md:text-lg">{lead}</p> : null}
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
@@ -133,18 +120,25 @@ export default function EventDetail() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:grid-cols-[1fr_360px] md:gap-14 md:px-12 lg:grid-cols-[1.1fr_380px]">
-        <div className="aspect-[4/3] w-full overflow-hidden border border-line bg-paper-soft">
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.1fr_380px] lg:gap-14">
+        {/* Фото — как в новости: на всю ширину, без полей */}
+        <div className="w-full overflow-hidden border border-line bg-paper-soft">
           {event.image ? (
-            <img src={mediaUrl(event.image)} alt={l(event.title)} className="h-full w-full object-cover" />
+            <img
+              src={mediaUrl(event.image)}
+              alt={l(event.title)}
+              loading="lazy"
+              decoding="async"
+              className="max-h-[640px] w-full object-cover"
+            />
           ) : (
-            <div className="flex h-full min-h-[200px] items-center justify-center p-6 text-center text-sm text-muted">
+            <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
               {l(event.title)}
             </div>
           )}
         </div>
 
-        <aside className="flex flex-col justify-center gap-6 border-t border-line pt-8 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+        <aside className="flex flex-col justify-center gap-6 border-t border-line pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           <dl className="grid gap-4 text-sm">
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
@@ -162,87 +156,130 @@ export default function EventDetail() {
             </div>
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
-                {lang === 'ru' ? 'Жанр' : 'Genre'}
+                {lang === 'ru' ? 'Категория' : 'Category'}
               </dt>
               <dd className="mt-1 text-ink-soft">{l(event.tag)}</dd>
             </div>
-            <div>
-              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
-                {lang === 'ru' ? 'Билеты' : 'Tickets'}
-              </dt>
-              <dd className="mt-1 text-ink-soft">{l(event.price)}</dd>
-            </div>
+            {event.age_rating ? (
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+                  {lang === 'ru' ? 'Возраст' : 'Age'}
+                </dt>
+                <dd className="mt-1 text-ink-soft">{event.age_rating}</dd>
+              </div>
+            ) : null}
           </dl>
           {event.has_ticket && event.ticket_url ? (
             <a
               href={event.ticket_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-11 max-w-fit items-center justify-center bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-paper transition hover:opacity-90"
+              className="inline-flex min-h-11 max-w-fit items-center justify-center rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-paper transition hover:bg-accent-deep"
             >
               {lang === 'ru' ? 'Купить билет' : 'Buy tickets'} →
             </a>
           ) : null}
           <ActionButton to="/events" text={lang === 'ru' ? 'Вся афиша' : 'Full programme'} />
+
+          {/* Поделиться */}
+          <div className="border-t border-line pt-5">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+              {lang === 'ru' ? 'Поделиться' : 'Share'}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.14em]">
+              <a
+                className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent"
+                href={`https://vk.com/share.php?url=${shareUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                VK
+              </a>
+              <a
+                className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent"
+                href={`https://t.me/share/url?url=${shareUrl}&text=${shareText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram
+              </a>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="border-b border-line pb-px uppercase text-ink transition hover:border-accent hover:text-accent"
+              >
+                {copied ? (lang === 'ru' ? 'Скопировано' : 'Copied') : lang === 'ru' ? 'Копировать' : 'Copy link'}
+              </button>
+            </div>
+          </div>
         </aside>
       </section>
 
-      <section className="border-t border-line px-5 py-16 md:px-12">
-        <div className="mx-auto grid max-w-[1600px] gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] lg:gap-16">
-          <div className="space-y-8">
-            {galleryItems.length > 0 ? (
-              <>
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
-                  {lang === 'ru' ? 'Галерея' : 'Gallery'}
-                </div>
-                {galleryItems.map((img: EventGalleryImage, gi: number) => (
-                  <motion.button
-                    key={img.id}
-                    type="button"
-                    className="block w-full overflow-hidden border border-line bg-paper text-left"
-                    onClick={() => openLightboxAt(gi)}
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true, margin: '-40px' }}
-                    variants={maskLineReveal(reduced)}
-                    transition={reduced ? { duration: 0 } : { ...transitionBase, delay: gi * 0.15 }}
-                  >
-                    <img
-                      src={mediaUrl(img.image)}
-                      alt={img.caption ? l(img.caption) : l(event.title)}
-                      className="aspect-[4/5] w-full object-cover"
-                    />
-                  </motion.button>
-                ))}
-              </>
-            ) : (
-              <div className="border border-dashed border-line bg-paper p-8 text-center text-sm text-muted">
-                {lang === 'ru' ? 'Дополнительные фотографии появятся позже.' : 'More photographs will be added later.'}
-              </div>
-            )}
-          </div>
-
-          <aside className="lg:sticky lg:top-28 lg:self-start">
+      {/* Описание программы */}
+      {descParas.length > 0 ? (
+        <section className="border-t border-line px-5 py-14 md:px-12">
+          <div className="mx-auto max-w-[820px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
-            <div className="max-w-prose space-y-5 text-[15px] leading-[1.65] text-ink-soft">
-              {l(event.description)
-                .split('\n')
-                .filter(Boolean)
-                .map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
+            <div className="space-y-5 text-[16px] leading-[1.7] text-ink-soft">
+              {descParas.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
             </div>
-          </aside>
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
 
-      <Lightbox
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        items={lightboxSlides}
-        index={lightboxIndex}
-        onIndexChange={setLightboxIndex}
-      />
+      {/* Похожие события */}
+      {related.length > 0 ? (
+        <section className="border-t border-line bg-paper px-5 py-16 md:px-12">
+          <div className="mx-auto max-w-[1600px]">
+            <h2 className="mb-10 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+              {lang === 'ru' ? 'Похожие события' : 'Related events'}
+            </h2>
+            <div className="grid gap-10 md:grid-cols-3 md:gap-8">
+              {related.map((ev) => (
+                <Link key={ev.id} to={`/events/${ev.id}`} className="group flex flex-col">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-soft">
+                    {ev.image ? (
+                      <img
+                        src={mediaUrl(ev.image)}
+                        alt={l(ev.title)}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-4 flex items-baseline justify-between gap-3 border-b border-ink pb-2 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-soft">
+                    <span>{l(ev.tag)}</span>
+                    <span className="tabular-nums">{formatDayMonthFromEvent(ev, lang)}</span>
+                  </div>
+                  <h3 className="mt-3 font-heading text-lg font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink transition group-hover:text-accent">
+                    {l(ev.title)}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Липкая панель покупки (мобайл) */}
+      {event.has_ticket && event.ticket_url ? (
+        <div className="sticky bottom-0 z-40 flex items-center justify-between gap-3 border-t border-line bg-paper-soft/95 px-5 py-3 backdrop-blur-sm md:hidden">
+          <div className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-ink">
+            {l(event.title)}
+          </div>
+          <a
+            href={event.ticket_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-paper transition hover:bg-accent-deep"
+          >
+            {lang === 'ru' ? 'Купить билет' : 'Buy tickets'}
+          </a>
+        </div>
+      ) : null}
     </>
   );
 }

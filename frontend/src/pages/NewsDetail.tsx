@@ -8,8 +8,8 @@ import { PageKicker } from '../components/PageKicker';
 import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
-import { formatNewsLongDate } from '../lib/newsDates';
-import { maskLineReveal, transitionBase, useReducedMotionActive } from '../lib/motion';
+import { formatNewsLongDate, formatNewsShortDate } from '../lib/newsDates';
+import { fadeUp, transitionBase, useReducedMotionActive } from '../lib/motion';
 
 function mediaUrl(path: string) {
   if (!path) return '';
@@ -22,6 +22,8 @@ export default function NewsDetail() {
   const { lang, content } = useSite();
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
   const reduced = useReducedMotionActive();
 
   useEffect(() => {
@@ -36,15 +38,12 @@ export default function NewsDetail() {
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
+  const gallery = useMemo(() => (article?.gallery ?? []).filter(Boolean), [article]);
+
   const lightboxItems: LightboxItem[] = useMemo(() => {
-    if (!article?.image) return [];
-    return [
-      {
-        src: mediaUrl(article.image),
-        alt: l(article.title),
-      },
-    ];
-  }, [article, lang]);
+    if (!article) return [];
+    return gallery.map((src) => ({ src: mediaUrl(src), alt: l(article.title) }));
+  }, [article, gallery, lang]);
 
   if (!article) {
     return (
@@ -54,10 +53,33 @@ export default function NewsDetail() {
     );
   }
 
-  const pub = formatNewsLongDate(article, lang);
+  const dayHeader = formatNewsShortDate(article, lang);
+  const contentParas = l(article.content).split('\n').map((s) => s.trim()).filter(Boolean);
+  const excerpt = l(article.excerpt).trim();
 
-  const seoDesc = (l(article.excerpt).trim() || l(article.content).trim().slice(0, 200)) || l(article.title);
+  const shareUrl = encodeURIComponent(`${SITE_URL}/news/${article.id}`);
+  const shareText = encodeURIComponent(l(article.title));
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(`${SITE_URL}/news/${article.id}`).then(
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      },
+      () => {},
+    );
+  };
+
+  const related = (content?.news ?? [])
+    .filter((n) => n.id !== article.id && n.tag.ru === article.tag.ru)
+    .slice(0, 3);
+
+  const seoDesc = excerpt || contentParas[0]?.slice(0, 200) || l(article.title);
   const seoImage = article.image ? mediaUrl(article.image) : undefined;
+
+  const openLightboxAt = (i: number) => {
+    setLightboxIndex(i);
+    setLightboxOpen(true);
+  };
 
   return (
     <>
@@ -79,89 +101,161 @@ export default function NewsDetail() {
           mainEntityOfPage: `${SITE_URL}/news/${article.id}`,
         }}
       />
+
+      {/* Шапка — как у афиши */}
       <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0 flex-1">
             <PageKicker>
               <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
               {' · '}
-              <Link to="/news">{lang === 'ru' ? 'Хроники' : 'Journal'}</Link>
+              <Link to="/news">{lang === 'ru' ? 'Новости' : 'News'}</Link>
               {' · '}
               <span>{l(article.tag)}</span>
             </PageKicker>
-            <h1 className="font-heading text-[clamp(52px,9vw,124px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
+            <h1 className="font-heading text-[clamp(44px,7vw,104px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
               {l(article.title)}
             </h1>
-            {l(article.excerpt).trim() ? (
-              <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink-soft md:text-lg">{l(article.excerpt)}</p>
-            ) : null}
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
               {lang === 'ru' ? 'Дата' : 'Date'}
             </div>
-            <time
-              className="mt-2 block font-heading text-[clamp(20px,2.5vw,32px)] font-bold tabular-nums text-ink"
-              dateTime={article.created_at ?? undefined}
-            >
-              {pub || '—'}
-            </time>
+            <div className="mt-2 font-heading text-[clamp(22px,3vw,36px)] font-bold tabular-nums text-ink">{dayHeader}</div>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-[1600px] px-5 py-12 md:px-12 lg:py-16">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:gap-16">
-          <div className="space-y-8">
-            {article.image ? (
+      {/* Раскладка (ПК):                              Моб. порядок:
+            ┌ обложка ─┬ инфо ─┐                         обложка
+            ├ галерея ─┼ текст ┤                         текст
+            └──────────┴───────┘                         галерея → инфо
+          Текст справа-внизу «прилипает» (sticky): при 100+ фото слева
+          текст остаётся на месте. Длинный текст решается сам — текст и
+          галерея растут вниз в своих рядах. */}
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.15fr_minmax(0,460px)] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:[grid-template-areas:'cover_info'_'gallery_text']">
+        {/* Обложка */}
+        <div className="w-full overflow-hidden border border-line bg-paper-soft lg:[grid-area:cover]">
+          {article.image ? (
+            <img
+              src={mediaUrl(article.image)}
+              alt={l(article.title)}
+              loading="lazy"
+              decoding="async"
+              className="w-full object-cover"
+            />
+          ) : (
+            <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
+              {l(article.title)}
+            </div>
+          )}
+        </div>
+
+        {/* Текст статьи — sticky на ПК */}
+        <div className="border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
+          <div className="space-y-5 text-[16px] leading-[1.8] text-ink-soft">
+            {contentParas.length > 0
+              ? contentParas.map((para, i) => <p key={i}>{para}</p>)
+              : excerpt
+                ? <p>{excerpt}</p>
+                : null}
+          </div>
+        </div>
+
+        {/* Галерея доп. фотографий (опционально) */}
+        {gallery.length > 0 ? (
+          <div className="flex flex-col gap-4 lg:[grid-area:gallery]">
+            {gallery.map((src, gi) => (
               <motion.button
+                key={gi}
                 type="button"
+                onClick={() => openLightboxAt(gi)}
+                className="group block w-full overflow-hidden border border-line bg-paper-soft"
+                variants={fadeUp(reduced)}
                 initial="hidden"
                 whileInView="show"
-                viewport={{ once: true, margin: '-40px' }}
-                variants={maskLineReveal(reduced)}
-                transition={transitionBase}
-                className="relative block w-full overflow-hidden border border-line bg-paper text-left"
-                onClick={() => setLightboxOpen(true)}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={reduced ? { duration: 0 } : transitionBase}
               >
                 <img
-                  src={mediaUrl(article.image)}
+                  src={mediaUrl(src)}
                   alt={l(article.title)}
-                  className="aspect-[4/3] w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
                 />
               </motion.button>
-            ) : null}
+            ))}
           </div>
+        ) : null}
 
-          <aside className="lg:sticky lg:top-28 lg:self-start">
-            <PageKicker>{lang === 'ru' ? 'Материал' : 'Article'}</PageKicker>
-            <div className="mb-8 border-b border-line pb-8 text-sm text-ink-soft">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
-                {lang === 'ru' ? 'Рубрика' : 'Category'}
-              </div>
-              <div className="mt-2 font-heading text-2xl font-bold uppercase tracking-[0.04em]">{l(article.tag)}</div>
+        {/* Инфо о новости: рубрика, дата, поделиться, кнопка */}
+        <aside className="flex flex-col gap-6 border-t border-line pt-8 lg:border-t-0 lg:pt-0 lg:[grid-area:info] lg:self-start">
+          <dl className="grid gap-4 text-sm">
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Дата' : 'Date'}</dt>
+              <dd className="mt-1 text-ink-soft">{formatNewsLongDate(article, lang) || dayHeader}</dd>
             </div>
-            <div className="max-w-prose space-y-5 text-[15px] leading-[1.65] text-ink-soft">
-              {l(article.content)
-                .split('\n')
-                .filter(Boolean)
-                .map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Рубрика' : 'Category'}</dt>
+              <dd className="mt-1 text-ink-soft">{l(article.tag)}</dd>
             </div>
-            <div className="mt-10">
-              <ActionButton to="/news" text={`← ${lang === 'ru' ? 'Все материалы' : 'All articles'}`} />
+          </dl>
+          <ActionButton to="/news" text={lang === 'ru' ? 'Все новости' : 'All news'} />
+          <div className="border-t border-line pt-5">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Поделиться' : 'Share'}</div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.14em]">
+              <a className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent" href={`https://vk.com/share.php?url=${shareUrl}`} target="_blank" rel="noopener noreferrer">VK</a>
+              <a className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent" href={`https://t.me/share/url?url=${shareUrl}&text=${shareText}`} target="_blank" rel="noopener noreferrer">Telegram</a>
+              <button type="button" onClick={handleCopyLink} className="border-b border-line pb-px uppercase text-ink transition hover:border-accent hover:text-accent">
+                {copied ? (lang === 'ru' ? 'Скопировано' : 'Copied') : lang === 'ru' ? 'Копировать' : 'Copy link'}
+              </button>
             </div>
-          </aside>
-        </div>
+          </div>
+        </aside>
       </section>
+
+      {/* Похожие новости */}
+      {related.length > 0 ? (
+        <section className="border-t border-line bg-paper px-5 py-16 md:px-12">
+          <div className="mx-auto max-w-[1600px]">
+            <h2 className="mb-10 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+              {lang === 'ru' ? 'Ещё новости' : 'More news'}
+            </h2>
+            <div className="grid gap-10 md:grid-cols-3 md:gap-8">
+              {related.map((nw) => (
+                <Link key={nw.id} to={`/news/${nw.id}`} className="group flex flex-col">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-soft">
+                    {nw.image ? (
+                      <img
+                        src={mediaUrl(nw.image)}
+                        alt={l(nw.title)}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-4 flex items-baseline justify-between gap-3 border-b border-ink pb-2 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-soft">
+                    <span>{l(nw.tag)}</span>
+                    <span className="tabular-nums">{formatNewsShortDate(nw, lang)}</span>
+                  </div>
+                  <h3 className="mt-3 font-heading text-lg font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink transition group-hover:text-accent">
+                    {l(nw.title)}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <Lightbox
         open={lightboxOpen && lightboxItems.length > 0}
         onClose={() => setLightboxOpen(false)}
         items={lightboxItems}
-        index={0}
-        onIndexChange={() => {}}
+        index={lightboxIndex}
+        onIndexChange={setLightboxIndex}
       />
     </>
   );

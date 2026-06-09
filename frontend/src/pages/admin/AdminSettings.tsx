@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  BarChart3,
   BookOpen,
   Briefcase,
   Calendar,
@@ -43,6 +44,8 @@ type ListSubField = {
   multiline?: boolean;
   /** false → одно поле без RU/EN (номер, индекс). По умолчанию true. */
   bilingual?: boolean;
+  /** 'image' → загрузка картинки (хранится одной строкой-URL). */
+  type?: 'text' | 'image';
 };
 
 type Field = {
@@ -142,6 +145,24 @@ const PAGES: PageDef[] = [
         title: 'CTA-баннер',
         fields: [
           { key: 'cta_background_url', label: 'Фоновое изображение баннера', type: 'image', single: true },
+        ],
+      },
+      {
+        title: 'Промо-баннеры (блоки на главной)',
+        fields: [
+          {
+            key: 'home_promos',
+            label: 'Баннеры',
+            type: 'list',
+            itemLabel: 'Добавить баннер',
+            itemFields: [
+              { key: 'image', label: 'Изображение', type: 'image', bilingual: false },
+              { key: 'title', label: 'Заголовок' },
+              { key: 'text', label: 'Текст', multiline: true },
+              { key: 'cta', label: 'Текст кнопки' },
+              { key: 'link', label: 'Ссылка (куда ведёт)', bilingual: false },
+            ],
+          },
         ],
       },
     ],
@@ -279,6 +300,7 @@ const PAGES: PageDef[] = [
           { key: 'address_ru', label: 'Адрес', type: 'text' },
           { key: 'hours_ru', label: 'Часы работы', type: 'text' },
           { key: 'metro_ru', label: 'Метро', type: 'text' },
+          { key: 'map_embed_url', label: 'Ссылка карты (Яндекс-виджет)', type: 'text', single: true, hint: 'По умолчанию — карта на Большую Дмитровку 1. Можно вставить свой Яндекс map-widget.' },
         ],
       },
       {
@@ -317,6 +339,23 @@ const PAGES: PageDef[] = [
           { key: 'social_vk', label: 'ВКонтакте', type: 'text', single: true, hint: 'Полная ссылка https://vk.com/...' },
           { key: 'social_tg', label: 'Telegram', type: 'text', single: true, hint: 'Полная ссылка https://t.me/...' },
           { key: 'social_yt', label: 'YouTube', type: 'text', single: true, hint: 'Полная ссылка https://youtube.com/...' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'analytics',
+    label: 'Аналитика',
+    description: 'Счётчики Яндекс.Метрики и Google Analytics.',
+    group: 'Общее',
+    icon: BarChart3,
+    href: '/',
+    sections: [
+      {
+        title: 'Счётчики (грузятся только если заполнены)',
+        fields: [
+          { key: 'analytics_yandex_metrika', label: 'Яндекс.Метрика — номер счётчика', type: 'text', single: true, hint: 'Только цифры, напр. 12345678.' },
+          { key: 'analytics_ga_id', label: 'Google Analytics — Measurement ID', type: 'text', single: true, hint: 'Формат G-XXXXXXX.' },
         ],
       },
     ],
@@ -939,6 +978,17 @@ function ListEditor({
             <div className="grid gap-3">
               {itemFields.map((sf) => {
                 const value = item[sf.key];
+                if (sf.type === 'image') {
+                  const url = typeof value === 'string' ? value : '';
+                  return (
+                    <ListImageField
+                      key={sf.key}
+                      label={sf.label}
+                      value={url}
+                      onChange={(v) => updateItem(idx, { [sf.key]: v })}
+                    />
+                  );
+                }
                 const isBi = sf.bilingual !== false;
                 if (!isBi) {
                   const raw = typeof value === 'string' ? value : '';
@@ -998,6 +1048,56 @@ function ListEditor({
       >
         <Plus size={14} /> {itemLabel}
       </button>
+    </div>
+  );
+}
+
+function ListImageField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const upload = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const url = await adminApi.uploadFile(file);
+      onChange(url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="grid gap-2">
+      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{label}</span>
+      {value ? (
+        <img src={value} alt="" className="h-28 w-full rounded-lg object-cover" />
+      ) : (
+        <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-line bg-white text-xs text-muted">
+          Нет изображения
+        </div>
+      )}
+      <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="URL изображения"
+          className="min-h-10 w-full rounded-lg border border-line bg-white px-3 outline-none transition focus:border-ink"
+        />
+        <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line bg-paper px-3 text-sm font-semibold text-ink transition hover:border-ink">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+          {busy ? '…' : 'Загрузить'}
+          <input type="file" accept={ACCEPT_IMAGE} onChange={(e) => upload(e.target.files?.[0])} className="hidden" />
+        </label>
+      </div>
     </div>
   );
 }

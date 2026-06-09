@@ -14,11 +14,23 @@ const EMPTY = {
   price_ru: '', price_en: '',
   description_ru: '', description_en: '',
   image: '',
+  has_ticket: false,
+  ticket_url: '',
+  age_rating: '',
   is_featured: false,
   is_active: true,
   sort_order: 0,
   created_at: '',
 };
+
+const AGE_OPTIONS = ['', '0+', '6+', '12+', '16+', '18+'];
+
+const CATEGORIES = [
+  { ru: 'Концерт', en: 'Concert' },
+  { ru: 'Мероприятие', en: 'Event' },
+  { ru: 'Экскурсия', en: 'Excursion' },
+  { ru: 'Собрание', en: 'Meeting' },
+];
 
 export default function AdminEvents() {
   return (
@@ -121,15 +133,20 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label>Жанр (RU)</label>
-          <input value={form.tag_ru} onChange={set('tag_ru')} required placeholder="Симфоническая" />
-        </div>
-        <div className="grid gap-2">
-          <label>Tag (EN)</label>
-          <input value={form.tag_en} onChange={set('tag_en')} required placeholder="Symphonic" />
-        </div>
+      <div className="grid gap-2">
+        <label>Категория</label>
+        <select
+          value={form.tag_ru || 'Концерт'}
+          onChange={(e) => {
+            const ru = e.target.value;
+            const en = CATEGORIES.find((c) => c.ru === ru)?.en || ru;
+            setForm((p) => ({ ...p, tag_ru: ru, tag_en: en }));
+          }}
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c.ru} value={c.ru}>{c.ru}</option>
+          ))}
+        </select>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -159,6 +176,30 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         value={form.image}
         onChange={(url) => setForm((p) => ({ ...p, image: url }))}
       />
+
+      {/* Билеты (внешний сервис) + возраст */}
+      <div className="grid gap-4 rounded-2xl border border-line bg-paper-soft p-4 md:grid-cols-[auto_1fr_140px] md:items-end">
+        <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
+          <input type="checkbox" checked={form.has_ticket} onChange={setCheck('has_ticket')} />
+          Есть билеты
+        </label>
+        <div className="grid gap-2">
+          <label>Ссылка на покупку (внешний сервис)</label>
+          <input
+            value={form.ticket_url}
+            onChange={set('ticket_url')}
+            placeholder="https://tickets.example.ru/event/123"
+          />
+        </div>
+        <div className="grid gap-2">
+          <label>Возраст</label>
+          <select value={form.age_rating} onChange={set('age_rating')}>
+            {AGE_OPTIONS.map((a) => (
+              <option key={a} value={a}>{a || '—'}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-6">
         <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">

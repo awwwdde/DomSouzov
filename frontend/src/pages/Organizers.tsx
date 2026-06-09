@@ -16,16 +16,16 @@ import { RevealSection } from '../components/Reveal';
 /* ============================================================ */
 
 export default function Organizers() {
-  const { lang, t } = useSite();
+  const { lang, t, tStrict } = useSite();
 
-  const title = t('organizers_title') || (lang === 'ru' ? 'Организаторам' : 'For Organizers');
+  const title = tStrict('organizers_title') || (lang === 'ru' ? 'Организаторам' : 'For Organizers');
   const lead =
-    t('organizers_lead') ||
+    tStrict('organizers_lead') ||
     (lang === 'ru'
       ? 'Колонный, Октябрьский и Малый залы Дома Союзов — для концертов, церемоний, форумов и съёмок. Историческая архитектура в центре Москвы, акустика класса A, вместимость до 1 200 гостей и собственная техническая команда.'
       : 'The Hall of Columns, the October and Small halls of the House of Unions — for concerts, ceremonies, forums and filming. Historic architecture in the heart of Moscow, class A acoustics, capacity up to 1,200 guests and an in-house technical crew.');
   const note =
-    t('organizers_note') ||
+    tStrict('organizers_note') ||
     (lang === 'ru'
       ? 'Скачайте технический райдер и презентацию залов или отправьте запрос — мы ответим с доступными датами и сметой.'
       : 'Download the technical rider and the halls presentation, or send a request — we will reply with available dates and a quote.');

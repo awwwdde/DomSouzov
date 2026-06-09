@@ -25,17 +25,23 @@ def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
-    # Admin user
-    if not db.query(AdminUser).filter_by(email=settings.ADMIN_EMAIL).first():
-        db.add(AdminUser(email=settings.ADMIN_EMAIL, hashed_password=hash_password(settings.ADMIN_PASSWORD)))
-    # Test super user for quick local login
-    if not db.query(AdminUser).filter_by(email=settings.TEST_SUPERUSER_EMAIL).first():
-        db.add(
-            AdminUser(
-                email=settings.TEST_SUPERUSER_EMAIL,
-                hashed_password=hash_password(settings.TEST_SUPERUSER_PASSWORD),
-            )
-        )
+    # ── Админ из окружения (env = источник истины) ──
+    # BOOTSTRAP_ADMIN_EMAIL / BOOTSTRAP_ADMIN_PASSWORD (awwwdde-panel) или
+    # ADMIN_EMAIL / ADMIN_PASSWORD (локалка). Если пароль не задан — админа
+    # не трогаем (не плодим небезопасных дефолтных пользователей).
+    admin_email = settings.admin_email
+    admin_password = settings.admin_password
+    if admin_email and admin_password:
+        existing = db.query(AdminUser).filter_by(email=admin_email).first()
+        if existing:
+            # Сброс пароля под текущее значение из env.
+            existing.hashed_password = hash_password(admin_password)
+            existing.is_active = True
+        else:
+            db.add(AdminUser(email=admin_email, hashed_password=hash_password(admin_password)))
+        print(f"[seed] admin ensured: {admin_email}")
+    else:
+        print("[seed] BOOTSTRAP_ADMIN_EMAIL/PASSWORD не заданы — админ не создан")
 
     # Site settings
     defaults = [
@@ -104,7 +110,7 @@ def seed():
             db.add(SiteSettings(key=key, value_ru=val_ru, value_en=val_en))
 
     # Events
-    if db.query(Event).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(Event).count() == 0:
         events = [
             Event(
                 title_ru="Эпоха великих композиторов",
@@ -158,7 +164,7 @@ def seed():
         db.add_all(events)
 
     # News
-    if db.query(NewsArticle).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(NewsArticle).count() == 0:
         news = [
             NewsArticle(
                 tag_ru="ФЕСТИВАЛЬ · 2026", tag_en="FESTIVAL · 2026",
@@ -194,7 +200,7 @@ def seed():
         db.add_all(news)
 
     # Halls
-    if db.query(Hall).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(Hall).count() == 0:
         halls = [
             Hall(
                 name_ru="Колонный зал", name_en="Hall of Columns",
@@ -220,7 +226,7 @@ def seed():
         db.add_all(halls)
 
     # Gallery placeholders (no real images, just metadata)
-    if db.query(GalleryImage).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(GalleryImage).count() == 0:
         gallery = [
             GalleryImage(caption_ru="Колонный зал", caption_en="Hall of Columns",
                          category_ru="Архитектура", category_en="Architecture",
@@ -243,7 +249,7 @@ def seed():
         ]
         db.add_all(gallery)
 
-    if db.query(GalleryCategory).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(GalleryCategory).count() == 0:
         db.add_all(
             [
                 GalleryCategory(
@@ -300,7 +306,7 @@ def seed():
             db.add(SiteSettings(key=key, value_ru=val_ru or None, value_en=val_en or None))
 
     # ── About hover-tips (стартовый набор; реальные медиа загружаются в админке) ──
-    if db.query(AboutHoverTip).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(AboutHoverTip).count() == 0:
         for tip in [
             AboutHoverTip(
                 phrase_ru="28 коринфских колонн",
@@ -333,7 +339,7 @@ def seed():
             db.add(tip)
 
     # ── About scattered photos (стартовая раскладка) ──
-    if db.query(AboutScatteredPhoto).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(AboutScatteredPhoto).count() == 0:
         layout = [
             (1, 5, 0, 0.15, 0.10),
             (8, 4, 80, -0.25, 0.20),
@@ -356,7 +362,7 @@ def seed():
             ))
 
     # ── About timeline ──
-    if db.query(AboutTimelineEvent).count() == 0:
+    if settings.SEED_DEMO_CONTENT and db.query(AboutTimelineEvent).count() == 0:
         for i, (year, title_ru, title_en, desc_ru, desc_en) in enumerate([
             ("1784", "Перестройка Казаковым", "Kazakov's reconstruction",
              "Матвей Казаков создаёт Колонный зал: 28 коринфских колонн, белый мрамор, пять хрустальных люстр.",

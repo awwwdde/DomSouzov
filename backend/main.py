@@ -1,6 +1,6 @@
 import os
 import sys
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, PlainTextResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,6 +13,7 @@ if BACKEND_DIR not in sys.path:
 from config import settings
 from database import engine, Base, SessionLocal
 from migrate_db import migrate_sqlite
+from models import MediaFile
 from routers import public, admin
 import seo
 
@@ -29,9 +30,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve uploaded images
+# Загрузки раздаём из БД (переживают редеплой), с фолбэком на диск (локалка).
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
+
+@app.get("/uploads/{filename}", include_in_schema=False)
+def serve_upload(filename: str):
+    db = SessionLocal()
+    try:
+        m = db.query(MediaFile).filter(MediaFile.filename == filename).first()
+        if m is not None:
+            return Response(
+                content=m.data,
+                media_type=m.content_type or "application/octet-stream",
+                headers={"Cache-Control": "public, max-age=31536000, immutable"},
+            )
+    finally:
+        db.close()
+    # Фолбэк: файл на диске (локальная разработка или legacy).
+    path = os.path.join(settings.UPLOAD_DIR, filename)
+    if os.path.isfile(path):
+        return FileResponse(path)
+    raise HTTPException(404, "File not found")
 
 app.include_router(public.router)
 app.include_router(admin.router)

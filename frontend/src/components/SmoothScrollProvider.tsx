@@ -1,46 +1,73 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import Lenis from 'lenis';
-import { useReducedMotionActive, useVisionMode } from '../lib/motion';
+import { useReducedMotionActive } from '../lib/motion';
 
 type Props = {
   children: ReactNode;
   routeKey: string;
 };
 
-/** Глобальная ссылка на активный Lenis — нужна для сброса скролла из
- *  PageTransition в момент фактического монтирования новой страницы.
- *  `null`, когда Lenis отключён (vision / reduced motion). */
+/* ============================================================ */
+/* Плавный скролл на Lenis — с защитой от прошлых багов.        */
+/*                                                              */
+/* Что было сломано раньше и как учтено:                        */
+/*  1) Контент «улетал»/пропадал при переходе — Lenis держал    */
+/*     старую позицию. → Жёсткий сброс наверх при смене роута   */
+/*     в правильном порядке (resize → window → scrollTo как     */
+/*     «последнее слово»), + history.scrollRestoration='manual' */
+/*     (в main.tsx), + переход без AnimatePresence mode="wait"  */
+/*     (в PageTransition — страница монтируется сразу).         */
+/*  2) Lenis перехватывал внутренний скролл меню/модалок. →     */
+/*     опция prevent: элементы с [data-lenis-prevent] нативны.  */
+/*  3) Тач/мобайл не трогаем (syncTouch=false) — там нативно.   */
+/*  4) Reduced/слабовидящие — Lenis выключен.                   */
+/* ============================================================ */
+
+// Глобальная ссылка на активный экземпляр (для сброса из PageTransition).
+let lenisInstance: Lenis | null = null;
 export function getLenis(): Lenis | null {
-  return (window as unknown as { __dsLenis?: Lenis | null }).__dsLenis ?? null;
+  return lenisInstance;
+}
+
+/** Надёжный сброс наверх. Порядок критичен: scrollTo(0) идёт ПОСЛЕДНИМ —
+ *  иначе lenis.resize() возвращает прежний animatedScroll в окно (desync). */
+export function scrollToTopInstant() {
+  const lenis = lenisInstance;
+  if (lenis) {
+    lenis.resize();
+    window.scrollTo(0, 0);
+    lenis.scrollTo(0, { immediate: true, force: true });
+  } else {
+    window.scrollTo(0, 0);
+  }
 }
 
 export default function SmoothScrollProvider({ children, routeKey }: Props) {
-  const reduced = useReducedMotionActive();
-  const vision = useVisionMode();
-  const lenisDisabled = vision || reduced;
-  const lenisRef = useRef<Lenis | null>(null);
-  const rafRef = useRef<number>(0);
+  const disabled = useReducedMotionActive();
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof window === 'undefined') return;
     const root = document.documentElement;
-    const w = window as unknown as { __dsLenis?: Lenis | null };
-    if (lenisDisabled) {
+
+    if (disabled) {
       root.style.scrollBehavior = 'smooth';
-      lenisRef.current = null;
-      w.__dsLenis = null;
+      lenisInstance = null;
       return;
     }
 
     root.style.scrollBehavior = 'auto';
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.1,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      touchMultiplier: 1.1,
+      syncTouch: false, // мобильный тач — нативный (перехват тача давал баги)
+      wheelMultiplier: 1,
+      // Не перехватывать скролл внутри меню/модалок/списков.
+      prevent: (node) =>
+        !!(node && typeof node.closest === 'function' && node.closest('[data-lenis-prevent]')),
     });
-    lenisRef.current = lenis;
-    w.__dsLenis = lenis;
+    lenisInstance = lenis;
 
     const raf = (time: number) => {
       lenis.raf(time);
@@ -49,24 +76,18 @@ export default function SmoothScrollProvider({ children, routeKey }: Props) {
     rafRef.current = requestAnimationFrame(raf);
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
       lenis.destroy();
-      lenisRef.current = null;
-      w.__dsLenis = null;
+      lenisInstance = null;
       root.style.scrollBehavior = 'smooth';
     };
-  }, [lenisDisabled]);
+  }, [disabled]);
 
-  // Основной сброс скролла — в PageTransition (после монтирования страницы).
-  // Здесь дублируем мгновенный сброс прямо на смене маршрута (срабатывает
-  // сразу по клику, до завершения анимации перехода) + пересчёт размеров.
+  // Жёсткий сброс наверх при смене маршрута. Страница уже смонтирована
+  // (PageTransition без mode="wait"), поэтому высота корректна.
   useEffect(() => {
-    const lenis = lenisRef.current;
-    if (lenis) {
-      lenis.resize();
-      lenis.scrollTo(0, { immediate: true, force: true });
-    }
-    window.scrollTo(0, 0);
+    scrollToTopInstant();
   }, [routeKey]);
 
   return <>{children}</>;

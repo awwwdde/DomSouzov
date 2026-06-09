@@ -3,8 +3,13 @@ import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 
+const ADDRESS_QUERY = 'Москва, Большая Дмитровка, 1';
+const DEFAULT_MAP_EMBED = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(ADDRESS_QUERY)}&z=16`;
+const ROUTE_URL = `https://yandex.ru/maps/?rtext=~${encodeURIComponent(ADDRESS_QUERY)}&rtt=mt`;
+
 export default function Contacts() {
   const { lang, t } = useSite();
+  const mapEmbed = t('map_embed_url') || DEFAULT_MAP_EMBED;
 
   return (
     <>
@@ -58,12 +63,27 @@ export default function Contacts() {
             </dd>
           </dl>
           <div className="mt-7 flex flex-wrap gap-3">
-            <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-ink bg-ink px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white">{lang === 'ru' ? 'Построить маршрут' : 'Directions'} →</button>
+            <a
+              href={ROUTE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-accent bg-accent px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-paper transition hover:bg-accent-deep"
+            >
+              {lang === 'ru' ? 'Построить маршрут' : 'Directions'} →
+            </a>
             <a href={`mailto:${t('email_rent')}`} className="inline-flex min-h-10 items-center justify-center rounded-full border border-ink bg-transparent px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5">{lang === 'ru' ? 'Написать' : 'Email'}</a>
           </div>
         </div>
         <div>
-          <div className="flex min-h-[460px] items-center justify-center border border-line bg-paper p-8 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">{lang === 'ru' ? '[ КАРТА · МОСКВА ]' : '[ MAP · MOSCOW ]'}</div>
+          <div className="min-h-[460px] overflow-hidden border border-line bg-paper">
+            <iframe
+              title={lang === 'ru' ? 'Карта · Дом Союзов' : 'Map · House of Unions'}
+              src={mapEmbed}
+              className="h-full min-h-[460px] w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         </div>
       </RevealSection>
     </>

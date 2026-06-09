@@ -10,11 +10,21 @@ const EMPTY = {
   excerpt_ru: '', excerpt_en: '',
   content_ru: '', content_en: '',
   image: '',
+  gallery: '',
   is_lead: false,
   is_active: true,
   sort_order: 0,
   created_at: '',
 };
+
+function parseGallery(s: string): string[] {
+  try {
+    const a = JSON.parse(s || '[]');
+    return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function AdminNews() {
   return (
@@ -39,6 +49,23 @@ export default function AdminNews() {
 function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => void; onCancel: () => void }) {
   const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
   const [saving, setSaving] = useState(false);
+  const [galBusy, setGalBusy] = useState(false);
+
+  const gallery = parseGallery(form.gallery);
+  const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
+  const addImage = async (file: File | undefined) => {
+    if (!file) return;
+    setGalBusy(true);
+    try {
+      const url = await adminApi.uploadFile(file);
+      setGallery([...gallery, url]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setGalBusy(false);
+    }
+  };
+  const removeImage = (i: number) => setGallery(gallery.filter((_, j) => j !== i));
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -106,10 +133,33 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       </div>
 
       <ImageUpload
-        label="Изображение статьи"
+        label="Главное изображение статьи"
         value={form.image}
         onChange={(url) => setForm((p) => ({ ...p, image: url }))}
       />
+
+      <div className="grid gap-2">
+        <label>Доп. фотографии (галерея новости)</label>
+        <div className="flex flex-wrap gap-3">
+          {gallery.map((url, i) => (
+            <div key={i} className="relative h-24 w-32 overflow-hidden rounded-lg border border-line">
+              <img src={url} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
+                aria-label="Удалить"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+            {galBusy ? '…' : '+ Фото'}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
+          </label>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-6">
         <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">

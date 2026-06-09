@@ -1,7 +1,32 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, ForeignKey, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
+
+
+class MediaFile(Base):
+    """Загруженные через админку файлы хранятся в БД, а не на диске.
+
+    Причина: контейнер гостя на awwwdde-panel не имеет постоянного volume —
+    файлы на диске терялись бы при каждом редеплое. БД (Postgres) переживает
+    обновления, поэтому картинки/документы кладём сюда и раздаём через
+    GET /uploads/{filename}.
+    """
+    __tablename__ = "media_files"
+    id = Column(Integer, primary_key=True)
+    filename = Column(String, unique=True, nullable=False, index=True)
+    content_type = Column(String, nullable=False, default="application/octet-stream")
+    data = Column(LargeBinary, nullable=False)
+    size = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class NewsletterSubscriber(Base):
+    """Подписчики на афишу из формы в футере."""
+    __tablename__ = "newsletter_subscribers"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class AdminUser(Base):
@@ -49,6 +74,7 @@ class Event(Base):
     ticket_url = Column(String, nullable=True)
     is_pinned = Column(Boolean, default=False)
     pin_order = Column(Integer, default=0)
+    age_rating = Column(String, nullable=True)  # "0+", "6+", "12+", "16+", "18+"
 
     gallery_images = relationship("EventGalleryImage", back_populates="event", order_by="EventGalleryImage.sort_order")
 
@@ -82,6 +108,7 @@ class NewsArticle(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_pinned = Column(Boolean, default=False)
     pin_order = Column(Integer, default=0)
+    gallery = Column(Text, nullable=True)  # JSON-массив URL доп. фотографий
 
 
 class Hall(Base):

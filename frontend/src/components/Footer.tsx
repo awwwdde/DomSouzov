@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
+import { subscribeNewsletter } from '../api/client';
 
 /* ============================================================ */
 /* FOOTER — четырёхколоночная подвал-сетка в духе ZILART.       */
@@ -44,6 +45,8 @@ export default function Footer() {
   const year = new Date().getFullYear();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [subError, setSubError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
 
@@ -57,11 +60,20 @@ export default function Footer() {
     ] as const
   ).filter((s) => s.href && s.href.trim().length > 0);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email.includes('@')) return;
-    setSubscribed(true);
-    setEmail('');
+    if (!email.includes('@') || submitting) return;
+    setSubmitting(true);
+    setSubError(false);
+    try {
+      await subscribeNewsletter(email);
+      setSubscribed(true);
+      setEmail('');
+    } catch {
+      setSubError(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -113,24 +125,31 @@ export default function Footer() {
                   required
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={lang === 'ru' ? 'Электронная почта' : 'Your email'}
-                  className="flex-1 bg-transparent text-paper outline-none placeholder:text-paper/40"
+                  className="w-full min-w-0 flex-1 bg-transparent text-paper outline-none placeholder:text-paper/40"
                 />
                 <button
                   type="submit"
-                  className="shrink-0 rounded-full bg-paper px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-paper/90"
+                  disabled={submitting}
+                  className="shrink-0 rounded-full bg-paper px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-paper/90 disabled:opacity-60"
                 >
-                  {lang === 'ru' ? 'Подписаться' : 'Subscribe'}
+                  {submitting
+                    ? lang === 'ru' ? '…' : '…'
+                    : lang === 'ru' ? 'Подписаться' : 'Subscribe'}
                 </button>
               </div>
             </label>
             <p className="max-w-[44ch] text-[11px] leading-relaxed text-paper/45">
-              {subscribed
+              {subError
                 ? lang === 'ru'
-                  ? 'Спасибо! Вы подписаны на афишу Дома Союзов.'
-                  : 'Thank you. You are subscribed to our programme.'
-                : lang === 'ru'
-                  ? 'Афиша концертов и анонсы публичных программ. Без спама, можно отписаться в любой момент.'
-                  : 'Concert programme and public events digest. No spam; you can unsubscribe at any time.'}
+                  ? 'Не удалось подписаться. Проверьте адрес и попробуйте ещё раз.'
+                  : 'Subscription failed. Check the address and try again.'
+                : subscribed
+                  ? lang === 'ru'
+                    ? 'Спасибо! Вы подписаны на афишу Дома Союзов.'
+                    : 'Thank you. You are subscribed to our programme.'
+                  : lang === 'ru'
+                    ? 'Афиша концертов и анонсы публичных программ. Без спама, можно отписаться в любой момент.'
+                    : 'Concert programme and public events digest. No spam; you can unsubscribe at any time.'}
             </p>
           </form>
         </motion.div>

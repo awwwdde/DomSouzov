@@ -5,6 +5,9 @@ import { VisionModeProvider } from './context/VisionModeContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CookieBanner from './components/CookieBanner';
+import ErrorBoundary from './components/ErrorBoundary';
+import Analytics from './components/Analytics';
+import ScrollProgress from './components/ScrollProgress';
 import Preloader from './components/Preloader';
 import SmoothScrollProvider from './components/SmoothScrollProvider';
 import { PageAnimationLayout } from './components/PageTransition';
@@ -44,6 +47,7 @@ function PublicLayout() {
   return (
     <SmoothScrollProvider routeKey={location.pathname}>
       <div className="flex min-h-screen flex-col text-ink">
+        <ScrollProgress />
         <Header />
         <main className="flex min-h-0 flex-1 flex-col">
           <Routes>
@@ -105,7 +109,10 @@ export default function App() {
     <BrowserRouter>
       <SiteProvider>
         <VisionModeProvider>
-          <AppShell />
+          <ErrorBoundary>
+            <Analytics />
+            <AppShell />
+          </ErrorBoundary>
         </VisionModeProvider>
       </SiteProvider>
     </BrowserRouter>

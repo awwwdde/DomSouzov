@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useInView } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { isVisionEnabledSync } from '../context/VisionModeContext';
 
@@ -83,6 +84,27 @@ export function isReducedMotionEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
   return isVisionEnabledSync();
+}
+
+/** Надёжная замена `whileInView`: появляется, когда элемент во вьюпорте,
+ *  НО гарантированно проявляется через `failsafeMs`, даже если
+ *  IntersectionObserver не сработал (баг Lenis + SPA-переход → пустые секции).
+ *  Возвращает ref и флаг `show`. Используйте: initial="hidden" animate={show?'show':'hidden'}. */
+export function useInViewFailsafe<T extends Element = HTMLElement>(
+  amount: number = 0.18,
+  failsafeMs: number = 600,
+): { ref: React.RefObject<T>; show: boolean } {
+  const ref = useRef<T>(null);
+  const inView = useInView(ref, { once: true, amount });
+  const [failsafe, setFailsafe] = useState(false);
+
+  useEffect(() => {
+    if (inView) return;
+    const id = window.setTimeout(() => setFailsafe(true), failsafeMs);
+    return () => window.clearTimeout(id);
+  }, [inView, failsafeMs]);
+
+  return { ref, show: inView || failsafe };
 }
 
 export function fadeUp(reduced: boolean): Variants {

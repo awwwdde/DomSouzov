@@ -1,7 +1,10 @@
 """Public read-only API endpoints."""
-from fastapi import APIRouter, Depends
+import re
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 from typing import Dict, Any
 from database import get_db
 from models import (
@@ -16,9 +19,32 @@ from models import (
     AboutHoverTip,
     AboutScatteredPhoto,
     AboutTimelineEvent,
+    NewsletterSubscriber,
 )
 
 router = APIRouter(prefix="/api", tags=["public"])
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class SubscribeIn(BaseModel):
+    email: str
+
+
+@router.post("/subscribe")
+def subscribe(body: SubscribeIn, db: Session = Depends(get_db)):
+    email = (body.email or "").strip().lower()
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(400, "Некорректный email")
+    existing = db.query(NewsletterSubscriber).filter_by(email=email).first()
+    if existing:
+        return {"ok": True, "already": True}
+    try:
+        db.add(NewsletterSubscriber(email=email))
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+    return {"ok": True}
 
 
 def settings_to_dict(db: Session) -> Dict[str, Dict[str, str]]:
@@ -163,6 +189,7 @@ def _event_out(db: Session, e: Event) -> dict:
         "is_featured": e.is_featured,
         "has_ticket": bool(getattr(e, "has_ticket", False)),
         "ticket_url": getattr(e, "ticket_url", None),
+        "age_rating": getattr(e, "age_rating", None),
         "is_pinned": bool(getattr(e, "is_pinned", False)),
         "pin_order": int(getattr(e, "pin_order", 0) or 0),
         "gallery": gallery,
@@ -170,7 +197,17 @@ def _event_out(db: Session, e: Event) -> dict:
 
 
 def _news_out(n: NewsArticle) -> dict:
+    import json
     created = n.created_at.isoformat() if n.created_at else None
+    gallery = []
+    raw = getattr(n, "gallery", None)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                gallery = [str(u) for u in parsed if u]
+        except Exception:
+            gallery = []
     return {
         "id": n.id,
         "tag": {"ru": n.tag_ru, "en": n.tag_en},
@@ -178,6 +215,7 @@ def _news_out(n: NewsArticle) -> dict:
         "excerpt": {"ru": n.excerpt_ru, "en": n.excerpt_en},
         "content": {"ru": n.content_ru or "", "en": n.content_en or ""},
         "image": n.image,
+        "gallery": gallery,
         "is_lead": n.is_lead,
         "is_pinned": bool(getattr(n, "is_pinned", False)),
         "pin_order": int(getattr(n, "pin_order", 0) or 0),

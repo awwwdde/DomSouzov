@@ -19,6 +19,8 @@ def migrate_sqlite() -> None:
         "ALTER TABLE gallery ADD COLUMN category_id INTEGER",
         "ALTER TABLE gallery ADD COLUMN is_video BOOLEAN DEFAULT 0",
         "ALTER TABLE gallery ADD COLUMN video_url VARCHAR",
+        "ALTER TABLE events ADD COLUMN age_rating VARCHAR",
+        "ALTER TABLE news ADD COLUMN gallery TEXT",
     ]
 
     for sql in statements:

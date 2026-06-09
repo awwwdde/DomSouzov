@@ -30,7 +30,7 @@ export default function VisionModePanel({
     ].join(' ');
 
   return (
-    <div className={`${cardClass} ${className}`} role="dialog" aria-modal={!embedded} aria-labelledby="vision-panel-title">
+    <div data-lenis-prevent className={`${cardClass} ${className}`} role="dialog" aria-modal={!embedded} aria-labelledby="vision-panel-title">
       <div className="mb-4 flex items-start justify-between gap-3">
         <h2 id="vision-panel-title" className="text-xs font-bold uppercase tracking-[0.18em] text-ink">
           {t('Версия для слабовидящих', 'Vision accessibility')}

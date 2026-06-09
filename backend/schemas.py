@@ -50,6 +50,7 @@ class EventBase(BaseModel):
     ticket_url: Optional[str] = None
     is_pinned: bool = False
     pin_order: int = 0
+    age_rating: Optional[str] = None
 
 
 class EventCreate(EventBase):
@@ -84,6 +85,7 @@ class NewsBase(BaseModel):
     sort_order: int = 0
     is_pinned: bool = False
     pin_order: int = 0
+    gallery: Optional[str] = None
 
 
 class NewsCreate(NewsBase):

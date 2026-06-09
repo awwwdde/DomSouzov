@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from './ActionButton';
+import { eventCategoryIcon } from '../lib/eventCategory';
 import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
 import { addDays, dateKey, parseEventDateForEvent, startOfDay } from '../lib/eventDates';
 import type { Event, Lang } from '../types';
@@ -24,14 +25,13 @@ const EN_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const RU_WEEKDAYS_MON = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
 const EN_WEEKDAYS_MON = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-const FILTERS_RU = ['Все', 'Симфония', 'Камерная', 'Хор', 'Литература', 'Конференция'];
-const FILTERS_EN = ['All', 'Symphony', 'Chamber', 'Choir', 'Literature', 'Conference'];
+const FILTERS_RU = ['Все', 'Концерт', 'Мероприятие', 'Экскурсия', 'Собрание'];
+const FILTERS_EN = ['All', 'Concert', 'Event', 'Excursion', 'Meeting'];
 const FILTER_TOKENS: Record<number, string[]> = {
-  1: ['Симфония', 'Симфоническая', 'Symphony', 'Symphonic'],
-  2: ['Камерная', 'Chamber'],
-  3: ['Хор', 'Хоровая', 'Choir', 'Choral'],
-  4: ['Литература', 'Литературный', 'Literary'],
-  5: ['Конференция', 'Conference'],
+  1: ['Концерт', 'Concert', 'симфон', 'камерн', 'хор', 'музык', 'music', 'symphon', 'chamber', 'choir'],
+  2: ['Мероприятие', 'Event', 'премьер', 'фестивал', 'гала', 'спектакл', 'литератур', 'premiere', 'festival', 'gala'],
+  3: ['Экскурс', 'Excursion', 'tour', 'лекци', 'lecture'],
+  4: ['Собрание', 'Meeting', 'конференц', 'форум', 'съезд', 'заседан', 'assembly', 'conference', 'forum'],
 };
 
 const addMonths = (date: Date, months: number) => new Date(date.getFullYear(), date.getMonth() + months, 1);
@@ -300,8 +300,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
       <motion.div
         className="border-y border-line bg-paper py-6 md:py-7"
         initial={reduced ? false : { opacity: 0, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
+        animate={{ opacity: 1, y: 0 }}
         transition={reduced ? { duration: 0 } : { duration: DURATION.fast, ease: EASE_DS }}
       >
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -556,10 +555,9 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                 >
                 <motion.article
                   role="listitem"
-                  className="grid min-h-[420px] items-center gap-5 border-t border-line bg-white px-4 py-6 md:grid-cols-[minmax(110px,0.35fr)_minmax(260px,520px)_minmax(0,1fr)] md:gap-7 md:px-6 md:py-8"
+                  className="grid min-h-[420px] gap-5 border-t border-line bg-white px-4 py-6 lg:grid-cols-[minmax(90px,0.26fr)_minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-7 lg:px-6 lg:py-8"
                   initial={reduced ? false : { opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={
                     reduced
                       ? { duration: 0 }
@@ -570,7 +568,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         }
                   }
                 >
-                  <div className="flex items-end gap-3 pl-1 md:grid md:gap-2 md:pl-2 md:self-start">
+                  <div className="flex items-end gap-3 pl-1 lg:grid lg:gap-2 lg:pl-2 lg:self-start">
                     <span className="font-heading text-[clamp(56px,7vw,100px)] font-bold uppercase leading-[0.82] tracking-[-0.05em] text-ink">
                       {day}
                     </span>
@@ -586,8 +584,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         src={event.image}
                         alt={l(event.title)}
                         initial={reduced ? false : { scale: 1.04 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
+                        animate={{ scale: 1 }}
                         transition={reduced ? { duration: 0 } : { duration: 1.1, ease: EASE_DS }}
                       />
                     ) : (
@@ -597,26 +594,46 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     )}
                   </div>
 
-                  <div className="self-center">
+                  <div className="min-w-0 self-center">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+                      {(() => {
+                        const Icon = eventCategoryIcon(event.tag.ru || event.tag.en);
+                        return <Icon size={14} strokeWidth={1.7} className="text-accent" />;
+                      })()}
                       <span>{event.weekday[lang]}</span>
                       <span>{event.time}</span>
                       <span>{l(event.hall)}</span>
+                      {event.age_rating ? (
+                        <span className="rounded-full border border-line px-2 py-0.5 tabular-nums text-ink-soft">
+                          {event.age_rating}
+                        </span>
+                      ) : null}
                     </div>
-                    <h4 className="mt-3 max-w-3xl font-heading text-[clamp(22px,2.8vw,40px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
+                    <h4 className="mt-3 max-w-3xl break-words font-heading text-[clamp(22px,2.8vw,40px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
                       {l(event.title)}
                     </h4>
                     <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft md:text-base">
-                      {l(event.tag)} · {l(event.price)}
+                      {l(event.tag)}
                     </p>
-                    <ActionButton
-                      to={`/events/${event.id}`}
-                      text={lang === 'ru' ? 'Подробнее' : 'Details'}
-                      backgroundColor="#0a0a0a"
-                      textColor="#ffffff"
-                      strokeColor="#0a0a0a"
-                      className="mt-5"
-                    />
+                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                      <ActionButton
+                        to={`/events/${event.id}`}
+                        text={lang === 'ru' ? 'Подробнее' : 'Details'}
+                        backgroundColor="transparent"
+                        textColor="#0a0a0a"
+                        strokeColor="#0a0a0a"
+                      />
+                      {event.has_ticket && event.ticket_url ? (
+                        <a
+                          href={event.ticket_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-10 items-center justify-center rounded-full bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-paper transition hover:bg-accent-deep"
+                        >
+                          {lang === 'ru' ? 'Купить билет' : 'Buy tickets'}
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </motion.article>
                 </div>

@@ -17,6 +17,8 @@ from models import (
     AboutHoverTip,
     AboutScatteredPhoto,
     AboutTimelineEvent,
+    MediaFile,
+    NewsletterSubscriber,
 )
 from schemas import (
     Token, LoginRequest,
@@ -87,6 +89,7 @@ def change_password(
 @router.post("/upload")
 async def upload_file(
     file: UploadFile = File(...),
+    db: Session = Depends(get_db),
     current: AdminUser = Depends(get_current_admin),
 ):
     ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "bin"
@@ -109,16 +112,33 @@ async def upload_file(
             "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF",
         )
 
+    content = await file.read()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    upload_dir = app_settings.UPLOAD_DIR
-    os.makedirs(upload_dir, exist_ok=True)
-    path = os.path.join(upload_dir, filename)
+    content_type = file.content_type or "application/octet-stream"
 
-    async with aiofiles.open(path, "wb") as f:
-        content = await file.read()
-        await f.write(content)
+    # Храним в БД — переживает редеплой (у гостя панели нет постоянного диска).
+    db.add(
+        MediaFile(
+            filename=filename,
+            content_type=content_type,
+            data=content,
+            size=len(content),
+        )
+    )
+    db.commit()
 
     return {"url": f"/uploads/{filename}"}
+
+
+# ──────────── NEWSLETTER ────────────
+
+@router.get("/subscribers")
+def list_subscribers(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    rows = db.query(NewsletterSubscriber).order_by(NewsletterSubscriber.created_at.desc()).all()
+    return [
+        {"id": r.id, "email": r.email, "created_at": r.created_at.isoformat() if r.created_at else None}
+        for r in rows
+    ]
 
 
 # ──────────── SETTINGS ────────────
