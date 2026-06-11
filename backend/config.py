@@ -26,9 +26,9 @@ class Settings(BaseSettings):
     SEED_DEMO_CONTENT: bool = True
 
     UPLOAD_DIR: str = "uploads"
-    # Лимит загрузки файла в МБ. Файлы хранятся в БД (bytea), поэтому большие
-    # видео заливать сюда не стоит — для видео используйте внешнюю ссылку (URL).
-    MAX_UPLOAD_MB: int = 25
+    # Лимиты загрузки (файлы хранятся в БД как bytea).
+    MAX_UPLOAD_MB: int = 25         # картинки / PDF
+    MAX_VIDEO_UPLOAD_MB: int = 300  # видео
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
     # Публичный адрес сайта — для canonical, og:url, sitemap.xml.
     SITE_URL: str = "https://union.awwwdde.art"

@@ -164,6 +164,30 @@ class GalleryOut(GalleryBase):
         from_attributes = True
 
 
+# Gallery categories (блоки-темы)
+class GalleryCategoryBase(BaseModel):
+    name_ru: str
+    name_en: str
+    cover_image: Optional[str] = None
+    sort_order: int = 0
+
+
+class GalleryCategoryCreate(GalleryCategoryBase):
+    slug: Optional[str] = None  # генерируется на сервере, если не задан
+
+
+class GalleryCategoryUpdate(GalleryCategoryBase):
+    slug: Optional[str] = None
+
+
+class GalleryCategoryOut(GalleryCategoryBase):
+    id: int
+    slug: str
+
+    class Config:
+        from_attributes = True
+
+
 # Partners
 class PartnerBase(BaseModel):
     name_ru: str

@@ -1,13 +1,12 @@
 import {
-  Ticket,
-  Clock,
-  Camera,
-  Users,
+  ShieldCheck,
+  Ban,
   Shirt,
-  Coffee,
-  Accessibility,
-  Volume2,
-  ShoppingBag,
+  CupSoda,
+  CigaretteOff,
+  Baby,
+  Dog,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
@@ -15,47 +14,120 @@ import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 
-type RawItem = Record<string, unknown>;
-
 /* ============================================================ */
-/* ЗРИТЕЛЯМ — правила нахождения в Доме Союзов.                 */
-/* Карточки с иконками; контент редактируется в CMS через ключ  */
-/* audience_items (массив { title, desc }).                      */
+/* ЗРИТЕЛЯМ — официальные правила посещения Дома Союзов.        */
+/* Ключевые моменты вынесены в карточки, полный текст —         */
+/* в раскрывающихся секциях (по разделам официальных правил).  */
 /* ============================================================ */
 
-const DEFAULT_ITEMS: RawItem[] = [
-  { title: { ru: 'Билеты', en: 'Tickets' }, desc: { ru: 'Электронный билет показывайте с экрана смартфона на входе. Сохраните его заранее — в фойе может не быть связи.', en: 'Show your e-ticket from your phone at the entrance. Save it in advance — signal in the foyer may be weak.' } },
-  { title: { ru: 'Приходите заранее', en: 'Arrive early' }, desc: { ru: 'Двери открываются за час до начала. После третьего звонка вход в зал — только в антракте.', en: 'Doors open one hour before. After the final bell, entry is allowed only at the interval.' } },
-  { title: { ru: 'Гардероб', en: 'Cloakroom' }, desc: { ru: 'Верхнюю одежду, зонты и крупные сумки необходимо сдать. Гардероб работает до окончания мероприятия.', en: 'Outerwear, umbrellas and large bags must be checked in. The cloakroom is open until the event ends.' } },
-  { title: { ru: 'Тишина в зале', en: 'Silence in the hall' }, desc: { ru: 'Переведите телефон в беззвучный режим. Во время выступления просьба не разговаривать и не пользоваться экраном.', en: 'Switch your phone to silent. Please do not talk or use your screen during the performance.' } },
-  { title: { ru: 'Фотосъёмка', en: 'Photography' }, desc: { ru: 'Любительская съёмка — без вспышки и штатива. Профессиональная съёмка — только по согласованию.', en: 'Amateur photography without flash or tripod. Professional shoots by prior arrangement only.' } },
-  { title: { ru: 'Дресс-код', en: 'Dress code' }, desc: { ru: 'Рекомендуем деловой или нарядный стиль. На торжественных вечерах — вечерние наряды.', en: 'Smart or elegant attire is recommended. Formal evenings call for evening wear.' } },
-  { title: { ru: 'Дети', en: 'Children' }, desc: { ru: 'Возрастные ограничения указаны для каждого мероприятия. С 6 лет ребёнку нужен отдельный билет.', en: 'Age ratings are listed per event. From age 6 a child needs a separate ticket.' } },
-  { title: { ru: 'Еда и напитки', en: 'Food & drinks' }, desc: { ru: 'В фойе работает буфет. Проносить еду и напитки в зал не разрешается.', en: 'A buffet operates in the foyer. Food and drinks may not be taken into the hall.' } },
-  { title: { ru: 'Доступная среда', en: 'Accessibility' }, desc: { ru: 'Пандусы, лифт, места для колясок и сопровождение по запросу. Сообщите о потребностях заранее.', en: 'Ramps, a lift, wheelchair spaces and assistance on request. Let us know your needs in advance.' } },
+type KeyRule = { icon: LucideIcon; title: string; text: string };
+
+const KEY_RULES: KeyRule[] = [
+  {
+    icon: ShieldCheck,
+    title: 'Досмотр ФСО на входе',
+    text: 'При входе — пункт досмотра ФСО России. При отказе пройти досмотр посетитель в здание не допускается.',
+  },
+  {
+    icon: Ban,
+    title: 'Запрещённые предметы',
+    text: 'Нельзя проносить оружие, опасные и пахучие вещества, колющие и режущие предметы, пиротехнику, лазерные фонарики, алкоголь, еду, чемоданы и крупные сумки.',
+  },
+  {
+    icon: Shirt,
+    title: 'Верхняя одежда — в гардероб',
+    text: 'В залы нельзя входить в верхней одежде и проносить её с собой. Крупные сумки, рюкзаки, пакеты и коляски в гардероб не принимаются.',
+  },
+  {
+    icon: CupSoda,
+    title: 'Еда и напитки',
+    text: 'Проносить и употреблять еду и напитки в залах запрещено — исключение только бутилированная вода без газа.',
+  },
+  {
+    icon: CigaretteOff,
+    title: 'Курение запрещено',
+    text: 'Курение табака, электронных сигарет и иной никотиносодержащей продукции в помещениях Дома Союзов запрещено (ФЗ № 15-ФЗ).',
+  },
+  {
+    icon: Baby,
+    title: 'Дети до 14 лет',
+    text: 'Посетители до 14 лет допускаются только в сопровождении совершеннолетних. Для групп — не менее одного сопровождающего на 10 детей.',
+  },
+  {
+    icon: Dog,
+    title: 'С животными нельзя',
+    text: 'Вход с животными запрещён. Исключение — собаки-поводыри для лиц с ограниченными возможностями.',
+  },
+  {
+    icon: AlertTriangle,
+    title: 'Бесхозные вещи',
+    text: 'Обнаружив оставленные без присмотра предметы, немедленно сообщите сотрудникам охраны. Трогать и перемещать их строго запрещается.',
+  },
 ];
 
-const ICONS: LucideIcon[] = [Ticket, Clock, ShoppingBag, Volume2, Camera, Shirt, Users, Coffee, Accessibility];
+type RuleSection = { heading: string; items: { n: string; text: string }[]; note?: string };
+
+const SECTIONS: RuleSection[] = [
+  {
+    heading: '1. Общие положения',
+    items: [
+      {
+        n: '1.1',
+        text: 'Настоящие правила разработаны в соответствии с уставом федерального государственного бюджетного учреждения «Управление по эксплуатации зданий Федерального Собрания Российской Федерации» Управления делами Президента Российской Федерации (далее — Учреждение), действующим законодательством Российской Федерации и устанавливают порядок посещения здания Дома Союзов (объект культурного наследия федерального значения «Дом Благородного собрания с колонным залом, 1780-е гг., арх. М.Ф. Казаков»), расположенного по адресу: г. Москва, вн.тер.г, муниципальный округ Тверской, ул. Дмитровка Б., д. 1 (далее — Дом Союзов), при проведении мероприятий, выставок, экскурсий и др. (далее — Правила).',
+      },
+      { n: '1.2', text: 'Настоящие Правила публикуются на официальном сайте Дома Союзов.' },
+    ],
+  },
+  {
+    heading: '2. Правила прохода в здание',
+    items: [
+      { n: '2.1', text: 'При входе в здание Дома Союзов посетитель проходит пункт досмотра Федеральной Службы Охраны Российской Федерации (далее — ФСО России).' },
+      { n: '2.2', text: 'Запрещается проходить в здание с оружием, огнеопасными, взрывчатыми, ядовитыми, пахучими и радиоактивными веществами, колющими и режущими предметами, пиротехническими устройствами, лазерными фонариками, наркотическими веществами, алкогольными напитками, пищей, чемоданами, крупными свёртками и сумками, в пачкающей одежде или с предметами, которые могут испачкать других посетителей, мебель и иное имущество, расположенное в здании Дома Союзов.' },
+      { n: '2.3', text: 'С целью обеспечения безопасности контроль посетителей и находящихся при них вещей осуществляется как визуально, так и с применением металлодетекторов и иных специальных приборов и устройств.' },
+      { n: '2.4', text: 'В случае отказа пройти досмотр, посетитель не допускается в здание.' },
+      { n: '2.5', text: 'После прохождения посетителем досмотра осуществляется проверка основания прохода на мероприятие, выставку, экскурсию (билет, приглашение, список, заявка).' },
+      { n: '2.6', text: 'Вход в здание Дома Союзов с животными запрещён, за исключением случаев посещения мероприятий, выставок, экскурсий лицами с ограниченными возможностями, для которых животное является поводырём и необходимым условием передвижения.' },
+      { n: '2.7', text: 'Посетители возраста до 14 лет допускаются в здание Дома Союзов только в сопровождении совершеннолетних сопровождающих.' },
+      { n: '2.8', text: 'При посещении мероприятий, выставок, экскурсий группой посетителей несовершеннолетнего возраста обязательно присутствие сопровождающего лица старше 18 лет, из расчёта не менее одного сопровождающего на 10 несовершеннолетних посетителей. Руководитель группы или сопровождающие родители принимают на себя ответственность за жизнь и здоровье, а также за поведение сопровождаемых детей на протяжении всего пребывания в здании Дома Союзов.' },
+      { n: '2.9', text: 'Учреждение не несёт ответственность за задержку при проходе в здание Дома Союзов в связи с осуществлением досмотра сотрудниками ФСО России.' },
+    ],
+  },
+  {
+    heading: '3. Правила нахождения в залах и помещениях',
+    items: [
+      { n: '3.1', text: 'Запрещается входить в залы и помещения Дома Союзов в верхней одежде, а также проносить её с собой, размещать на зрительских креслах.' },
+      { n: '3.2', text: 'В гардеробе Дома Союзов не принимаются на хранение сумки большого размера, рюкзаки, пакеты, коляски и т.п.' },
+      { n: '3.3', text: 'В случае утери жетона (номерка) или утраты личных вещей из гардероба, посетитель должен обратиться к работнику гардероба или представителям администрации Дома Союзов.' },
+      { n: '3.4', text: 'Учреждение не несёт ответственности, в том числе материальной, за сохранность личного имущества посетителей.' },
+      { n: '3.5', text: 'При посещении мероприятий, выставок, экскурсий в Доме Союзов посетителям необходимо: бережно относиться к имуществу и оборудованию с учётом охранного статуса объекта, соблюдать общественный порядок, правила пожарной безопасности и меры предосторожности на ступенях лестниц; уважительно относиться к другим посетителям и работникам Дома Союзов, не допускать нарушения общепринятых норм поведения (нецензурной брани, агрессии, физического насилия, нарушения тишины и т.п.); выполнять требования сотрудников частного охранного предприятия, осуществляющих контроль общественного порядка и безопасного посещения.' },
+      { n: '3.6', text: 'В залах и помещениях Дома Союзов посетителям запрещается: размещать между проходами зала стулья и громоздкие вещи, препятствующие эвакуации; проносить и употреблять пищу и напитки, за исключением бутилированной негазированной воды; курение табака, электронных сигарет, употребление иной никотиносодержащей продукции; выходить на сцену и за кулисы, в технические и служебные помещения, перемещать предметы интерьера; входить за установленные ограждения и в помещения, закрытые для посещения; сидеть и стоять в проходах между рядами и на ступенях лестниц; трогать и передвигать экспонаты, совершать любые неправомерные действия, нарушающие внешний вид и техническое состояние объектов.' },
+      { n: '3.7', text: 'В случае обнаружения оставленных без присмотра предметов или вещей необходимо немедленно сообщить об этом сотрудникам ФСО России / частного охранного предприятия / представителям администрации. Брать в руки, открывать, сдвигать с места данные предметы строго запрещается.' },
+      { n: '3.8', text: 'В случае ухудшения самочувствия или в иных нештатных ситуациях посетитель незамедлительно обращается к организатору мероприятия / сотрудникам охраны / представителям администрации Дома Союзов.' },
+      { n: '3.9', text: 'В случае возникновения форс-мажорных обстоятельств организуется эвакуация посетителей через основные пути эвакуации и запасные выходы согласно размещённым схемам.' },
+      { n: '3.10', text: 'Посетители, нарушающие настоящие Правила и иные нормы общественного правопорядка, могут быть удалены из здания Дома Союзов.' },
+    ],
+    note: 'Обращаем внимание: в соответствии с Федеральным законом от 23.02.2013 № 15-ФЗ «Об охране здоровья граждан от воздействия окружающего табачного дыма и последствий потребления табака» курение в помещениях Дома Союзов запрещено.',
+  },
+];
 
 export default function Audience() {
-  const { lang, tStrict, list, pickItem } = useSite();
+  const { lang, tStrict } = useSite();
   const title = tStrict('audience_title') || (lang === 'ru' ? 'Зрителям' : 'For Visitors');
   const lead =
     tStrict('audience_lead') ||
     (lang === 'ru'
-      ? 'Несколько простых правил, чтобы вечер в Доме Союзов прошёл комфортно для вас и для всех гостей.'
-      : 'A few simple rules so that your evening at the House of Unions is comfortable for you and for every guest.');
-
-  const items = list<RawItem>('audience_items', DEFAULT_ITEMS);
+      ? 'Правила посещения Дома Союзов: проход в здание, гардероб, поведение в залах. Главное — в карточках ниже, полный текст — в разделах.'
+      : 'Rules of visiting the House of Unions: entry, cloakroom, conduct in the halls.');
 
   return (
     <div className="bg-paper">
       <Seo
-        title={lang === 'ru' ? 'Зрителям — Дом Союзов' : 'For Visitors — House of Unions'}
+        title={lang === 'ru' ? 'Зрителям — правила посещения · Дом Союзов' : 'For Visitors — House of Unions'}
         description={lead}
         path="audience"
         lang={lang}
       />
+
       {/* HERO */}
       <RevealSection className="grid gap-8 border-b border-line px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-20 md:pt-32">
         <div>
@@ -67,25 +139,73 @@ export default function Audience() {
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">{lead}</p>
       </RevealSection>
 
-      {/* ПРАВИЛА — карточки с иконками */}
-      <RevealList className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item, i) => {
-          const Icon = ICONS[i % ICONS.length];
-          return (
-            <RevealItem key={`${pickItem(item, 'title') || i}`}>
-              <div className="group flex h-full flex-col gap-5 bg-paper p-8 transition hover:bg-paper-soft md:p-10">
-                <span className="grid h-14 w-14 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
-                  <Icon size={26} strokeWidth={1.5} />
+      {/* КОРОТКО О ГЛАВНОМ — карточки */}
+      <RevealSection className="px-5 py-14 md:px-12 md:py-20">
+        <h2 className="mb-10 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+          Коротко о главном
+        </h2>
+        <RevealList className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          {KEY_RULES.map((r) => {
+            const Icon = r.icon;
+            return (
+              <RevealItem key={r.title}>
+                <div className="group flex h-full flex-col gap-4 bg-paper p-7 transition hover:bg-paper-soft">
+                  <span className="grid h-12 w-12 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
+                    <Icon size={22} strokeWidth={1.6} />
+                  </span>
+                  <h3 className="font-heading text-[clamp(17px,1.4vw,21px)] font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink">
+                    {r.title}
+                  </h3>
+                  <p className="text-[14px] leading-6 text-ink-soft">{r.text}</p>
+                </div>
+              </RevealItem>
+            );
+          })}
+        </RevealList>
+      </RevealSection>
+
+      {/* ПОЛНЫЕ ПРАВИЛА — раскрывающиеся секции */}
+      <RevealSection className="border-t border-line px-5 py-14 md:px-12 md:py-20">
+        <h2 className="mb-3 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
+          Полные правила посещения
+        </h2>
+        <p className="mb-10 max-w-3xl text-base leading-7 text-ink-soft">
+          Официальные правила посещения здания Дома Союзов при проведении мероприятий, выставок и экскурсий.
+        </p>
+
+        <div className="mx-auto max-w-[1000px] divide-y divide-line border-y border-line">
+          {SECTIONS.map((section, idx) => (
+            <details key={section.heading} className="group" open={idx === 0}>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-6 transition hover:text-accent">
+                <span className="font-heading text-[clamp(20px,2.2vw,30px)] font-bold uppercase leading-[1.05] tracking-[0.02em] text-ink group-open:text-accent">
+                  {section.heading}
                 </span>
-                <h3 className="font-heading text-[clamp(22px,2vw,30px)] font-bold uppercase leading-[1.05] tracking-[0.02em] text-ink">
-                  {pickItem(item, 'title')}
-                </h3>
-                <p className="text-[15px] leading-7 text-ink-soft">{pickItem(item, 'desc')}</p>
+                <span
+                  aria-hidden
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-ink transition group-open:rotate-45 group-open:border-accent group-open:text-accent"
+                >
+                  +
+                </span>
+              </summary>
+              <div className="pb-8">
+                <ul className="space-y-5">
+                  {section.items.map((item) => (
+                    <li key={item.n} className="grid gap-2 md:grid-cols-[64px_1fr] md:gap-5">
+                      <span className="font-mono text-[13px] font-bold tabular-nums text-accent">{item.n}</span>
+                      <p className="text-[15px] leading-7 text-ink-soft">{item.text}</p>
+                    </li>
+                  ))}
+                </ul>
+                {section.note ? (
+                  <div className="mt-6 border-l-2 border-accent bg-paper-soft px-5 py-4 text-[14px] leading-6 text-ink">
+                    {section.note}
+                  </div>
+                ) : null}
               </div>
-            </RevealItem>
-          );
-        })}
-      </RevealList>
+            </details>
+          ))}
+        </div>
+      </RevealSection>
     </div>
   );
 }

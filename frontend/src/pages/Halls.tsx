@@ -36,7 +36,7 @@ export default function Halls() {
         </div>
       </RevealSection>
 
-      <RevealList className="mx-auto max-w-[1600px]">
+      <RevealList className="px-5 md:px-12">
         {halls.map((hall, i) => (
           <RevealItem key={hall.id}>
             <article className="grid gap-0 border-b border-line md:grid-cols-2">

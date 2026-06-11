@@ -93,6 +93,12 @@ export const adminApi = {
   updateGallery: (id: number, data: unknown) => api.put(`/admin/gallery/${id}`, data).then((r) => r.data),
   deleteGallery: (id: number) => api.delete(`/admin/gallery/${id}`).then((r) => r.data),
 
+  // Gallery categories (блоки-темы)
+  getGalleryCategories: () => api.get('/admin/gallery-categories').then((r) => r.data),
+  createGalleryCategory: (data: unknown) => api.post('/admin/gallery-categories', data).then((r) => r.data),
+  updateGalleryCategory: (id: number, data: unknown) => api.put(`/admin/gallery-categories/${id}`, data).then((r) => r.data),
+  deleteGalleryCategory: (id: number) => api.delete(`/admin/gallery-categories/${id}`).then((r) => r.data),
+
   // Partners
   getPartners: () => api.get('/admin/partners').then((r) => r.data),
   createPartner: (data: unknown) => api.post('/admin/partners', data).then((r) => r.data),

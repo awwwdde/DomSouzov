@@ -1,5 +1,6 @@
 """Admin CRUD API endpoints (JWT-protected)."""
 import os
+import re
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
@@ -13,6 +14,7 @@ from models import (
     NewsArticle,
     Hall,
     GalleryImage,
+    GalleryCategory,
     Partner,
     AboutHoverTip,
     AboutScatteredPhoto,
@@ -27,6 +29,7 @@ from schemas import (
     NewsCreate, NewsUpdate, NewsOut,
     HallCreate, HallUpdate, HallOut,
     GalleryCreate, GalleryUpdate, GalleryOut,
+    GalleryCategoryCreate, GalleryCategoryUpdate, GalleryCategoryOut,
     PartnerCreate, PartnerUpdate, PartnerOut,
     AboutHoverTipCreate, AboutHoverTipUpdate, AboutHoverTipOut,
     AboutScatteredPhotoCreate, AboutScatteredPhotoUpdate, AboutScatteredPhotoOut,
@@ -113,24 +116,21 @@ async def upload_file(
         )
 
     # Лимит размера — ДО чтения в память (файлы лежат в БД как bytea).
-    max_bytes = app_settings.MAX_UPLOAD_MB * 1024 * 1024
+    is_video_ext = ext in ALLOWED_VIDEO_EXTENSIONS or (file.content_type in ALLOWED_VIDEO_TYPES)
+    limit_mb = app_settings.MAX_VIDEO_UPLOAD_MB if is_video_ext else app_settings.MAX_UPLOAD_MB
+    max_bytes = limit_mb * 1024 * 1024
     declared = getattr(file, "size", None)
-    is_video_ext = ext in ALLOWED_VIDEO_EXTENSIONS
     if declared and declared > max_bytes:
-        hint = " Для видео используйте внешнюю ссылку (поле URL)." if is_video_ext else ""
         raise HTTPException(
             413,
-            f"Файл слишком большой ({declared // (1024 * 1024)} МБ). "
-            f"Максимум — {app_settings.MAX_UPLOAD_MB} МБ.{hint}",
+            f"Файл слишком большой ({declared // (1024 * 1024)} МБ). Максимум — {limit_mb} МБ.",
         )
 
     content = await file.read()
     if len(content) > max_bytes:
-        hint = " Для видео используйте внешнюю ссылку (поле URL)." if is_video_ext else ""
         raise HTTPException(
             413,
-            f"Файл слишком большой ({len(content) // (1024 * 1024)} МБ). "
-            f"Максимум — {app_settings.MAX_UPLOAD_MB} МБ.{hint}",
+            f"Файл слишком большой ({len(content) // (1024 * 1024)} МБ). Максимум — {limit_mb} МБ.",
         )
     filename = f"{uuid.uuid4().hex}.{ext}"
     content_type = file.content_type or "application/octet-stream"
@@ -329,6 +329,72 @@ def delete_gallery(item_id: int, db: Session = Depends(get_db), _: AdminUser = D
     if not item:
         raise HTTPException(404, "Not found")
     db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+
+# ──────────── GALLERY CATEGORIES (блоки-темы) ────────────
+
+_TRANSLIT = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "h", "ц": "c", "ч": "ch", "ш": "sh", "щ": "sch",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _slugify(text: str) -> str:
+    s = (text or "").strip().lower()
+    out = "".join(_TRANSLIT.get(ch, ch) for ch in s)
+    out = re.sub(r"[^a-z0-9]+", "-", out).strip("-")
+    return out or f"tema-{uuid.uuid4().hex[:6]}"
+
+
+@router.get("/gallery-categories", response_model=List[GalleryCategoryOut])
+def list_gallery_categories(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(GalleryCategory).order_by(GalleryCategory.sort_order).all()
+
+
+@router.post("/gallery-categories", response_model=GalleryCategoryOut)
+def create_gallery_category(body: GalleryCategoryCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    data = body.model_dump()
+    slug = (data.get("slug") or "").strip() or _slugify(data.get("name_ru") or data.get("name_en"))
+    # уникальность slug
+    base, i = slug, 2
+    while db.query(GalleryCategory).filter_by(slug=slug).first():
+        slug = f"{base}-{i}"
+        i += 1
+    data["slug"] = slug
+    cat = GalleryCategory(**data)
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.put("/gallery-categories/{cat_id}", response_model=GalleryCategoryOut)
+def update_gallery_category(cat_id: int, body: GalleryCategoryUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    cat = db.query(GalleryCategory).filter_by(id=cat_id).first()
+    if not cat:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        if k == "slug" and not (v or "").strip():
+            continue  # пустой slug не затираем
+        setattr(cat, k, v)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.delete("/gallery-categories/{cat_id}")
+def delete_gallery_category(cat_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    cat = db.query(GalleryCategory).filter_by(id=cat_id).first()
+    if not cat:
+        raise HTTPException(404, "Not found")
+    # фотографии этой темы тоже удаляем (блок с фотками)
+    db.query(GalleryImage).filter(GalleryImage.category_id == cat_id).delete(synchronize_session=False)
+    db.delete(cat)
     db.commit()
     return {"ok": True}
 
