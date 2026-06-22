@@ -83,12 +83,11 @@ type PageDef = {
   sections: PageSection[];
 };
 
-/** Краткие секции hero + lead для обычных страниц. */
-const heroPair = (titleKey: string, leadKey: string): PageSection => ({
+/** Краткая hero-секция (только заголовок) для обычных страниц. */
+const heroPair = (titleKey: string): PageSection => ({
   title: 'Hero страницы',
   fields: [
     { key: titleKey, label: 'Заголовок', type: 'text' },
-    { key: leadKey, label: 'Подзаголовок / лид', type: 'textarea', rows: 3 },
   ],
 });
 
@@ -170,11 +169,11 @@ const PAGES: PageDef[] = [
   {
     id: 'events',
     label: 'Афиша',
-    description: 'Заголовок и лид страницы.',
+    description: 'Заголовок страницы.',
     group: 'Страницы',
     icon: Calendar,
     href: '/events',
-    sections: [heroPair('events_title', 'events_lead')],
+    sections: [heroPair('events_title')],
   },
   {
     id: 'about',
@@ -211,20 +210,20 @@ const PAGES: PageDef[] = [
   {
     id: 'halls',
     label: 'Залы',
-    description: 'Заголовок и лид страницы.',
+    description: 'Заголовок страницы.',
     group: 'Страницы',
     icon: Landmark,
     href: '/halls',
-    sections: [heroPair('halls_title', 'halls_lead')],
+    sections: [heroPair('halls_title')],
   },
   {
     id: 'gallery',
     label: 'Галерея',
-    description: 'Заголовок и лид страницы.',
+    description: 'Заголовок страницы.',
     group: 'Страницы',
     icon: Images,
     href: '/gallery',
-    sections: [heroPair('gallery_title', 'gallery_lead')],
+    sections: [heroPair('gallery_title')],
   },
   {
     id: 'organizers',
@@ -234,7 +233,7 @@ const PAGES: PageDef[] = [
     icon: Briefcase,
     href: '/organizers',
     sections: [
-      heroPair('organizers_title', 'organizers_lead'),
+      heroPair('organizers_title'),
       {
         title: 'Короткий текст под кнопками',
         fields: [
@@ -258,7 +257,7 @@ const PAGES: PageDef[] = [
     icon: Users,
     href: '/audience',
     sections: [
-      heroPair('audience_title', 'audience_lead'),
+      heroPair('audience_title'),
       {
         title: 'Правила нахождения (карточки)',
         fields: [
@@ -279,11 +278,11 @@ const PAGES: PageDef[] = [
   {
     id: 'news',
     label: 'Новости',
-    description: 'Заголовок и лид страницы.',
+    description: 'Заголовок страницы.',
     group: 'Страницы',
     icon: Newspaper,
     href: '/news',
-    sections: [heroPair('news_title', 'news_lead')],
+    sections: [heroPair('news_title')],
   },
   {
     id: 'contacts',

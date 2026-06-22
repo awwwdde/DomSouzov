@@ -1,4 +1,5 @@
 """Seed database with initial content."""
+import json
 import os
 import sys
 
@@ -209,9 +210,13 @@ def seed():
             Hall(
                 name_ru="Колонный зал", name_en="Hall of Columns",
                 capacity="1 200 мест", area="1 120 м²",
-                columns="28",
-                features_ru="28 колонн · Акустика класса A",
-                features_en="28 columns · Acoustic class A",
+                columns=None,
+                features_ru=json.dumps([
+                    {"title_ru": "Акустика", "title_en": "Acoustics", "text_ru": "Класс A", "text_en": "Class A"},
+                    {"title_ru": "Колонны", "title_en": "Columns", "text_ru": "28 коринфских из белого мрамора", "text_en": "28 Corinthian, white marble"},
+                    {"title_ru": "Люстры", "title_en": "Chandeliers", "text_ru": "5 хрустальных", "text_en": "5 crystal"},
+                ], ensure_ascii=False),
+                features_en="",
                 description_ru="Главный зал Дома Союзов — шедевр классицизма. Двадцать восемь коринфских колонн белого мрамора, пять хрустальных люстр, превосходная акустика. Здесь выступали Чайковский, Лист и Рахманинов.",
                 description_en="The principal hall of the House of Unions — a masterpiece of classicism. Twenty-eight Corinthian columns of white marble, five crystal chandeliers, exceptional acoustics. Tchaikovsky, Liszt and Rachmaninoff performed here.",
                 sort_order=1,
@@ -220,8 +225,11 @@ def seed():
                 name_ru="Октябрьский зал", name_en="October Hall",
                 capacity="480 мест", area="540 м²",
                 columns=None,
-                features_ru="Концерты · Конференции",
-                features_en="Concerts · Conferences",
+                features_ru=json.dumps([
+                    {"title_ru": "Формат", "title_en": "Format", "text_ru": "Концерты, конференции, приёмы", "text_en": "Concerts, conferences, receptions"},
+                    {"title_ru": "Атмосфера", "title_en": "Atmosphere", "text_ru": "Камерное пространство", "text_en": "Intimate chamber space"},
+                ], ensure_ascii=False),
+                features_en="",
                 description_ru="Камерный зал Дома Союзов — идеальное пространство для конференций, лекций, камерных концертов и торжественных приёмов.",
                 description_en="The intimate hall of the House of Unions — ideal for conferences, lectures, chamber concerts and formal receptions.",
                 sort_order=2,

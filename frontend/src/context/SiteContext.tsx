@@ -18,6 +18,8 @@ interface SiteContextValue {
   /** Достаёт значение подполя элемента списка с учётом языка. */
   pickItem: (item: unknown, key: string) => string;
   loading: boolean;
+  /** true, если контент не удалось загрузить (сеть/бэкенд недоступны). */
+  error: boolean;
   refresh: () => void;
 }
 
@@ -38,19 +40,25 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<SiteContent | null>(null);
   const [lang, setLang] = useState<Lang>('ru');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = () => {
     setLoading(true);
+    setError(false);
     getContent()
-      .then((data) =>
+      .then((data) => {
         setContent({
           ...data,
           partners: data.partners ?? [],
           gallery_categories: data.gallery_categories ?? [],
           about: data.about ?? { hover_tips: [], scattered_photos: [], timeline: [] },
-        })
-      )
-      .catch(() => setContent(FALLBACK))
+        });
+        setError(false);
+      })
+      .catch(() => {
+        setContent(FALLBACK);
+        setError(true);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -95,7 +103,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SiteContext.Provider value={{ content, lang, setLang, t, tStrict, list, pickItem, loading, refresh: load }}>
+    <SiteContext.Provider value={{ content, lang, setLang, t, tStrict, list, pickItem, loading, error, refresh: load }}>
       {children}
     </SiteContext.Provider>
   );

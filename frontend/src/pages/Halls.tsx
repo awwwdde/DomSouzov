@@ -26,7 +26,6 @@ export default function Halls() {
           </h1>
         </div>
         <div className="flex flex-col items-start gap-6 self-end md:items-end">
-          <p className="max-w-2xl text-lg leading-8 text-ink-soft md:text-right">{lead}</p>
           <ActionButton
             to="/organizers"
             text={lang === 'ru' ? 'Аренда и условия' : 'Hire & terms'}
@@ -75,16 +74,26 @@ export default function Halls() {
                     </dt>
                     <dd>{hall.area}</dd>
                   </div>
-                  {hall.columns ? (
-                    <div className="flex gap-2">
-                      <dt className="min-w-[10rem] text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-                        {lang === 'ru' ? 'Колонны' : 'Columns'}
-                      </dt>
-                      <dd>{hall.columns}</dd>
-                    </div>
-                  ) : null}
                 </dl>
                 <p className="mt-6 max-w-prose text-sm leading-7 text-ink-soft">{l(hall.description)}</p>
+
+                {hall.features_list && hall.features_list.length > 0 ? (
+                  <dl className="mt-8 grid gap-x-8 gap-y-4 border-t border-line pt-6 sm:grid-cols-2">
+                    {hall.features_list.map((f, fi) => {
+                      const ttl = l(f.title);
+                      const txt = l(f.text);
+                      if (!ttl && !txt) return null;
+                      return (
+                        <div key={fi} className="flex flex-col gap-1">
+                          {ttl ? (
+                            <dt className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{ttl}</dt>
+                          ) : null}
+                          {txt ? <dd className="text-sm leading-6 text-ink-soft">{txt}</dd> : null}
+                        </div>
+                      );
+                    })}
+                  </dl>
+                ) : null}
                 <div className="mt-10">
                   <Link
                     to="/organizers"
@@ -99,28 +108,6 @@ export default function Halls() {
           </RevealItem>
         ))}
       </RevealList>
-
-      <RevealSection className="border-t border-line px-5 py-16 md:px-12">
-        <h2 className="mb-6 font-heading text-[clamp(48px,6vw,96px)] font-bold uppercase leading-[0.86] tracking-[0.04em]">
-          {lang === 'ru' ? 'План и посадка' : 'Layout & seating'}
-        </h2>
-        <RevealList className="grid gap-6 md:grid-cols-2">
-          <RevealItem>
-            <div className="min-h-[320px] border border-line bg-paper">
-              <div className="flex h-full min-h-[320px] items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                {lang === 'ru' ? '[ СХЕМА КОЛОННОГО ЗАЛА · ПАРТЕР + ЯРУСЫ ]' : '[ HALL OF COLUMNS PLAN · STALLS + TIERS ]'}
-              </div>
-            </div>
-          </RevealItem>
-          <RevealItem>
-            <div className="min-h-[320px] border border-line bg-paper">
-              <div className="flex h-full min-h-[320px] items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                {lang === 'ru' ? '[ СХЕМА ОКТЯБРЬСКОГО ЗАЛА ]' : '[ OCTOBER HALL PLAN ]'}
-              </div>
-            </div>
-          </RevealItem>
-        </RevealList>
-      </RevealSection>
     </>
   );
 }

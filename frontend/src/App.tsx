@@ -6,6 +6,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import CookieBanner from './components/CookieBanner';
 import ErrorBoundary from './components/ErrorBoundary';
+import NetworkError from './components/NetworkError';
+import { useSite } from './context/SiteContext';
 import Analytics from './components/Analytics';
 import ScrollProgress from './components/ScrollProgress';
 import Preloader from './components/Preloader';
@@ -43,6 +45,7 @@ import AdminPartners from './pages/admin/AdminPartners';
 
 function PublicLayout() {
   const location = useLocation();
+  const { error, loading } = useSite();
 
   return (
     <SmoothScrollProvider routeKey={location.pathname}>
@@ -50,6 +53,9 @@ function PublicLayout() {
         <ScrollProgress />
         <Header />
         <main className="flex min-h-0 flex-1 flex-col">
+          {error && !loading ? (
+            <NetworkError />
+          ) : (
           <Routes>
             <Route element={<PageAnimationLayout />}>
               <Route index element={<Home />} />
@@ -70,6 +76,7 @@ function PublicLayout() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
+          )}
         </main>
         <Footer />
         <CookieBanner />

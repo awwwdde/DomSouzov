@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { adminApi } from '../../api/client';
+import { NEWS_CATEGORIES } from '../../lib/categories';
 
 const EMPTY = {
   id: 0,
@@ -87,16 +88,21 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input]:transition [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:outline-none [&_textarea:focus]:border-ink">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label>Рубрика (RU)</label>
-          <input value={form.tag_ru} onChange={set('tag_ru')} required placeholder="ФЕСТИВАЛЬ · 2026" />
-        </div>
-        <div className="grid gap-2">
-          <label>Tag (EN)</label>
-          <input value={form.tag_en} onChange={set('tag_en')} required placeholder="FESTIVAL · 2026" />
-        </div>
+    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input]:transition [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted [&_select]:min-h-11 [&_select]:rounded-xl [&_select]:border [&_select]:border-line [&_select]:bg-white [&_select]:px-3 [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:outline-none [&_textarea:focus]:border-ink">
+      <div className="grid max-w-sm gap-2">
+        <label>Рубрика</label>
+        <select
+          value={form.tag_ru || NEWS_CATEGORIES[0].ru}
+          onChange={(e) => {
+            const ru = e.target.value;
+            const en = NEWS_CATEGORIES.find((c) => c.ru === ru)?.en || ru;
+            setForm((p) => ({ ...p, tag_ru: ru, tag_en: en }));
+          }}
+        >
+          {NEWS_CATEGORIES.map((c) => (
+            <option key={c.ru} value={c.ru}>{c.ru}</option>
+          ))}
+        </select>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

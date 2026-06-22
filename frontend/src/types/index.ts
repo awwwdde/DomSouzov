@@ -44,6 +44,11 @@ export interface NewsArticle {
   created_at?: string | null;
 }
 
+export interface HallFeature {
+  title: BilingualString;
+  text: BilingualString;
+}
+
 export interface Hall {
   id: number;
   name: BilingualString;
@@ -51,6 +56,7 @@ export interface Hall {
   area: string;
   columns: string | null;
   features: BilingualString;
+  features_list?: HallFeature[];
   description: BilingualString;
   image: string | null;
 }

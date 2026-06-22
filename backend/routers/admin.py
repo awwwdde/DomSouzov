@@ -1,8 +1,9 @@
 """Admin CRUD API endpoints (JWT-protected)."""
 import os
 import re
+import time
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -60,11 +61,36 @@ ALLOWED_DOC_EXTENSIONS = {"pdf"}
 
 # ──────────── AUTH ────────────
 
+# Простой in-memory rate-limit на вход: защита от перебора пароля.
+# Хранит метки времени неудачных попыток по IP. Сбрасывается при рестарте —
+# для одного инстанса этого достаточно; для кластера нужен общий стор (Redis).
+_LOGIN_ATTEMPTS: dict = {}
+_LOGIN_MAX_ATTEMPTS = 7          # попыток за окно
+_LOGIN_WINDOW_SEC = 15 * 60      # окно блокировки, сек
+
+
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 @router.post("/login", response_model=Token)
-def login(form: LoginRequest, db: Session = Depends(get_db)):
+def login(form: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    ip = _client_ip(request)
+    now = time.time()
+    attempts = [t for t in _LOGIN_ATTEMPTS.get(ip, []) if now - t < _LOGIN_WINDOW_SEC]
+    if len(attempts) >= _LOGIN_MAX_ATTEMPTS:
+        raise HTTPException(429, "Слишком много попыток входа. Повторите через несколько минут.")
+
     user = db.query(AdminUser).filter(AdminUser.email == form.email).first()
     if not user or not verify_password(form.password, user.hashed_password):
+        attempts.append(now)
+        _LOGIN_ATTEMPTS[ip] = attempts
         raise HTTPException(401, "Incorrect email or password")
+
+    _LOGIN_ATTEMPTS.pop(ip, None)  # успешный вход — сбрасываем счётчик
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 

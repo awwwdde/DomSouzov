@@ -223,6 +223,28 @@ def _news_out(n: NewsArticle) -> dict:
     }
 
 
+def _hall_features(h: Hall) -> list:
+    """Особенности зала хранятся JSON-массивом в features_ru.
+    Возвращаем список {title:{ru,en}, text:{ru,en}}; легаси-строки игнорируем."""
+    import json
+    raw = h.features_ru or ""
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    out = []
+    for x in parsed:
+        if not isinstance(x, dict):
+            continue
+        out.append({
+            "title": {"ru": x.get("title_ru", ""), "en": x.get("title_en", "")},
+            "text": {"ru": x.get("text_ru", ""), "en": x.get("text_en", "")},
+        })
+    return out
+
+
 def _hall_out(h: Hall) -> dict:
     return {
         "id": h.id,
@@ -231,6 +253,7 @@ def _hall_out(h: Hall) -> dict:
         "area": h.area,
         "columns": h.columns,
         "features": {"ru": h.features_ru, "en": h.features_en},
+        "features_list": _hall_features(h),
         "description": {"ru": h.description_ru or "", "en": h.description_en or ""},
         "image": h.image,
     }

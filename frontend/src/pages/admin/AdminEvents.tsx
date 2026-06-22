@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { adminApi } from '../../api/client';
+import { EVENT_CATEGORIES } from '../../lib/categories';
 
 const EMPTY = {
   id: 0,
@@ -25,12 +26,7 @@ const EMPTY = {
 
 const AGE_OPTIONS = ['', '0+', '6+', '12+', '16+', '18+'];
 
-const CATEGORIES = [
-  { ru: 'Концерт', en: 'Concert' },
-  { ru: 'Мероприятие', en: 'Event' },
-  { ru: 'Экскурсия', en: 'Excursion' },
-  { ru: 'Собрание', en: 'Meeting' },
-];
+const CATEGORIES = EVENT_CATEGORIES;
 
 export default function AdminEvents() {
   return (
