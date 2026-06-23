@@ -117,6 +117,7 @@ export interface AboutScatteredPhoto {
 export interface AboutTimelineEvent {
   id: number;
   year: string;
+  tag?: BilingualString;
   title: BilingualString;
   description: BilingualString;
   image: string | null;

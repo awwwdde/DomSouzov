@@ -14,6 +14,27 @@ class LoginRequest(BaseModel):
     password: str
 
 
+# Управление админами (только супер-админ)
+class AdminUserCreate(BaseModel):
+    email: str
+    password: str
+
+
+class AdminPasswordReset(BaseModel):
+    password: str
+
+
+class AdminUserOut(BaseModel):
+    id: int
+    email: str
+    is_active: bool
+    is_super: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # Site Settings
 class SettingItem(BaseModel):
     key: str
@@ -272,6 +293,8 @@ class AboutScatteredPhotoOut(AboutScatteredPhotoBase):
 # About — события таймлайна
 class AboutTimelineEventBase(BaseModel):
     year: str
+    tag_ru: Optional[str] = None
+    tag_en: Optional[str] = None
     title_ru: str
     title_en: str
     description_ru: Optional[str] = None

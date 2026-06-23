@@ -2,28 +2,40 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
-import { CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, LayoutDashboard, Landmark, Newspaper } from 'lucide-react';
+import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, LayoutDashboard, Landmark, Newspaper, Users } from 'lucide-react';
 
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
   { path: '/admin/events', label: 'Мероприятия', icon: CalendarDays },
   { path: '/admin/news', label: 'Хроники', icon: Newspaper },
   { path: '/admin/halls', label: 'Залы', icon: Landmark },
+  { path: '/admin/about', label: 'О Доме', icon: BookOpen },
   { path: '/admin/gallery', label: 'Галерея', icon: GalleryHorizontal },
   { path: '/admin/partners', label: 'Партнёры', icon: Handshake },
   { path: '/admin/settings', label: 'Настройки', icon: Cog },
+];
+
+// Пункты только для супер-админа.
+const SUPER_NAV = [
+  { path: '/admin/users', label: 'Администраторы', icon: Users },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [isSuper, setIsSuper] = useState(false);
 
   useEffect(() => {
     getMe()
-      .then((me) => setEmail(me.email))
+      .then((me) => {
+        setEmail(me.email);
+        setIsSuper(Boolean(me.is_super));
+      })
       .catch(() => navigate('/admin/login'));
   }, [navigate]);
+
+  const navItems = isSuper ? [...NAV, ...SUPER_NAV] : NAV;
 
   const handleLogout = () => {
     adminLogout();
@@ -44,7 +56,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="mt-8 grid gap-2">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
             return (

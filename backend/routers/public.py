@@ -322,6 +322,7 @@ def _about_timeline_out(e: AboutTimelineEvent) -> dict:
     return {
         "id": e.id,
         "year": e.year,
+        "tag": {"ru": e.tag_ru or "", "en": e.tag_en or ""},
         "title": {"ru": e.title_ru, "en": e.title_en},
         "description": {"ru": e.description_ru or "", "en": e.description_en or ""},
         "image": e.image,

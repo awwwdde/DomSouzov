@@ -195,7 +195,7 @@ const PAGES: PageDef[] = [
       {
         title: 'Введение',
         fields: [
-          { key: 'about_intro_text', label: 'Текст-введение', type: 'textarea', rows: 6, hint: 'Слова из подсказок становятся ховером с медиа.' },
+          { key: 'about_intro_text', label: 'Текст-введение', type: 'textarea', rows: 8, hint: 'Абзацы разделяйте пустой строкой. Слова из подсказок становятся ховером с медиа.' },
         ],
       },
       {
@@ -336,8 +336,8 @@ const PAGES: PageDef[] = [
         title: 'Соцсети (ссылки; пустые скрываются)',
         fields: [
           { key: 'social_vk', label: 'ВКонтакте', type: 'text', single: true, hint: 'Полная ссылка https://vk.com/...' },
+          { key: 'social_max', label: 'MAX', type: 'text', single: true, hint: 'Полная ссылка на профиль в мессенджере MAX.' },
           { key: 'social_tg', label: 'Telegram', type: 'text', single: true, hint: 'Полная ссылка https://t.me/...' },
-          { key: 'social_yt', label: 'YouTube', type: 'text', single: true, hint: 'Полная ссылка https://youtube.com/...' },
         ],
       },
     ],

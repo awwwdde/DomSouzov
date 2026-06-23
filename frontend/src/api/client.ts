@@ -123,9 +123,29 @@ export const adminApi = {
     return adminApi.uploadFile(file);
   },
 
+  // About — «Дом в кадрах» (scattered photos)
+  getAboutPhotos: () => api.get('/admin/about/photos').then((r) => r.data),
+  createAboutPhoto: (data: unknown) => api.post('/admin/about/photos', data).then((r) => r.data),
+  updateAboutPhoto: (id: number, data: unknown) => api.put(`/admin/about/photos/${id}`, data).then((r) => r.data),
+  deleteAboutPhoto: (id: number) => api.delete(`/admin/about/photos/${id}`).then((r) => r.data),
+
+  // About — таймлайн (хронология)
+  getAboutTimeline: () => api.get('/admin/about/timeline').then((r) => r.data),
+  createAboutTimeline: (data: unknown) => api.post('/admin/about/timeline', data).then((r) => r.data),
+  updateAboutTimeline: (id: number, data: unknown) => api.put(`/admin/about/timeline/${id}`, data).then((r) => r.data),
+  deleteAboutTimeline: (id: number) => api.delete(`/admin/about/timeline/${id}`).then((r) => r.data),
+
   // Newsletter
   getSubscribers: () => api.get('/admin/subscribers').then((r) => r.data),
 
   changePassword: (current_password: string, new_password: string) =>
     api.post('/admin/change-password', { current_password, new_password }).then((r) => r.data),
+
+  // Администраторы (только супер-админ)
+  getAdmins: () => api.get('/admin/admins').then((r) => r.data),
+  createAdmin: (email: string, password: string) =>
+    api.post('/admin/admins', { email, password }).then((r) => r.data),
+  resetAdminPassword: (id: number, password: string) =>
+    api.post(`/admin/admins/${id}/reset-password`, { password }).then((r) => r.data),
+  deleteAdmin: (id: number) => api.delete(`/admin/admins/${id}`).then((r) => r.data),
 };

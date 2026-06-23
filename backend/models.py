@@ -35,6 +35,9 @@ class AdminUser(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
+    # Супер-админ: может создавать/удалять других админов. Обычные админы
+    # управляют контентом, но не учётками.
+    is_super = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -213,7 +216,9 @@ class AboutTimelineEvent(Base):
     """Событие хронологии Дома Союзов (зигзаг-таймлайн)."""
     __tablename__ = "about_timeline_events"
     id = Column(Integer, primary_key=True)
-    year = Column(String, nullable=False)        # "1784"
+    year = Column(String, nullable=False)        # дата/год, напр. "1784" или "Март 2026"
+    tag_ru = Column(String, nullable=True)       # необязательный тег/метка события
+    tag_en = Column(String, nullable=True)
     title_ru = Column(String, nullable=False)
     title_en = Column(String, nullable=False)
     description_ru = Column(Text, nullable=True)

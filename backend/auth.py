@@ -46,3 +46,10 @@ def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends
     if user is None or not user.is_active:
         raise credentials_exception
     return user
+
+
+def get_current_super_admin(current: AdminUser = Depends(get_current_admin)) -> AdminUser:
+    """Доступ только для супер-админа (управление учётками)."""
+    if not getattr(current, "is_super", False):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только для супер-админа")
+    return current

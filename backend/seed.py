@@ -42,8 +42,9 @@ def seed():
             # Сброс пароля под текущее значение из env.
             existing.hashed_password = hash_password(admin_password)
             existing.is_active = True
+            existing.is_super = True  # bootstrap-админ всегда супер
         else:
-            db.add(AdminUser(email=admin_email, hashed_password=hash_password(admin_password)))
+            db.add(AdminUser(email=admin_email, hashed_password=hash_password(admin_password), is_super=True))
         print(f"[seed] admin ensured: {admin_email}")
     else:
         print("[seed] BOOTSTRAP_ADMIN_EMAIL/PASSWORD не заданы — админ не создан")
@@ -375,28 +376,30 @@ def seed():
 
     # ── About timeline ──
     if settings.SEED_DEMO_CONTENT and db.query(AboutTimelineEvent).count() == 0:
-        for i, (year, title_ru, title_en, desc_ru, desc_en) in enumerate([
-            ("1784", "Перестройка Казаковым", "Kazakov's reconstruction",
+        for i, (year, tag_ru, tag_en, title_ru, title_en, desc_ru, desc_en) in enumerate([
+            ("1784", "Архитектура", "Architecture", "Перестройка Казаковым", "Kazakov's reconstruction",
              "Матвей Казаков создаёт Колонный зал: 28 коринфских колонн, белый мрамор, пять хрустальных люстр.",
              "Matvey Kazakov creates the Hall of Columns: 28 Corinthian columns, white marble, five crystal chandeliers."),
-            ("1844", "Выступление Ференца Листа", "Ferenc Liszt's performance",
+            ("1844", "Концерт", "Concert", "Выступление Ференца Листа", "Ferenc Liszt's performance",
              "Один из первых знаменитых гастрольных концертов зала.",
              "One of the hall's first great touring concerts."),
-            ("1891", "П. И. Чайковский", "P. I. Tchaikovsky",
+            ("1891", "Концерт", "Concert", "П. И. Чайковский", "P. I. Tchaikovsky",
              "Композитор многократно дирижирует собственными произведениями.",
              "The composer conducts his own works on multiple occasions."),
-            ("1930", "Переход к профсоюзам", "Transferred to the unions",
+            ("1930", "История", "History", "Переход к профсоюзам", "Transferred to the unions",
              "Здание получает современное имя — Дом Союзов.",
              "The building receives its modern name — House of Unions."),
-            ("1953", "Государственная сцена", "A state stage",
+            ("1953", "История", "History", "Государственная сцена", "A state stage",
              "Зал становится одной из главных церемониальных сцен страны.",
              "The hall becomes one of the country's principal ceremonial stages."),
-            ("2024", "Реставрация", "Restoration",
+            ("2024", "Реставрация", "Restoration", "Реставрация", "Restoration",
              "Современная реставрация с бережным сохранением исторической акустики и лепнины Казакова.",
              "Contemporary restoration carefully preserves Kazakov's mouldings and the historical acoustics."),
         ]):
             db.add(AboutTimelineEvent(
                 year=year,
+                tag_ru=tag_ru,
+                tag_en=tag_en,
                 title_ru=title_ru,
                 title_en=title_en,
                 description_ru=desc_ru,

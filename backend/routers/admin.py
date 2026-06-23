@@ -36,7 +36,8 @@ from schemas import (
     AboutScatteredPhotoCreate, AboutScatteredPhotoUpdate, AboutScatteredPhotoOut,
     AboutTimelineEventCreate, AboutTimelineEventUpdate, AboutTimelineEventOut,
 )
-from auth import verify_password, create_access_token, get_current_admin, hash_password
+from auth import verify_password, create_access_token, get_current_admin, get_current_super_admin, hash_password
+from schemas import AdminUserCreate, AdminUserOut, AdminPasswordReset
 from config import settings as app_settings
 import aiofiles
 
@@ -97,7 +98,56 @@ def login(form: LoginRequest, request: Request, db: Session = Depends(get_db)):
 
 @router.get("/me")
 def get_me(current: AdminUser = Depends(get_current_admin)):
-    return {"email": current.email, "id": current.id}
+    return {"email": current.email, "id": current.id, "is_super": bool(getattr(current, "is_super", False))}
+
+
+# ──────────── ADMINS (только супер-админ) ────────────
+
+@router.get("/admins", response_model=List[AdminUserOut])
+def list_admins(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_super_admin)):
+    return db.query(AdminUser).order_by(AdminUser.created_at).all()
+
+
+@router.post("/admins", response_model=AdminUserOut)
+def create_admin(body: AdminUserCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_super_admin)):
+    email = (body.email or "").strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(400, "Некорректный email")
+    if len(body.password or "") < 6:
+        raise HTTPException(400, "Пароль должен быть не короче 6 символов")
+    if db.query(AdminUser).filter(AdminUser.email == email).first():
+        raise HTTPException(409, "Админ с таким email уже существует")
+    user = AdminUser(email=email, hashed_password=hash_password(body.password), is_active=True, is_super=False)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post("/admins/{admin_id}/reset-password")
+def reset_admin_password(admin_id: int, body: AdminPasswordReset, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_super_admin)):
+    user = db.query(AdminUser).filter_by(id=admin_id).first()
+    if not user:
+        raise HTTPException(404, "Не найдено")
+    if len(body.password or "") < 6:
+        raise HTTPException(400, "Пароль должен быть не короче 6 символов")
+    user.hashed_password = hash_password(body.password)
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/admins/{admin_id}")
+def delete_admin(admin_id: int, db: Session = Depends(get_db), current: AdminUser = Depends(get_current_super_admin)):
+    user = db.query(AdminUser).filter_by(id=admin_id).first()
+    if not user:
+        raise HTTPException(404, "Не найдено")
+    if user.id == current.id:
+        raise HTTPException(400, "Нельзя удалить самого себя")
+    if user.is_super:
+        raise HTTPException(400, "Нельзя удалить супер-админа")
+    db.delete(user)
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/change-password")

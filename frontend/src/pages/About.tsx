@@ -33,7 +33,11 @@ export default function About() {
   const heroPoster = t('about_hero_video_poster') || t('hero_video_poster');
   const heroKicker = t('about_hero_kicker') || (lang === 'ru' ? 'Большая Дмитровка · с 1784' : 'Bolshaya Dmitrovka · since 1784');
   const heroTitle = t('about_hero_title') || (lang === 'ru' ? 'О Доме Союзов' : 'About the House');
-  const introText = t('about_intro_text') || '';
+  const introFallback =
+    lang === 'ru'
+      ? 'Дом Союзов — один из старейших и самых известных залов Москвы. За белой колоннадой Колонного зала почти два с половиной века звучат музыка, голоса и аплодисменты.\n\nЗдесь выступали Чайковский, Лист и Рахманинов, проходили торжественные собрания и премьеры, которые становились частью истории страны.\n\nСегодня Дом Союзов соединяет наследие и современность: концерты, литературные вечера, церемонии и встречи в интерьерах, сохранивших дух эпохи.'
+      : 'The House of Unions is one of the oldest and most celebrated halls in Moscow. Behind the white colonnade of the Hall of Columns, music, voices and applause have resounded for almost two and a half centuries.\n\nTchaikovsky, Liszt and Rachmaninoff performed here; here too were held the ceremonies and premieres that became part of the nation’s history.\n\nToday the House of Unions unites heritage and the present day: concerts, literary evenings, ceremonies and gatherings within interiors that have preserved the spirit of the age.';
+  const introText = t('about_intro_text') || introFallback;
 
   const about = content?.about ?? { hover_tips: [], scattered_photos: [], timeline: [] };
 
@@ -56,7 +60,7 @@ export default function About() {
       <ScatteredPhotosStage
         photos={about.scattered_photos}
         kicker={t('about_photos_kicker') || (lang === 'ru' ? 'Архив' : 'Archive')}
-        heading={t('about_photos_heading') || (lang === 'ru' ? 'Дом в моменте' : 'The House in the moment')}
+        heading={t('about_photos_heading') || (lang === 'ru' ? 'Дом в кадрах' : 'The House in frames')}
         lang={lang}
         reduced={reduced}
       />
@@ -154,8 +158,17 @@ function IntroStage({
   lang: 'ru' | 'en';
   reduced: boolean;
 }) {
-  /* Разбираем текст: ищем все вхождения phrase[lang] из tips, оборачиваем в <HoverPhrase>. */
-  const parts = useMemo(() => parseTextWithTips(text, tips, lang), [text, tips, lang]);
+  /* Делим текст на абзацы по пустой строке, каждый разбираем на части
+     с hover-фразами по отдельности. */
+  const paragraphs = useMemo(
+    () =>
+      text
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => parseTextWithTips(p, tips, lang)),
+    [text, tips, lang]
+  );
 
   return (
     <Section tone="paper" spacing="md" bordered>
@@ -179,17 +192,24 @@ function IntroStage({
           transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
           className="md:col-span-9"
         >
-          <p className="border-t border-ink pt-8 text-lg leading-9 text-ink md:text-2xl md:leading-[1.5]">
-            {parts.map((part, i) =>
-              part.type === 'text' ? (
-                <span key={i}>{part.value}</span>
-              ) : (
-                <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
-                  {part.value}
-                </HoverPhrase>
-              )
-            )}
-          </p>
+          {paragraphs.map((parts, pi) => (
+            <p
+              key={pi}
+              className={`text-lg leading-9 text-ink md:text-2xl md:leading-[1.5] ${
+                pi === 0 ? 'border-t border-ink pt-8' : 'mt-6 md:mt-8'
+              }`}
+            >
+              {parts.map((part, i) =>
+                part.type === 'text' ? (
+                  <span key={i}>{part.value}</span>
+                ) : (
+                  <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
+                    {part.value}
+                  </HoverPhrase>
+                )
+              )}
+            </p>
+          ))}
         </motion.div>
       </div>
     </Section>
@@ -554,6 +574,7 @@ function TimelineStage({
           const isLeft = i % 2 === 0;
           const title = it.title[lang] || it.title.ru;
           const desc = it.description[lang] || it.description.ru;
+          const tag = it.tag ? it.tag[lang] || it.tag.ru : '';
           return (
             <motion.li
               key={it.id}
@@ -567,6 +588,11 @@ function TimelineStage({
               ].join(' ')}
             >
               <div className={isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8 md:text-left'}>
+                {tag ? (
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
+                    {tag}
+                  </div>
+                ) : null}
                 <div className="font-heading text-[clamp(40px,5vw,80px)] font-bold uppercase leading-none tracking-[0.01em] tabular-nums text-ink">
                   {it.year}
                 </div>

@@ -50,13 +50,13 @@ export default function Footer() {
 
   const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
 
-  // Ссылки соцсетей из CMS (ключи social_vk / social_tg / social_yt).
+  // Ссылки соцсетей из CMS (ключи social_vk / social_max / social_tg).
   // Показываем только заполненные — без «мёртвых» href="#".
   const socials = (
     [
-      { label: 'VK', href: t('social_vk') },
+      { label: 'ВКонтакте', href: t('social_vk') },
+      { label: 'MAX', href: t('social_max') },
       { label: 'Telegram', href: t('social_tg') },
-      { label: 'YouTube', href: t('social_yt') },
     ] as const
   ).filter((s) => s.href && s.href.trim().length > 0);
 

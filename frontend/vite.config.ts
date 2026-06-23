@@ -11,4 +11,16 @@ export default defineConfig({
       '/uploads': 'http://localhost:8001',
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Вендоры в отдельные чанки — кэшируются между релизами,
+        // не перезагружаются при правках кода приложения.
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+        },
+      },
+    },
+  },
 })
