@@ -18,7 +18,6 @@ export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const { lang, content } = useSite();
   const [event, setEvent] = useState<Event | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -42,18 +41,6 @@ export default function EventDetail() {
 
   const dayHeader = formatDayMonthFromEvent(event, lang);
   const descParas = l(event.description).split('\n').map((s) => s.trim()).filter(Boolean);
-
-  const shareUrl = encodeURIComponent(`${SITE_URL}/events/${event.id}`);
-  const shareText = encodeURIComponent(l(event.title));
-  const handleCopyLink = () => {
-    navigator.clipboard?.writeText(`${SITE_URL}/events/${event.id}`).then(
-      () => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      },
-      () => {},
-    );
-  };
 
   // Похожие события: тот же жанр, кроме текущего, до 3.
   const related = (content?.events ?? [])
@@ -180,38 +167,6 @@ export default function EventDetail() {
             </a>
           ) : null}
           <ActionButton to="/events" text={lang === 'ru' ? 'Вся афиша' : 'Full programme'} />
-
-          {/* Поделиться */}
-          <div className="border-t border-line pt-5">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
-              {lang === 'ru' ? 'Поделиться' : 'Share'}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.14em]">
-              <a
-                className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent"
-                href={`https://vk.com/share.php?url=${shareUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                VK
-              </a>
-              <a
-                className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent"
-                href={`https://t.me/share/url?url=${shareUrl}&text=${shareText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Telegram
-              </a>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="border-b border-line pb-px uppercase text-ink transition hover:border-accent hover:text-accent"
-              >
-                {copied ? (lang === 'ru' ? 'Скопировано' : 'Copied') : lang === 'ru' ? 'Копировать' : 'Copy link'}
-              </button>
-            </div>
-          </div>
         </aside>
       </section>
 

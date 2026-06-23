@@ -107,6 +107,8 @@ class NewsBase(BaseModel):
     is_pinned: bool = False
     pin_order: int = 0
     gallery: Optional[str] = None
+    # Дата/время публикации — можно задать вручную из админки.
+    created_at: Optional[datetime] = None
 
 
 class NewsCreate(NewsBase):

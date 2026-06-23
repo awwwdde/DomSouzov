@@ -23,7 +23,6 @@ export default function NewsDetail() {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [copied, setCopied] = useState(false);
   const reduced = useReducedMotionActive();
 
   useEffect(() => {
@@ -56,18 +55,6 @@ export default function NewsDetail() {
   const dayHeader = formatNewsShortDate(article, lang);
   const contentParas = l(article.content).split('\n').map((s) => s.trim()).filter(Boolean);
   const excerpt = l(article.excerpt).trim();
-
-  const shareUrl = encodeURIComponent(`${SITE_URL}/news/${article.id}`);
-  const shareText = encodeURIComponent(l(article.title));
-  const handleCopyLink = () => {
-    navigator.clipboard?.writeText(`${SITE_URL}/news/${article.id}`).then(
-      () => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      },
-      () => {},
-    );
-  };
 
   const related = (content?.news ?? [])
     .filter((n) => n.id !== article.id && n.tag.ru === article.tag.ru)
@@ -202,16 +189,6 @@ export default function NewsDetail() {
             </div>
           </dl>
           <ActionButton to="/news" text={lang === 'ru' ? 'Все новости' : 'All news'} />
-          <div className="border-t border-line pt-5">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Поделиться' : 'Share'}</div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.14em]">
-              <a className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent" href={`https://vk.com/share.php?url=${shareUrl}`} target="_blank" rel="noopener noreferrer">VK</a>
-              <a className="border-b border-line pb-px text-ink transition hover:border-accent hover:text-accent" href={`https://t.me/share/url?url=${shareUrl}&text=${shareText}`} target="_blank" rel="noopener noreferrer">Telegram</a>
-              <button type="button" onClick={handleCopyLink} className="border-b border-line pb-px uppercase text-ink transition hover:border-accent hover:text-accent">
-                {copied ? (lang === 'ru' ? 'Скопировано' : 'Copied') : lang === 'ru' ? 'Копировать' : 'Copy link'}
-              </button>
-            </div>
-          </div>
         </aside>
       </section>
 

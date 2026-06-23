@@ -304,7 +304,11 @@ def list_news(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_
 
 @router.post("/news", response_model=NewsOut)
 def create_news(body: NewsCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
-    article = NewsArticle(**body.model_dump())
+    data = body.model_dump()
+    # Если дата не задана — пусть применится server_default (текущее время).
+    if data.get("created_at") is None:
+        data.pop("created_at", None)
+    article = NewsArticle(**data)
     db.add(article)
     db.commit()
     db.refresh(article)
@@ -317,6 +321,8 @@ def update_news(news_id: int, body: NewsUpdate, db: Session = Depends(get_db), _
     if not article:
         raise HTTPException(404, "Not found")
     for k, v in body.model_dump().items():
+        if k == "created_at" and v is None:
+            continue  # не затираем дату, если её не прислали
         setattr(article, k, v)
     db.commit()
     db.refresh(article)

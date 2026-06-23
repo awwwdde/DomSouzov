@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
-import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, LayoutDashboard, Landmark, Newspaper, Users } from 'lucide-react';
+import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, LayoutDashboard, Landmark, Menu, Newspaper, Users, X } from 'lucide-react';
 
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
@@ -25,6 +25,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isSuper, setIsSuper] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     getMe()
@@ -34,6 +35,11 @@ export default function AdminLayout() {
       })
       .catch(() => navigate('/admin/login'));
   }, [navigate]);
+
+  // На мобильном меню сворачивается; закрываем его при переходе.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   const navItems = isSuper ? [...NAV, ...SUPER_NAV] : NAV;
 
@@ -50,37 +56,51 @@ export default function AdminLayout() {
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div>
-          <div className="font-heading text-4xl font-semibold uppercase leading-none tracking-[-0.04em]">ДОМ СОЮЗОВ</div>
-          <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">CMS · ADMIN</div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="font-heading text-3xl font-semibold uppercase leading-none tracking-[-0.04em] md:text-4xl">ДОМ СОЮЗОВ</div>
+            <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">CMS · ADMIN</div>
+          </div>
+          {/* Бургер только на мобильном — сворачивает меню, чтобы не перекрывало контент. */}
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white md:hidden"
+            onClick={() => setNavOpen((v) => !v)}
+            aria-label="Меню"
+            aria-expanded={navOpen}
+          >
+            {navOpen ? <X size={18} strokeWidth={1.8} /> : <Menu size={18} strokeWidth={1.8} />}
+          </button>
         </div>
 
-        <nav className="mt-8 grid gap-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${active ? 'bg-white text-ink' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-              >
-                <span><Icon size={14} strokeWidth={1.8} /></span>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className={`${navOpen ? 'flex' : 'hidden'} flex-1 flex-col md:flex`}>
+          <nav className="mt-6 grid gap-2 md:mt-8">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${active ? 'bg-white text-ink' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+                >
+                  <span><Icon size={14} strokeWidth={1.8} /></span>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="mt-8 grid gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/55 md:mt-auto">
-          <Link to="/" target="_blank" className="inline-flex items-center gap-2 transition hover:text-white">
-            <ExternalLink size={12} strokeWidth={2} />
-            ОТКРЫТЬ САЙТ
-          </Link>
-          <div className="truncate">{email}</div>
-          <button className="justify-self-start text-white/55 transition hover:text-white" onClick={handleLogout}>
-            ВЫЙТИ
-          </button>
+          <div className="mt-8 grid gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/55 md:mt-auto">
+            <Link to="/" target="_blank" className="inline-flex items-center gap-2 transition hover:text-white">
+              <ExternalLink size={12} strokeWidth={2} />
+              ОТКРЫТЬ САЙТ
+            </Link>
+            <div className="truncate">{email}</div>
+            <button className="justify-self-start text-white/55 transition hover:text-white" onClick={handleLogout}>
+              ВЫЙТИ
+            </button>
+          </div>
         </div>
       </motion.aside>
 

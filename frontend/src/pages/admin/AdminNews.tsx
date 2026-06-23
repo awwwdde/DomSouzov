@@ -27,6 +27,15 @@ function parseGallery(s: string): string[] {
   }
 }
 
+/** ISO-строка → значение для <input type="datetime-local"> (локальное время). */
+function toLocalInput(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function AdminNews() {
   return (
     <AdminCrudPage
@@ -49,6 +58,7 @@ export default function AdminNews() {
 
 function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => void; onCancel: () => void }) {
   const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
+  const [publishAt, setPublishAt] = useState(toLocalInput((item as typeof EMPTY)?.created_at || ''));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
 
@@ -77,8 +87,9 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
     e.preventDefault();
     setSaving(true);
     try {
-      if (form.id) await adminApi.updateNews(form.id, form);
-      else await adminApi.createNews(form);
+      const payload = { ...form, created_at: publishAt ? new Date(publishAt).toISOString() : null };
+      if (form.id) await adminApi.updateNews(form.id, payload);
+      else await adminApi.createNews(payload);
       onSave();
     } catch {
       alert('Ошибка сохранения');
@@ -165,6 +176,14 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
             <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
           </label>
         </div>
+      </div>
+
+      <div className="grid max-w-xs gap-2">
+        <label>Дата и время публикации</label>
+        <input type="datetime-local" value={publishAt} onChange={(e) => setPublishAt(e.target.value)} />
+        <span className="text-[11px] normal-case tracking-normal text-muted">
+          Если оставить пустым — текущие дата и время. Эта дата показывается в новости.
+        </span>
       </div>
 
       <div className="flex flex-wrap gap-6">

@@ -38,9 +38,9 @@ export default function Halls() {
       <RevealList className="px-5 md:px-12">
         {halls.map((hall, i) => (
           <RevealItem key={hall.id}>
-            <article className="grid gap-0 border-b border-line md:grid-cols-2">
+            <article className="grid grid-cols-1 gap-0 border-b border-line md:grid-cols-2">
               <div
-                className={`relative aspect-[4/3] min-h-[280px] overflow-hidden bg-paper-soft md:min-h-[360px] ${
+                className={`relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[360px] ${
                   i % 2 === 1 ? 'md:order-2' : ''
                 }`}
               >

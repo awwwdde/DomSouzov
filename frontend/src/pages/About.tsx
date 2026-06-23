@@ -192,24 +192,29 @@ function IntroStage({
           transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
           className="md:col-span-9"
         >
-          {paragraphs.map((parts, pi) => (
-            <p
-              key={pi}
-              className={`text-lg leading-9 text-ink md:text-2xl md:leading-[1.5] ${
-                pi === 0 ? 'border-t border-ink pt-8' : 'mt-6 md:mt-8'
-              }`}
-            >
-              {parts.map((part, i) =>
-                part.type === 'text' ? (
-                  <span key={i}>{part.value}</span>
-                ) : (
-                  <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
-                    {part.value}
-                  </HoverPhrase>
-                )
-              )}
-            </p>
-          ))}
+          <div className="max-w-[66ch] border-t border-ink pt-8">
+            {paragraphs.map((parts, pi) => (
+              <p
+                key={pi}
+                className={[
+                  'text-ink text-lg leading-8 md:text-xl md:leading-[1.75]',
+                  pi === 0
+                    ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[56px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
+                    : 'mt-5 md:mt-6',
+                ].join(' ')}
+              >
+                {parts.map((part, i) =>
+                  part.type === 'text' ? (
+                    <span key={i}>{part.value}</span>
+                  ) : (
+                    <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
+                      {part.value}
+                    </HoverPhrase>
+                  )
+                )}
+              </p>
+            ))}
+          </div>
         </motion.div>
       </div>
     </Section>
@@ -382,9 +387,17 @@ function ScatteredPhotosStage({
         </h2>
       </div>
 
+      {/* Мобильный: чистая сетка без параллакса (первое фото — во всю ширину). */}
+      <div className="grid grid-cols-2 gap-3 md:hidden [&>*:first-child]:col-span-2">
+        {items.map((p) => (
+          <MobilePhoto key={p.id} photo={p} lang={lang} reduced={reduced} />
+        ))}
+      </div>
+
+      {/* Десктоп: художественный разброс с параллаксом. */}
       <div
         ref={ref}
-        className="relative grid grid-cols-12 gap-3 md:gap-4"
+        className="relative hidden grid-cols-12 gap-4 md:grid"
         style={{ minHeight: sectionMinHeight }}
       >
         {items.map((p) => (
@@ -398,6 +411,41 @@ function ScatteredPhotosStage({
         ))}
       </div>
     </Section>
+  );
+}
+
+/** Мобильная карточка фото: ровная 4:3, простое появление, без параллакса. */
+function MobilePhoto({
+  photo,
+  lang,
+  reduced,
+}: {
+  photo: AboutScatteredPhoto;
+  lang: 'ru' | 'en';
+  reduced: boolean;
+}) {
+  const caption = photo.caption[lang] || photo.caption.ru;
+  return (
+    <motion.figure
+      initial={reduced ? false : { opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6, ease: EASE }}
+      className="relative"
+    >
+      <div className="aspect-[4/3] w-full overflow-hidden bg-ink">
+        {photo.image ? (
+          <img src={photo.image} alt={caption} loading="lazy" className="block h-full w-full object-cover" />
+        ) : (
+          <PhotoFallback />
+        )}
+      </div>
+      {caption ? (
+        <figcaption className="mt-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft">
+          {caption}
+        </figcaption>
+      ) : null}
+    </motion.figure>
   );
 }
 
