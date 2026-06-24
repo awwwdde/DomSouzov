@@ -62,13 +62,9 @@ export default function Home() {
   const thesis = t('home_thesis') || (lang === 'ru'
     ? 'Дом Союзов — историческая концертная и церемониальная площадка в центре Москвы. Колонный зал работает с 1784 года: классические концерты, публичные дискуссии, торжественные церемонии и съёмки.'
     : 'House of Unions is a historic concert and ceremonial venue in the heart of Moscow. The Hall of Columns has operated since 1784: classical concerts, public discussions, ceremonies, and filming.');
-  const planHeading = t('home_plan_heading') || (lang === 'ru' ? 'Спланировать визит' : 'Plan your visit');
-  const planBody = t('home_plan_body') || (lang === 'ru'
-    ? 'Большая Дмитровка 1, в трёх минутах от метро «Охотный ряд». Колонный, Октябрьский и Малый залы открыты для концертов, церемоний, лекций и съёмок. Билеты — через афишу, аренда — по запросу.'
-    : 'Bolshaya Dmitrovka 1, three minutes from Okhotny Ryad metro. The Hall of Columns, the October and Small halls host concerts, ceremonies, lectures, and filming. Tickets via the programme; venue rental on request.');
   const organizersBody = t('home_organizers_body') || (lang === 'ru'
-    ? 'Аренда Колонного, Октябрьского и Малого залов под концерты, церемонии, форумы и съёмки. Сопровождение и техническое обеспечение.'
-    : 'Rent the Hall of Columns and the October and Small halls for concerts, ceremonies, forums, and filming. Full production support.');
+    ? 'Колонный, Октябрьский и Малый залы доступны для концертов, церемоний, форумов и съёмок. Сопровождение и техническое обеспечение.'
+    : 'The Hall of Columns and the October and Small halls are available for concerts, ceremonies, forums and filming. Full production support.');
   const visitorsBody = t('home_visitors_body') || (lang === 'ru'
     ? 'Афиша концертов и публичных программ, информация о посещении, доступная среда и экскурсии по историческим залам.'
     : 'Programme of concerts and public events, visitor information, accessibility, and guided tours of the historic halls.');
@@ -226,73 +222,26 @@ export default function Home() {
       </Section>
 
       {/* ============================================================ */}
-      {/* 4. PLAN VISIT — 2 колонки: текст + архивное фото              */}
+      {/* ПАРНЫЕ БЛОКИ — Организаторам / Зрителям                       */}
       {/* ============================================================ */}
-      <Section tone="paper-soft" spacing="lg" bordered>
-        <div className="grid gap-12 md:grid-cols-12 md:gap-16">
-          <div className="md:col-span-6 lg:col-span-5 flex flex-col">
-            <h2 className="font-heading text-[clamp(40px,5vw,80px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
-              {planHeading}
-            </h2>
-            <p className="mt-8 max-w-[58ch] text-base leading-7 text-ink-soft">{planBody}</p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <ActionButton
-                to="/contacts"
-                text={lang === 'ru' ? 'Как добраться' : 'How to get there'}
-                backgroundColor="#0a0a0a"
-                textColor="#f0ebe0"
-                strokeColor="#0a0a0a"
-              />
-              <ActionButton
-                to="/organizers"
-                text={lang === 'ru' ? 'Аренда залов' : 'Rent a hall'}
-                backgroundColor="transparent"
-                textColor="#0a0a0a"
-                strokeColor="#0a0a0a"
-              />
-            </div>
-          </div>
-
-          <figure className="md:col-span-6 lg:col-span-7">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
-              {ctaBg || heroPoster ? (
-                <img
-                  src={ctaBg || heroPoster}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                // Архитектурный fallback — концентрические колонны + лучи света.
-                <div
-                  className="relative h-full w-full"
-                  aria-hidden
-                  style={{
-                    background:
-                      'radial-gradient(800px 500px at 50% 110%, rgba(47,93,80,0.45), transparent 60%), linear-gradient(180deg, #1a1a18 0%, #0f0f0e 100%)',
-                  }}
-                >
-                  {/* колонны */}
-                  <div className="absolute inset-x-0 bottom-0 top-1/4 flex items-end justify-center gap-[6%] px-[10%]">
-                    {[0.55, 0.7, 0.85, 1, 0.85, 0.7, 0.55].map((h, i) => (
-                      <div
-                        key={i}
-                        className="w-[6%]"
-                        style={{
-                          height: `${h * 100}%`,
-                          background: 'linear-gradient(180deg, rgba(247,247,242,0.18) 0%, rgba(247,247,242,0.04) 100%)',
-                          borderTop: '2px solid rgba(247,247,242,0.22)',
-                          borderBottom: '2px solid rgba(247,247,242,0.10)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span className="absolute left-1/2 top-6 -translate-x-1/2 text-[10px] font-bold uppercase tracking-[0.3em] text-paper/55">
-                    {lang === 'ru' ? 'Колонный зал' : 'Hall of Columns'}
-                  </span>
-                </div>
-              )}
-            </div>
-          </figure>
+      <Section tone="paper" spacing="md" bordered>
+        <div className="grid gap-12 md:grid-cols-2 md:gap-px md:bg-line">
+          <InfoBlock
+            index="01"
+            kicker={lang === 'ru' ? 'Залы' : 'Halls'}
+            title={lang === 'ru' ? 'Организаторам' : 'For organizers'}
+            body={organizersBody}
+            ctaText={lang === 'ru' ? 'Залы и условия' : 'Halls & terms'}
+            ctaTo="/organizers"
+          />
+          <InfoBlock
+            index="02"
+            kicker={lang === 'ru' ? 'Посещение' : 'Visit'}
+            title={lang === 'ru' ? 'Зрителям' : 'For visitors'}
+            body={visitorsBody}
+            ctaText={lang === 'ru' ? 'Афиша и билеты' : 'Programme & tickets'}
+            ctaTo="/audience"
+          />
         </div>
       </Section>
 
@@ -359,31 +308,7 @@ export default function Home() {
       ) : null}
 
       {/* ============================================================ */}
-      {/* 7. ПАРНЫЕ БЛОКИ — Организаторам / Зрителям                    */}
-      {/* ============================================================ */}
-      <Section tone="paper" spacing="md" bordered>
-        <div className="grid gap-12 md:grid-cols-2 md:gap-px md:bg-line">
-          <InfoBlock
-            index="01"
-            kicker={lang === 'ru' ? 'Аренда' : 'Rental'}
-            title={lang === 'ru' ? 'Организаторам' : 'For organizers'}
-            body={organizersBody}
-            ctaText={lang === 'ru' ? 'Запрос на аренду' : 'Request a rental'}
-            ctaTo="/organizers"
-          />
-          <InfoBlock
-            index="02"
-            kicker={lang === 'ru' ? 'Посещение' : 'Visit'}
-            title={lang === 'ru' ? 'Зрителям' : 'For visitors'}
-            body={visitorsBody}
-            ctaText={lang === 'ru' ? 'Афиша и билеты' : 'Programme & tickets'}
-            ctaTo="/audience"
-          />
-        </div>
-      </Section>
-
-      {/* ============================================================ */}
-      {/* 8. ПАРТНЁРЫ                                                   */}
+      {/* ПАРТНЁРЫ                                                      */}
       {/* ============================================================ */}
       <PartnersSection partners={partners} lang={lang} />
     </div>

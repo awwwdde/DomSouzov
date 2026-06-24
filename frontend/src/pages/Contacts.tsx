@@ -10,6 +10,7 @@ const ROUTE_URL = `https://yandex.ru/maps/?rtext=~${encodeURIComponent(ADDRESS_Q
 export default function Contacts() {
   const { lang, t } = useSite();
   const mapEmbed = t('map_embed_url') || DEFAULT_MAP_EMBED;
+  const reviewsUrl = t('yandex_reviews_url');
 
   return (
     <>
@@ -30,8 +31,8 @@ export default function Contacts() {
         </div>
         <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
           {lang === 'ru'
-            ? 'Билетная касса, аренда, пресс-служба, администрация — все контакты и часы работы.'
-            : 'Box office, hire, press, administration — contacts and opening hours.'}
+            ? 'Билетная касса, залы и мероприятия, пресс-служба, администрация — все контакты и часы работы.'
+            : 'Box office, venues, press, administration — contacts and opening hours.'}
         </p>
       </RevealSection>
 
@@ -47,7 +48,7 @@ export default function Contacts() {
               {t('phone')}<br />
               <span className="text-muted">{lang === 'ru' ? 'Вт–Вс · 10:00—21:30' : 'Tue–Sun · 10:00—21:30'}</span>
             </dd>
-            <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Аренда' : 'Hire'}</dt>
+            <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Залы и мероприятия' : 'Venues'}</dt>
             <dd className="leading-6 text-ink-soft">
               {t('email_rent')}<br />
               <span className="text-muted">+7 (495) 000-11-11</span>
@@ -85,6 +86,31 @@ export default function Contacts() {
             />
           </div>
         </div>
+      </RevealSection>
+
+      {/* ОТЗЫВЫ — живой виджет Яндекс Карт (обновляется автоматически). */}
+      <RevealSection className="border-t border-line bg-paper px-5 py-16 md:px-12">
+        <PageKicker>{lang === 'ru' ? 'Отзывы' : 'Reviews'}</PageKicker>
+        <h2 className="mb-8 font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
+          {lang === 'ru' ? 'Отзывы на Яндекс Картах' : 'Reviews on Yandex Maps'}
+        </h2>
+        {reviewsUrl ? (
+          <div className="overflow-hidden rounded-sm border border-line bg-paper">
+            <iframe
+              title={lang === 'ru' ? 'Отзывы — Яндекс Карты' : 'Reviews — Yandex Maps'}
+              src={reviewsUrl}
+              className="h-[620px] w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        ) : (
+          <p className="max-w-2xl text-base leading-7 text-ink-soft">
+            {lang === 'ru'
+              ? 'Виджет отзывов появится здесь. Отзывы обновляются автоматически с Яндекс Карт.'
+              : 'The reviews widget will appear here. Reviews update automatically from Yandex Maps.'}
+          </p>
+        )}
       </RevealSection>
     </>
   );

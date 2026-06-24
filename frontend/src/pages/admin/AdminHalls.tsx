@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
-import ImageUpload from '../../components/admin/ImageUpload';
 import { adminApi } from '../../api/client';
 
 const EMPTY = {
@@ -11,8 +10,19 @@ const EMPTY = {
   features_ru: '', features_en: '',
   description_ru: '', description_en: '',
   image: '',
+  gallery: '',
   sort_order: 0,
 };
+
+/** URL-ы фото зала хранятся JSON-массивом в поле gallery. */
+function parseUrls(raw: string): string[] {
+  try {
+    const a = JSON.parse(raw || '[]');
+    return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 /** Особенность зала: заголовок + текст на двух языках. */
 interface Feature {
@@ -65,6 +75,23 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
   const [features, setFeatures] = useState<Feature[]>(() => parseFeatures((item as typeof EMPTY)?.features_ru || ''));
   const [saving, setSaving] = useState(false);
+  const [galBusy, setGalBusy] = useState(false);
+
+  const gallery = parseUrls(form.gallery);
+  const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
+  const addImage = async (file: File | undefined) => {
+    if (!file) return;
+    setGalBusy(true);
+    try {
+      const url = await adminApi.uploadFile(file);
+      setGallery([...gallery, url]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setGalBusy(false);
+    }
+  };
+  const removeImage = (i: number) => setGallery(gallery.filter((_, j) => j !== i));
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -81,7 +108,8 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
     try {
       // Особенности пишем JSON-массивом в features_ru; features_en больше не используем.
       const clean = features.filter((f) => f.title_ru || f.title_en || f.text_ru || f.text_en);
-      const payload = { ...form, features_ru: JSON.stringify(clean), features_en: '' };
+      // Главное фото = первое из галереи (для превью/SEO).
+      const payload = { ...form, features_ru: JSON.stringify(clean), features_en: '', image: gallery[0] || '' };
       if (form.id) await adminApi.updateHall(form.id, payload);
       else await adminApi.createHall(payload);
       onSave();
@@ -168,11 +196,31 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
         </div>
       </div>
 
-      <ImageUpload
-        label="Фото зала"
-        value={form.image}
-        onChange={(url) => setForm((p) => ({ ...p, image: url }))}
-      />
+      <div className="grid gap-2">
+        <label>Фото зала (можно несколько — на странице листаются слайдером)</label>
+        <div className="flex flex-wrap gap-3">
+          {gallery.map((url, i) => (
+            <div key={i} className="relative h-24 w-32 overflow-hidden rounded-lg border border-line">
+              <img src={url} alt="" className="h-full w-full object-cover" />
+              {i === 0 ? (
+                <span className="absolute left-1 top-1 rounded-full bg-ink/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">Главное</span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
+                aria-label="Удалить"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+            {galBusy ? '…' : '+ Фото'}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
+          </label>
+        </div>
+      </div>
 
       <div className="grid max-w-32 gap-2">
         <label>Порядок</label>

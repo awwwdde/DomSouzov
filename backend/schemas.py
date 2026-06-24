@@ -139,6 +139,7 @@ class HallBase(BaseModel):
     description_ru: Optional[str] = None
     description_en: Optional[str] = None
     image: Optional[str] = None
+    gallery: Optional[str] = None
     sort_order: int = 0
 
 

@@ -126,7 +126,8 @@ class Hall(Base):
     features_en = Column(String, nullable=False)
     description_ru = Column(Text, nullable=True)
     description_en = Column(Text, nullable=True)
-    image = Column(String, nullable=True)
+    image = Column(String, nullable=True)            # главное фото (= первое из gallery)
+    gallery = Column(Text, nullable=True)            # JSON-массив URL фото для слайдера
     sort_order = Column(Integer, default=0)
 
 

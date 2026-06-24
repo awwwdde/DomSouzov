@@ -103,7 +103,7 @@ export default function Footer() {
                 {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
               </span>
               <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">
-                {lang === 'ru' ? 'Колонный зал · Большая Дмитровка 1' : 'Hall of Columns · Bolshaya Dmitrovka 1'}
+                {lang === 'ru' ? 'Большая Дмитровка 1' : 'Bolshaya Dmitrovka 1'}
               </span>
             </div>
           </Link>
@@ -158,7 +158,7 @@ export default function Footer() {
         <div className="grid gap-10 border-b border-paper/10 py-10 md:grid-cols-4 md:gap-10 md:py-14">
           <FooterColumn title={lang === 'ru' ? 'Афиша' : 'Programme'} items={COL_PROGRAMME} l={l} />
           <FooterColumn title={lang === 'ru' ? 'Дом' : 'House'} items={COL_HALLS} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'Аренда' : 'Rental'} items={COL_RENT} l={l} />
+          <FooterColumn title={lang === 'ru' ? 'Гостям' : 'Guests'} items={COL_RENT} l={l} />
           <FooterColumn title={lang === 'ru' ? 'Информация' : 'Information'} items={COL_INFO} l={l} />
         </div>
 

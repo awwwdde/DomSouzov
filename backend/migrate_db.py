@@ -29,6 +29,7 @@ def migrate_sqlite() -> None:
         ("about_timeline_events", "tag_ru", "VARCHAR"),
         ("about_timeline_events", "tag_en", "VARCHAR"),
         ("admin_users", "is_super", bool_default),
+        ("halls", "gallery", "TEXT"),
     ]
 
     for table, col, coltype in columns:

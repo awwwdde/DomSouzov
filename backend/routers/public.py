@@ -245,6 +245,24 @@ def _hall_features(h: Hall) -> list:
     return out
 
 
+def _hall_gallery(h: Hall) -> list:
+    """Фото зала для слайдера: JSON-массив URL из поля gallery."""
+    import json
+    raw = getattr(h, "gallery", None)
+    out = []
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                out = [str(u) for u in parsed if u]
+        except Exception:
+            out = []
+    # подстраховка: если массива нет, но есть главное фото — отдаём его
+    if not out and h.image:
+        out = [h.image]
+    return out
+
+
 def _hall_out(h: Hall) -> dict:
     return {
         "id": h.id,
@@ -256,6 +274,7 @@ def _hall_out(h: Hall) -> dict:
         "features_list": _hall_features(h),
         "description": {"ru": h.description_ru or "", "en": h.description_en or ""},
         "image": h.image,
+        "gallery": _hall_gallery(h),
     }
 
 

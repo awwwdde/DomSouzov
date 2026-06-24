@@ -18,7 +18,7 @@ export default function HallsPreview() {
           <h2 className="font-heading text-[clamp(48px,6vw,96px)] font-bold uppercase leading-[0.86] tracking-[0.04em]">{lang === 'ru' ? 'Залы' : 'Halls'}</h2>
         </div>
         <div>
-          <ActionButton to="/organizers" text={`${lang === 'ru' ? 'Аренда' : 'Rent'} →`} />
+          <ActionButton to="/organizers" text={`${lang === 'ru' ? 'Подробнее' : 'Details'} →`} />
         </div>
       </div>
 

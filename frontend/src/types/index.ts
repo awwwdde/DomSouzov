@@ -59,6 +59,7 @@ export interface Hall {
   features_list?: HallFeature[];
   description: BilingualString;
   image: string | null;
+  gallery?: string[];
 }
 
 export interface GalleryCategory {

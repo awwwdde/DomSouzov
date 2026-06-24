@@ -172,51 +172,49 @@ function IntroStage({
 
   return (
     <Section tone="paper" spacing="md" bordered>
-      <div className="grid gap-10 md:grid-cols-12 md:gap-12">
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="md:col-span-3"
-        >
-          <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-ink-soft">
-            {lang === 'ru' ? 'О Доме' : 'About'}
-          </span>
-        </motion.div>
+      <motion.div
+        initial={reduced ? false : { opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.7, ease: EASE }}
+        className="mb-6"
+      >
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-ink-soft">
+          {lang === 'ru' ? 'О Доме' : 'About'}
+        </span>
+      </motion.div>
 
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
-          className="md:col-span-9"
-        >
-          <div className="max-w-[66ch] border-t border-ink pt-8">
-            {paragraphs.map((parts, pi) => (
-              <p
-                key={pi}
-                className={[
-                  'text-ink text-lg leading-8 md:text-xl md:leading-[1.75]',
-                  pi === 0
-                    ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[56px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
-                    : 'mt-5 md:mt-6',
-                ].join(' ')}
-              >
-                {parts.map((part, i) =>
-                  part.type === 'text' ? (
-                    <span key={i}>{part.value}</span>
-                  ) : (
-                    <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
-                      {part.value}
-                    </HoverPhrase>
-                  )
-                )}
-              </p>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+      <motion.div
+        initial={reduced ? false : { opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
+      >
+        {/* Текст на всю ширину — широкими абзацами, до правого края. */}
+        <div>
+          {paragraphs.map((parts, pi) => (
+            <p
+              key={pi}
+              className={[
+                'text-ink text-lg leading-8 md:text-[22px] md:leading-[1.7]',
+                pi === 0
+                  ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[60px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
+                  : 'mt-6',
+              ].join(' ')}
+            >
+              {parts.map((part, i) =>
+                part.type === 'text' ? (
+                  <span key={i}>{part.value}</span>
+                ) : (
+                  <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
+                    {part.value}
+                  </HoverPhrase>
+                )
+              )}
+            </p>
+          ))}
+        </div>
+      </motion.div>
     </Section>
   );
 }

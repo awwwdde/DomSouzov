@@ -32,11 +32,13 @@ export default function Organizers() {
 
   const riderPdf = t('organizers_rider_pdf');
   const hallsPdf = t('organizers_halls_pdf');
+  const videoUrl = t('organizers_video_url');
+  const videoPoster = t('organizers_video_poster');
 
   return (
     <div className="bg-paper">
       <Seo
-        title={lang === 'ru' ? 'Организаторам — аренда залов Дома Союзов' : 'For Organizers — venue hire · House of Unions'}
+        title={lang === 'ru' ? 'Организаторам — залы Дома Союзов' : 'For Organizers — venues · House of Unions'}
         description={lead}
         path="organizers"
         lang={lang}
@@ -49,7 +51,23 @@ export default function Organizers() {
         </h1>
       </RevealSection>
 
-      {/* ДЕЙСТВИЯ: две ключевые кнопки + запрос */}
+      {/* ВИДЕО — крупный блок во всю ширину (как видео-герой на «О Доме») */}
+      {videoUrl ? (
+        <video
+          className="block h-[68vh] max-h-[800px] min-h-[440px] w-full bg-ink object-cover"
+          src={videoUrl}
+          poster={videoPoster || undefined}
+          controls
+          preload="metadata"
+          playsInline
+        />
+      ) : (
+        <div className="flex h-[68vh] max-h-[800px] min-h-[440px] w-full items-center justify-center border-b border-line bg-paper-soft text-center text-[12px] font-bold uppercase tracking-[0.18em] text-muted">
+          {lang === 'ru' ? 'Видео-презентация появится здесь' : 'Presentation video will appear here'}
+        </div>
+      )}
+
+      {/* ДЕЙСТВИЯ: кнопки PDF + запрос */}
       <RevealSection className="px-5 py-16 md:px-12 md:py-24">
         <p className="mb-10 max-w-3xl text-base leading-7 text-ink-soft md:text-lg">{note}</p>
 
@@ -84,7 +102,7 @@ export default function Organizers() {
             to="/contacts"
             className="group inline-flex items-center gap-3 font-heading text-[clamp(22px,2.4vw,34px)] font-bold uppercase leading-none tracking-[0.02em] text-ink transition hover:text-accent"
           >
-            {lang === 'ru' ? 'Отправить запрос на аренду' : 'Send a rental request'}
+            {lang === 'ru' ? 'Отправить запрос' : 'Send a request'}
             <ArrowUpRight
               size={28}
               strokeWidth={1.6}

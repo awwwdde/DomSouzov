@@ -75,20 +75,14 @@ export default function Header() {
         <div className="mx-auto flex h-[80px] w-full max-w-[1800px] items-center justify-between gap-3 px-5 md:h-[104px] md:w-[95%] md:px-6">
           <Link
             to="/"
-            className="flex items-center gap-2.5 leading-none md:gap-4"
+            className="flex items-center leading-none"
             aria-label={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
           >
             <img
               src="/logo-house.svg"
-              alt=""
-              aria-hidden
-              className="h-12 w-auto md:h-[68px]"
-              style={{ mixBlendMode: 'multiply' }}
+              alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
+              className="h-14 w-auto md:h-20"
             />
-            <span className="flex flex-col font-heading font-bold uppercase leading-[0.82] tracking-[0.02em] text-ink">
-              <span className="text-[17px] md:text-[26px]">{lang === 'ru' ? 'Дом' : 'House'}</span>
-              <span className="text-[17px] md:text-[26px]">{lang === 'ru' ? 'Союзов' : 'of Unions'}</span>
-            </span>
           </Link>
 
           <div className="flex items-center gap-2 md:gap-3">

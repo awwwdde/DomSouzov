@@ -235,6 +235,13 @@ const PAGES: PageDef[] = [
     sections: [
       heroPair('organizers_title'),
       {
+        title: 'Видео-презентация',
+        fields: [
+          { key: 'organizers_video_url', label: 'Видео', type: 'video', single: true, hint: 'Ссылка на mp4/webm или загрузка с компьютера. Показывается над кнопками PDF.' },
+          { key: 'organizers_video_poster', label: 'Постер видео', type: 'image', single: true, hint: 'Кадр, который виден до запуска видео.' },
+        ],
+      },
+      {
         title: 'Короткий текст под кнопками',
         fields: [
           { key: 'organizers_note', label: 'Пояснение к кнопкам', type: 'textarea', rows: 3, hint: 'Кратко: что делать организатору (скачать райдер / отправить запрос).' },
@@ -306,9 +313,15 @@ const PAGES: PageDef[] = [
         title: 'Связь',
         fields: [
           { key: 'phone', label: 'Телефон', type: 'text', single: true },
-          { key: 'email_rent', label: 'Email — аренда', type: 'text', single: true },
+          { key: 'email_rent', label: 'Email — залы и мероприятия', type: 'text', single: true },
           { key: 'email_press', label: 'Email — пресс-служба', type: 'text', single: true },
           { key: 'contact_email', label: 'Email — общий (резервный для подвала)', type: 'text', single: true },
+        ],
+      },
+      {
+        title: 'Отзывы (виджет Яндекс Карт)',
+        fields: [
+          { key: 'yandex_reviews_url', label: 'Ссылка на виджет отзывов', type: 'text', single: true, hint: 'Яндекс Бизнес → «Виджет отзывов» → ссылка вида https://yandex.ru/maps-reviews-widget/ORG_ID. Отзывы обновляются автоматически.' },
         ],
       },
     ],

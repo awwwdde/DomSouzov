@@ -1,17 +1,57 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import ActionButton from '../components/ActionButton';
+import { useReducedMotionActive } from '../lib/motion';
+
+/* Авто-слайдер фото зала: перелистывает кадры каждые 6 секунд с плавным
+   переходом. Один кадр — без листания; нет фото — подпись-заглушка. */
+function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: string; fallbackLabel: string }) {
+  const reduced = useReducedMotionActive();
+  const valid = images.filter(Boolean);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (reduced || valid.length < 2) return;
+    const id = window.setInterval(() => setIdx((i) => (i + 1) % valid.length), 6000);
+    return () => window.clearInterval(id);
+  }, [reduced, valid.length]);
+
+  if (valid.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+        {fallbackLabel}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {valid.map((src, i) => (
+        <img
+          key={src + i}
+          src={src}
+          alt={i === idx ? alt : ''}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-ds"
+          style={{ opacity: i === idx ? 1 : 0 }}
+          aria-hidden={i !== idx}
+        />
+      ))}
+    </>
+  );
+}
 
 export default function Halls() {
   const { lang, content, t } = useSite();
   const halls = content?.halls ?? [];
   const title = t('halls_title') || (lang === 'ru' ? 'Залы' : 'Halls');
   const lead = t('halls_lead') || (lang === 'ru'
-    ? 'Два исторических зала. Коринфские колонны и пять хрустальных люстр в главном — камерная плотность в Октябрьском. Каждый зал может быть арендован.'
-    : 'Two historic halls. Corinthian columns and five crystal chandeliers in the principal; chamber intimacy in the October. Each hall is available for hire.');
+    ? 'Два исторических зала. Коринфские колонны и пять хрустальных люстр в главном — камерная плотность в Октябрьском. Каждый зал доступен для мероприятий.'
+    : 'Two historic halls. Corinthian columns and five crystal chandeliers in the principal; chamber intimacy in the October. Each hall is available for events.');
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
@@ -28,7 +68,7 @@ export default function Halls() {
         <div className="flex flex-col items-start gap-6 self-end md:items-end">
           <ActionButton
             to="/organizers"
-            text={lang === 'ru' ? 'Аренда и условия' : 'Hire & terms'}
+            text={lang === 'ru' ? 'Залы и условия' : 'Halls & terms'}
             backgroundColor="#0a0a0a"
             textColor="#f0ebe0"
           />
@@ -44,13 +84,11 @@ export default function Halls() {
                   i % 2 === 1 ? 'md:order-2' : ''
                 }`}
               >
-                {hall.image ? (
-                  <img src={hall.image} alt={l(hall.name)} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center p-8 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-                    {l(hall.name)}
-                  </div>
-                )}
+                <HallSlider
+                  images={hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : []}
+                  alt={l(hall.name)}
+                  fallbackLabel={l(hall.name)}
+                />
               </div>
 
               <div
@@ -99,7 +137,7 @@ export default function Halls() {
                     to="/organizers"
                     className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-ink transition hover:underline hover:underline-offset-4"
                   >
-                    {lang === 'ru' ? 'Подробнее об аренде' : 'More about hire'}
+                    {lang === 'ru' ? 'Подробнее о зале' : 'More about the hall'}
                     <span aria-hidden>→</span>
                   </Link>
                 </div>
