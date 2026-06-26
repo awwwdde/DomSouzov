@@ -27,8 +27,11 @@ import {
   Upload,
   Users,
   Video,
+  Search,
+  X,
 } from 'lucide-react';
 import { adminApi } from '../../api/client';
+import { ICON_NAMES, getLucideIcon } from '../../lib/lucideIcons';
 
 /* ------------------------------------------------------------------ */
 /* Конфигурация: какие настройки относятся к каким страницам сайта.    */
@@ -44,8 +47,8 @@ type ListSubField = {
   multiline?: boolean;
   /** false → одно поле без RU/EN (номер, индекс). По умолчанию true. */
   bilingual?: boolean;
-  /** 'image' → загрузка картинки (хранится одной строкой-URL). */
-  type?: 'text' | 'image';
+  /** 'image' → загрузка картинки; 'icon' → выбор иконки Lucide (строка-имя). */
+  type?: 'text' | 'image' | 'icon';
 };
 
 type Field = {
@@ -248,6 +251,12 @@ const PAGES: PageDef[] = [
         ],
       },
       {
+        title: 'Форма заявки',
+        fields: [
+          { key: 'organizers_form_email', label: 'Email для заявок', type: 'text', single: true, hint: 'Сюда приходят заявки из модального окна «Оставить заявку». Если пусто — используется email из настроек «Контакты». Отправку писем включает SMTP в окружении сервера.' },
+        ],
+      },
+      {
         title: 'Документы (PDF — открываются в новой вкладке)',
         fields: [
           { key: 'organizers_rider_pdf', label: 'Технический райдер (PDF)', type: 'file', single: true, hint: 'Кнопка «Просмотреть технический райдер».' },
@@ -274,6 +283,7 @@ const PAGES: PageDef[] = [
             type: 'list',
             itemLabel: 'Добавить правило',
             itemFields: [
+              { key: 'icon', label: 'Иконка', type: 'icon', bilingual: false },
               { key: 'title', label: 'Заголовок' },
               { key: 'desc', label: 'Описание', multiline: true },
             ],
@@ -990,6 +1000,17 @@ function ListEditor({
             <div className="grid gap-3">
               {itemFields.map((sf) => {
                 const value = item[sf.key];
+                if (sf.type === 'icon') {
+                  const name = typeof value === 'string' ? value : '';
+                  return (
+                    <IconPickerField
+                      key={sf.key}
+                      label={sf.label}
+                      value={name}
+                      onChange={(v) => updateItem(idx, { [sf.key]: v })}
+                    />
+                  );
+                }
                 if (sf.type === 'image') {
                   const url = typeof value === 'string' ? value : '';
                   return (
@@ -1110,6 +1131,98 @@ function ListImageField({
           <input type="file" accept={ACCEPT_IMAGE} onChange={(e) => upload(e.target.files?.[0])} className="hidden" />
         </label>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* IconPickerField — выбор иконки Lucide из реестра.                    */
+/* Значение хранится строкой-именем (напр. "Ban"). Используется и на    */
+/* сайте (страница «Зрителям») через getLucideIcon.                     */
+/* ------------------------------------------------------------------ */
+function IconPickerField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const Current = getLucideIcon(value);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return ICON_NAMES;
+    return ICON_NAMES.filter((n) => n.toLowerCase().includes(q));
+  }, [query]);
+
+  return (
+    <div className="grid gap-2">
+      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{label}</span>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex min-h-10 items-center gap-3 self-start rounded-lg border border-line bg-white px-3 text-sm text-ink transition hover:border-ink"
+      >
+        <span className="grid h-7 w-7 place-items-center rounded-md bg-paper text-ink">
+          <Current size={16} strokeWidth={1.7} />
+        </span>
+        <span className="font-medium">{value || 'Выбрать иконку'}</span>
+      </button>
+
+      {open ? (
+        <div className="grid gap-2 rounded-xl border border-line bg-white p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-1 items-center gap-2 rounded-lg border border-line bg-paper px-2.5">
+              <Search size={14} className="text-muted" />
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Поиск иконки…"
+                className="min-h-9 w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-muted transition hover:border-ink hover:text-ink"
+              aria-label="Закрыть"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <div className="grid max-h-56 grid-cols-6 gap-1.5 overflow-y-auto sm:grid-cols-8">
+            {filtered.map((name) => {
+              const Icon = getLucideIcon(name);
+              const active = name === value;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  title={name}
+                  onClick={() => {
+                    onChange(name);
+                    setOpen(false);
+                  }}
+                  className={[
+                    'grid aspect-square place-items-center rounded-lg border transition',
+                    active ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:border-ink',
+                  ].join(' ')}
+                >
+                  <Icon size={18} strokeWidth={1.7} />
+                </button>
+              );
+            })}
+            {filtered.length === 0 ? (
+              <div className="col-span-full py-4 text-center text-xs text-muted">Ничего не найдено</div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

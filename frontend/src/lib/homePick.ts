@@ -1,11 +1,13 @@
 import type { Event, NewsArticle } from '../types';
 
-/** До 6 элементов: сначала закреплённые (по pin_order desc), затем по дате создания / порядку. */
-export function pickHomeEvents(events: Event[], max = 6): Event[] {
-  const pinned = events.filter((e) => e.is_pinned).sort((a, b) => (b.pin_order ?? 0) - (a.pin_order ?? 0));
-  const rest = events.filter((e) => !e.is_pinned).slice(0, Math.max(0, max - pinned.length));
-  const merged = [...pinned, ...rest].slice(0, max);
-  return merged.length ? merged : events.slice(0, max);
+/** Афиша на главной: до `max` событий. На вход ожидается список, уже
+ *  отсортированный по ближайшей дате. События с флагом «лид» (is_lead)
+ *  ставятся первыми (с сохранением порядка по дате между собой), остальные —
+ *  следом по дате. Размер карточек одинаковый. */
+export function pickHomeEvents(events: Event[], max = 3): Event[] {
+  const leads = events.filter((e) => e.is_lead);
+  const rest = events.filter((e) => !e.is_lead);
+  return [...leads, ...rest].slice(0, max);
 }
 
 export function pickHomeNews(articles: NewsArticle[], max = 6): NewsArticle[] {

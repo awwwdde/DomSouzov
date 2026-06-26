@@ -1,67 +1,88 @@
-import {
-  Accessibility,
-  Ban,
-  Shirt,
-  CupSoda,
-  CigaretteOff,
-  Baby,
-  Dog,
-  AlertTriangle,
-  type LucideIcon,
-} from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
+import { getLucideIcon } from '../lib/lucideIcons';
 
 /* ============================================================ */
 /* ЗРИТЕЛЯМ — официальные правила посещения Дома Союзов.        */
-/* Ключевые моменты вынесены в карточки, полный текст —         */
-/* в раскрывающихся секциях (по разделам официальных правил).  */
+/* Карточки «Коротко о главном» редактируются из админки        */
+/* (ключ `audience_items`): заголовок, описание и иконка Lucide. */
+/* Полный текст правил — в раскрывающихся секциях ниже.          */
 /* ============================================================ */
 
-type KeyRule = { icon: LucideIcon; title: string; text: string };
+/** Один элемент списка правил, как его сохраняет ListEditor в админке. */
+type RawRule = {
+  icon?: string;
+  title?: { ru?: string; en?: string } | string;
+  desc?: { ru?: string; en?: string } | string;
+};
 
-const KEY_RULES: KeyRule[] = [
+/** Дефолтные карточки (если в админке ничего не задано). */
+const DEFAULT_RULES: RawRule[] = [
   {
-    icon: Accessibility,
-    title: 'Доступная среда',
-    text: 'Залы Дома Союзов оснащены пандусами и приспособлены для маломобильных и малоподвижных граждан. Допускаются собаки-поводыри.',
+    icon: 'Accessibility',
+    title: { ru: 'Доступная среда', en: 'Accessible environment' },
+    desc: {
+      ru: 'Залы Дома Союзов оснащены пандусами и приспособлены для маломобильных и малоподвижных граждан. Допускаются собаки-поводыри.',
+      en: 'The halls are equipped with ramps and adapted for visitors with limited mobility. Guide dogs are welcome.',
+    },
   },
   {
-    icon: Ban,
-    title: 'Запрещённые предметы',
-    text: 'Нельзя проносить оружие, опасные и пахучие вещества, колющие и режущие предметы, пиротехнику, лазерные фонарики, алкоголь, еду, чемоданы и крупные сумки.',
+    icon: 'Ban',
+    title: { ru: 'Запрещённые предметы', en: 'Prohibited items' },
+    desc: {
+      ru: 'Нельзя проносить оружие, опасные и пахучие вещества, колющие и режущие предметы, пиротехнику, лазерные фонарики, алкоголь, еду, чемоданы и крупные сумки.',
+      en: 'No weapons, hazardous or odorous substances, sharp objects, pyrotechnics, laser pointers, alcohol, food, suitcases or large bags.',
+    },
   },
   {
-    icon: Shirt,
-    title: 'Верхняя одежда — в гардероб',
-    text: 'В залы нельзя входить в верхней одежде и проносить её с собой. Крупные сумки, рюкзаки, пакеты и коляски в гардероб не принимаются.',
+    icon: 'Shirt',
+    title: { ru: 'Верхняя одежда — в гардероб', en: 'Outerwear to the cloakroom' },
+    desc: {
+      ru: 'В залы нельзя входить в верхней одежде и проносить её с собой. Крупные сумки, рюкзаки, пакеты и коляски в гардероб не принимаются.',
+      en: 'Outerwear is not allowed in the halls. Large bags, backpacks and strollers are not accepted in the cloakroom.',
+    },
   },
   {
-    icon: CupSoda,
-    title: 'Еда и напитки',
-    text: 'Проносить и употреблять еду и напитки в залах запрещено — исключение только бутилированная вода без газа.',
+    icon: 'CupSoda',
+    title: { ru: 'Еда и напитки', en: 'Food and drinks' },
+    desc: {
+      ru: 'Проносить и употреблять еду и напитки в залах запрещено — исключение только бутилированная вода без газа.',
+      en: 'Food and drinks are not allowed in the halls — the only exception is still bottled water.',
+    },
   },
   {
-    icon: CigaretteOff,
-    title: 'Курение запрещено',
-    text: 'Курение табака, электронных сигарет и иной никотиносодержащей продукции в помещениях Дома Союзов запрещено (ФЗ № 15-ФЗ).',
+    icon: 'CigaretteOff',
+    title: { ru: 'Курение запрещено', en: 'No smoking' },
+    desc: {
+      ru: 'Курение табака, электронных сигарет и иной никотиносодержащей продукции в помещениях Дома Союзов запрещено (ФЗ № 15-ФЗ).',
+      en: 'Smoking of tobacco, e-cigarettes and other nicotine products is prohibited indoors (Federal Law No. 15-FZ).',
+    },
   },
   {
-    icon: Baby,
-    title: 'Дети до 14 лет',
-    text: 'Посетители до 14 лет допускаются только в сопровождении совершеннолетних. Для групп — не менее одного сопровождающего на 10 детей.',
+    icon: 'Baby',
+    title: { ru: 'Дети до 14 лет', en: 'Children under 14' },
+    desc: {
+      ru: 'Посетители до 14 лет допускаются только в сопровождении совершеннолетних. Для групп — не менее одного сопровождающего на 10 детей.',
+      en: 'Visitors under 14 are admitted only when accompanied by adults. For groups — at least one adult per 10 children.',
+    },
   },
   {
-    icon: Dog,
-    title: 'С животными нельзя',
-    text: 'Вход с животными запрещён. Исключение — собаки-поводыри для лиц с ограниченными возможностями.',
+    icon: 'Dog',
+    title: { ru: 'С животными нельзя', en: 'No animals' },
+    desc: {
+      ru: 'Вход с животными запрещён. Исключение — собаки-поводыри для лиц с ограниченными возможностями.',
+      en: 'Entry with animals is prohibited. The exception is guide dogs for people with disabilities.',
+    },
   },
   {
-    icon: AlertTriangle,
-    title: 'Бесхозные вещи',
-    text: 'Обнаружив оставленные без присмотра предметы, немедленно сообщите сотрудникам охраны. Трогать и перемещать их строго запрещается.',
+    icon: 'AlertTriangle',
+    title: { ru: 'Бесхозные вещи', en: 'Unattended items' },
+    desc: {
+      ru: 'Обнаружив оставленные без присмотра предметы, немедленно сообщите сотрудникам охраны. Трогать и перемещать их строго запрещается.',
+      en: 'If you notice unattended items, inform security immediately. Touching or moving them is strictly forbidden.',
+    },
   },
 ];
 
@@ -110,8 +131,9 @@ const SECTIONS: RuleSection[] = [
 ];
 
 export default function Audience() {
-  const { lang, tStrict } = useSite();
+  const { lang, tStrict, list, pickItem } = useSite();
   const title = tStrict('audience_title') || (lang === 'ru' ? 'Зрителям' : 'For Visitors');
+  const rules = list<RawRule>('audience_items', DEFAULT_RULES);
   const lead =
     tStrict('audience_lead') ||
     (lang === 'ru'
@@ -141,18 +163,20 @@ export default function Audience() {
           Коротко о главном
         </h2>
         <RevealList className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-          {KEY_RULES.map((r) => {
-            const Icon = r.icon;
+          {rules.map((r, i) => {
+            const Icon = getLucideIcon(typeof r.icon === 'string' ? r.icon : undefined);
+            const ruleTitle = pickItem(r, 'title');
+            const ruleText = pickItem(r, 'desc');
             return (
-              <RevealItem key={r.title}>
+              <RevealItem key={`${ruleTitle}-${i}`}>
                 <div className="group flex h-full flex-col gap-4 bg-paper p-7 transition hover:bg-paper-soft">
                   <span className="grid h-12 w-12 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
                     <Icon size={22} strokeWidth={1.6} />
                   </span>
                   <h3 className="font-heading text-[clamp(17px,1.4vw,21px)] font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink">
-                    {r.title}
+                    {ruleTitle}
                   </h3>
-                  <p className="text-[14px] leading-6 text-ink-soft">{r.text}</p>
+                  <p className="text-[14px] leading-6 text-ink-soft">{ruleText}</p>
                 </div>
               </RevealItem>
             );

@@ -48,6 +48,22 @@ export const subscribeNewsletter = async (email: string): Promise<void> => {
   }
 };
 
+export interface OrganizerRequestPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  consent: boolean;
+}
+
+export const submitOrganizerRequest = async (payload: OrganizerRequestPayload): Promise<void> => {
+  try {
+    await api.post('/organizers/request', payload);
+  } catch (error) {
+    throw new Error(extractApiErrorMessage(error));
+  }
+};
+
 // Admin Auth
 export const adminLogin = (email: string, password: string) =>
   api.post('/admin/login', { email, password }).then((r) => {

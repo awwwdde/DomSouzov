@@ -29,6 +29,22 @@ class NewsletterSubscriber(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class OrganizerRequest(Base):
+    """Заявка с формы «Организаторам» (модальное окно на /organizers).
+
+    Сохраняется в БД (чтобы ничего не терялось, даже если SMTP не настроен)
+    и параллельно уходит письмом на адрес из настроек (organizers_form_email)."""
+    __tablename__ = "organizer_requests"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    message = Column(Text, nullable=True)
+    consent = Column(Boolean, default=False)   # согласие на обработку ПДн (152-ФЗ)
+    emailed = Column(Boolean, default=False)   # удалось ли отправить письмо
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class AdminUser(Base):
     __tablename__ = "admin_users"
     id = Column(Integer, primary_key=True)
@@ -68,8 +84,11 @@ class Event(Base):
     price_en = Column(String, nullable=False)
     description_ru = Column(Text, nullable=True)
     description_en = Column(Text, nullable=True)
-    image = Column(String, nullable=True)
+    image = Column(String, nullable=True)              # горизонтальное — страница «Афиша»
+    image_vertical = Column(String, nullable=True)     # вертикальное — карточка на главной
     is_featured = Column(Boolean, default=False)
+    # Лид: на главной такое событие показывается первым в Афише.
+    is_lead = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

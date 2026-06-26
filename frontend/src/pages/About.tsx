@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, useId, type ReactNode } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence, type MotionValue } from 'framer-motion';
+import { useMemo, useState, useId, type ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
 import { Section } from '../components/Section';
@@ -56,11 +56,11 @@ export default function About() {
         lang={lang}
       />
       <HeroStage video={heroVideo} poster={heroPoster} kicker={heroKicker} title={heroTitle} reduced={reduced} />
-      <IntroStage text={introText} tips={about.hover_tips} lang={lang} reduced={reduced} />
-      <ScatteredPhotosStage
+      <NarrativeStage
+        text={introText}
+        tips={about.hover_tips}
         photos={about.scattered_photos}
-        kicker={t('about_photos_kicker') || (lang === 'ru' ? 'Архив' : 'Archive')}
-        heading={t('about_photos_heading') || (lang === 'ru' ? 'Дом в кадрах' : 'The House in frames')}
+        kicker={lang === 'ru' ? 'О Доме' : 'About'}
         lang={lang}
         reduced={reduced}
       />
@@ -145,21 +145,33 @@ function HeroStage({
 }
 
 /* ================================================================ */
-/* 2. INTRO — текст с акцентными фразами и hover-медиа.              */
+/* 2. NARRATIVE — чередование текста и фото: текст → фото → текст…    */
+/*                                                                  */
+/* Абзацы введения и фотографии (обе сущности — из бэкенда)         */
+/* складываются в ленту в духе старого сайта: пара «текст + снимок»  */
+/* уходит то влево, то вправо (зигзаг). Снимок — целиком, в рамке-   */
+/* паспарту, с курсивной подписью.                                   */
 /* ================================================================ */
-function IntroStage({
+type NarrativeBlock =
+  | { kind: 'text'; parts: TextPart[]; first: boolean; side: 'left' | 'right' }
+  | { kind: 'photo'; photo: AboutScatteredPhoto; side: 'left' | 'right' };
+
+function NarrativeStage({
   text,
   tips,
+  photos,
+  kicker,
   lang,
   reduced,
 }: {
   text: string;
   tips: AboutHoverTip[];
+  photos: AboutScatteredPhoto[];
+  kicker: string;
   lang: 'ru' | 'en';
   reduced: boolean;
 }) {
-  /* Делим текст на абзацы по пустой строке, каждый разбираем на части
-     с hover-фразами по отдельности. */
+  /* Текст → абзацы → части с hover-фразами. */
   const paragraphs = useMemo(
     () =>
       text
@@ -170,52 +182,139 @@ function IntroStage({
     [text, tips, lang]
   );
 
+  /* Переплетаем: текст, фото, текст, фото… Пара «текст + следующий снимок»
+     получает общую сторону (зигзаг: лево, право, лево…). «Хвост» (если
+     одного больше) продолжает чередоваться сам по себе. */
+  const blocks = useMemo<NarrativeBlock[]>(() => {
+    const out: NarrativeBlock[] = [];
+    let ti = 0;
+    let pi = 0;
+    let pair = 0;
+    let wantText = true;
+    while (ti < paragraphs.length || pi < photos.length) {
+      const side: 'left' | 'right' = pair % 2 === 0 ? 'left' : 'right';
+      if (wantText && ti < paragraphs.length) {
+        out.push({ kind: 'text', parts: paragraphs[ti], first: ti === 0, side });
+        ti += 1;
+      } else if (pi < photos.length) {
+        out.push({ kind: 'photo', photo: photos[pi], side });
+        pi += 1;
+        pair += 1; // пара завершена — следующая уходит на другую сторону
+      } else if (ti < paragraphs.length) {
+        out.push({ kind: 'text', parts: paragraphs[ti], first: ti === 0, side });
+        ti += 1;
+      }
+      wantText = !wantText;
+    }
+    return out;
+  }, [paragraphs, photos]);
+
   return (
     <Section tone="paper" spacing="md" bordered>
       <motion.div
         initial={reduced ? false : { opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
+        viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.7, ease: EASE }}
-        className="mb-6"
+        className="mb-10 md:mb-14"
       >
         <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-ink-soft">
-          {lang === 'ru' ? 'О Доме' : 'About'}
+          {kicker}
         </span>
       </motion.div>
 
-      <motion.div
-        initial={reduced ? false : { opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
-      >
-        {/* Текст на всю ширину — широкими абзацами, до правого края. */}
-        <div>
-          {paragraphs.map((parts, pi) => (
-            <p
-              key={pi}
-              className={[
-                'text-ink text-lg leading-8 md:text-[22px] md:leading-[1.7]',
-                pi === 0
-                  ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[60px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
-                  : 'mt-6',
-              ].join(' ')}
-            >
-              {parts.map((part, i) =>
-                part.type === 'text' ? (
-                  <span key={i}>{part.value}</span>
-                ) : (
-                  <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
-                    {part.value}
-                  </HoverPhrase>
-                )
-              )}
-            </p>
-          ))}
-        </div>
-      </motion.div>
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-y-16 md:gap-y-28">
+        {blocks.map((b, i) =>
+          b.kind === 'text' ? (
+            <NarrativeText key={`t-${i}`} parts={b.parts} first={b.first} side={b.side} lang={lang} reduced={reduced} />
+          ) : (
+            <NarrativePhoto key={`p-${i}`} photo={b.photo} side={b.side} reduced={reduced} />
+          )
+        )}
+      </div>
     </Section>
+  );
+}
+
+/** Текстовый блок ленты: читаемая мера, уходит влево/вправо «зигзагом». */
+function NarrativeText({
+  parts,
+  first,
+  side,
+  lang,
+  reduced,
+}: {
+  parts: TextPart[];
+  first: boolean;
+  side: 'left' | 'right';
+  lang: 'ru' | 'en';
+  reduced: boolean;
+}) {
+  return (
+    <motion.div
+      initial={reduced ? false : { opacity: 0, x: side === 'right' ? 24 : -24, y: 12 }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, amount: 0.35 }}
+      transition={{ duration: 0.7, ease: EASE }}
+      className={['w-full md:w-[60%]', side === 'right' ? 'md:ml-auto' : 'md:mr-auto'].join(' ')}
+    >
+      <p
+        className={[
+          'text-ink text-lg leading-8 md:text-[22px] md:leading-[1.62]',
+          first
+            ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[64px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
+            : '',
+        ].join(' ')}
+      >
+        {parts.map((part, i) =>
+          part.type === 'text' ? (
+            <span key={i}>{part.value}</span>
+          ) : (
+            <HoverPhrase key={i} tip={part.tip} lang={lang} reduced={reduced}>
+              {part.value}
+            </HoverPhrase>
+          )
+        )}
+      </p>
+    </motion.div>
+  );
+}
+
+/** Фото-блок ленты: снимок целиком (без обрезки) в рамке-паспарту,        */
+/* уходит влево/вправо «зигзагом», без подписи.                            */
+function NarrativePhoto({
+  photo,
+  side,
+  reduced,
+}: {
+  photo: AboutScatteredPhoto;
+  side: 'left' | 'right';
+  reduced: boolean;
+}) {
+  return (
+    <motion.div
+      initial={reduced ? false : { opacity: 0, x: side === 'right' ? 36 : -36, y: 24 }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.85, ease: EASE }}
+      className={[
+        'flex w-full md:w-[60%]',
+        side === 'right' ? 'md:ml-auto md:justify-end' : 'md:mr-auto md:justify-start',
+      ].join(' ')}
+    >
+      {photo.image ? (
+        <img
+          src={photo.image}
+          alt=""
+          loading="lazy"
+          className="block max-h-[80vh] w-auto max-w-full"
+        />
+      ) : (
+        <div className="aspect-[3/4] w-full max-w-[460px] overflow-hidden bg-ink">
+          <PhotoFallback />
+        </div>
+      )}
+    </motion.div>
   );
 }
 
@@ -347,171 +446,6 @@ function HoverPhrase({
   );
 }
 
-/* ================================================================ */
-/* 3. SCATTERED PHOTOS — фото с разными скоростями параллакса.       */
-/* ================================================================ */
-function ScatteredPhotosStage({
-  photos,
-  kicker,
-  heading,
-  lang,
-  reduced,
-}: {
-  photos: AboutScatteredPhoto[];
-  kicker: string;
-  heading: string;
-  lang: 'ru' | 'en';
-  reduced: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-
-  /* Расчёт высоты секции: чем больше фото, тем длиннее «полотно». */
-  const sectionMinHeight = Math.max(900, photos.length * 280 + 600);
-
-  /* Если фоток нет — рисуем плейсхолдеры, чтобы секция не пустовала. */
-  const items = photos.length ? photos : placeholderPhotos();
-
-  return (
-    <Section tone="paper-soft" spacing="md" bordered>
-      <div className="mb-12 grid gap-8 md:mb-16 md:grid-cols-12 md:gap-12">
-        <div className="md:col-span-3">
-          <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-ink-soft">
-            {kicker}
-          </span>
-        </div>
-        <h2 className="md:col-span-9 font-heading text-[clamp(36px,5vw,80px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
-          {heading}
-        </h2>
-      </div>
-
-      {/* Мобильный: чистая сетка без параллакса (первое фото — во всю ширину). */}
-      <div className="grid grid-cols-2 gap-3 md:hidden [&>*:first-child]:col-span-2">
-        {items.map((p) => (
-          <MobilePhoto key={p.id} photo={p} lang={lang} reduced={reduced} />
-        ))}
-      </div>
-
-      {/* Десктоп: художественный разброс с параллаксом. */}
-      <div
-        ref={ref}
-        className="relative hidden grid-cols-12 gap-4 md:grid"
-        style={{ minHeight: sectionMinHeight }}
-      >
-        {items.map((p) => (
-          <ScatteredPhotoItem
-            key={p.id}
-            photo={p}
-            scrollProgress={scrollYProgress}
-            lang={lang}
-            reduced={reduced}
-          />
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-/** Мобильная карточка фото: ровная 4:3, простое появление, без параллакса. */
-function MobilePhoto({
-  photo,
-  lang,
-  reduced,
-}: {
-  photo: AboutScatteredPhoto;
-  lang: 'ru' | 'en';
-  reduced: boolean;
-}) {
-  const caption = photo.caption[lang] || photo.caption.ru;
-  return (
-    <motion.figure
-      initial={reduced ? false : { opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, ease: EASE }}
-      className="relative"
-    >
-      <div className="aspect-[4/3] w-full overflow-hidden bg-ink">
-        {photo.image ? (
-          <img src={photo.image} alt={caption} loading="lazy" className="block h-full w-full object-cover" />
-        ) : (
-          <PhotoFallback />
-        )}
-      </div>
-      {caption ? (
-        <figcaption className="mt-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft">
-          {caption}
-        </figcaption>
-      ) : null}
-    </motion.figure>
-  );
-}
-
-function ScatteredPhotoItem({
-  photo,
-  scrollProgress,
-  lang,
-  reduced,
-}: {
-  photo: AboutScatteredPhoto;
-  scrollProgress: MotionValue<number>;
-  lang: 'ru' | 'en';
-  reduced: boolean;
-}) {
-  /* Параллакс — амплитуда зависит от parallax_speed. */
-  const amp = (photo.parallax_speed || 0) * 220;
-  const y = useTransform(scrollProgress, [0, 1], reduced ? [0, 0] : [amp, -amp]);
-
-  /* Появление: фото проявляется, когда прогресс секции достигает reveal_progress. */
-  const r = clamp01(photo.reveal_progress ?? 0);
-  const opacity = useTransform(
-    scrollProgress,
-    [Math.max(0, r - 0.08), r, Math.min(1, r + 0.4)],
-    reduced ? [1, 1, 1] : [0, 1, 1]
-  );
-  const fadeY = useTransform(
-    scrollProgress,
-    [Math.max(0, r - 0.08), r],
-    reduced ? [0, 0] : [40, 0]
-  );
-
-  const colStart = clampInt(photo.col_start || 1, 1, 12);
-  const colSpan = clampInt(photo.col_span || 4, 1, 13 - colStart);
-  const offsetY = photo.offset_y || 0;
-  const caption = photo.caption[lang] || photo.caption.ru;
-
-  return (
-    <motion.figure
-      className="relative"
-      style={{
-        gridColumnStart: colStart,
-        gridColumnEnd: `span ${colSpan}`,
-        marginTop: offsetY,
-        y,
-        opacity,
-      }}
-    >
-      <motion.div
-        style={{ y: fadeY }}
-        className="relative w-full overflow-hidden bg-ink"
-      >
-        <div className="aspect-[4/3] w-full">
-          {photo.image ? (
-            <img src={photo.image} alt={caption} className="block h-full w-full object-cover" />
-          ) : (
-            <PhotoFallback />
-          )}
-        </div>
-      </motion.div>
-      {caption ? (
-        <figcaption className="mt-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft">
-          {caption}
-        </figcaption>
-      ) : null}
-    </motion.figure>
-  );
-}
-
 function PhotoFallback() {
   return (
     <div
@@ -523,17 +457,6 @@ function PhotoFallback() {
       }}
     />
   );
-}
-
-function placeholderPhotos(): AboutScatteredPhoto[] {
-  return [
-    { id: -1, image: '', caption: { ru: '', en: '' }, col_start: 1, col_span: 5, offset_y: 0, parallax_speed: 0.15, reveal_progress: 0.1, sort_order: 1 },
-    { id: -2, image: '', caption: { ru: '', en: '' }, col_start: 8, col_span: 4, offset_y: 80, parallax_speed: -0.25, reveal_progress: 0.2, sort_order: 2 },
-    { id: -3, image: '', caption: { ru: '', en: '' }, col_start: 3, col_span: 6, offset_y: 220, parallax_speed: 0.10, reveal_progress: 0.35, sort_order: 3 },
-    { id: -4, image: '', caption: { ru: '', en: '' }, col_start: 9, col_span: 4, offset_y: 360, parallax_speed: -0.20, reveal_progress: 0.5, sort_order: 4 },
-    { id: -5, image: '', caption: { ru: '', en: '' }, col_start: 1, col_span: 4, offset_y: 500, parallax_speed: 0.05, reveal_progress: 0.65, sort_order: 5 },
-    { id: -6, image: '', caption: { ru: '', en: '' }, col_start: 7, col_span: 5, offset_y: 620, parallax_speed: -0.15, reveal_progress: 0.8, sort_order: 6 },
-  ];
 }
 
 /* ================================================================ */
@@ -701,14 +624,4 @@ function CTAStage({ lang, reduced }: { lang: 'ru' | 'en'; reduced: boolean }) {
       </motion.div>
     </Section>
   );
-}
-
-/* ── Утилиты ──────────────────────────────────────────────────── */
-function clamp01(x: number) {
-  if (Number.isNaN(x)) return 0;
-  return Math.max(0, Math.min(1, x));
-}
-function clampInt(x: number, min: number, max: number) {
-  const v = Math.round(x);
-  return Math.max(min, Math.min(max, v));
 }

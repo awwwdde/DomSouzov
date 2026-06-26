@@ -21,7 +21,9 @@ export interface Event {
   price: BilingualString;
   description: BilingualString;
   image: string | null;
+  image_vertical?: string | null;
   is_featured: boolean;
+  is_lead?: boolean;
   has_ticket?: boolean;
   ticket_url?: string | null;
   age_rating?: string | null;

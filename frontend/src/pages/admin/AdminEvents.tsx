@@ -15,10 +15,12 @@ const EMPTY = {
   price_ru: '', price_en: '',
   description_ru: '', description_en: '',
   image: '',
+  image_vertical: '',
   has_ticket: false,
   ticket_url: '',
   age_rating: '',
   is_featured: false,
+  is_lead: false,
   is_active: true,
   sort_order: 0,
   created_at: '',
@@ -167,11 +169,22 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         </div>
       </div>
 
-      <ImageUpload
-        label="Постер / изображение"
-        value={form.image}
-        onChange={(url) => setForm((p) => ({ ...p, image: url }))}
-      />
+      <div className="grid gap-4 md:grid-cols-2">
+        <ImageUpload
+          label="Фото для Афиши (горизонтальное)"
+          value={form.image}
+          onChange={(url) => setForm((p) => ({ ...p, image: url }))}
+        />
+        <ImageUpload
+          label="Фото для главной (вертикальное)"
+          value={form.image_vertical}
+          onChange={(url) => setForm((p) => ({ ...p, image_vertical: url }))}
+        />
+      </div>
+      <p className="-mt-2 text-xs leading-5 text-muted">
+        Горизонтальное фото показывается на странице «Афиша», вертикальное — в карточке на главной.
+        Если вертикальное не задано, на главной используется горизонтальное.
+      </p>
 
       {/* Билеты (внешний сервис) + возраст */}
       <div className="grid gap-4 rounded-2xl border border-line bg-paper-soft p-4 md:grid-cols-[auto_1fr_140px] md:items-end">
@@ -201,6 +214,10 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" checked={form.is_featured} onChange={setCheck('is_featured')} />
           Рекомендуется (featured)
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
+          <input type="checkbox" checked={form.is_lead} onChange={setCheck('is_lead')} />
+          Лид (первый в Афише на главной)
         </label>
         <label className="inline-flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" checked={form.is_active} onChange={setCheck('is_active')} />

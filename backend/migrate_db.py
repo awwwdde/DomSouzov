@@ -20,6 +20,8 @@ def migrate_sqlite() -> None:
         ("events", "is_pinned", bool_default),
         ("events", "pin_order", "INTEGER DEFAULT 0"),
         ("events", "age_rating", "VARCHAR"),
+        ("events", "image_vertical", "VARCHAR"),
+        ("events", "is_lead", bool_default),
         ("news", "is_pinned", bool_default),
         ("news", "pin_order", "INTEGER DEFAULT 0"),
         ("news", "gallery", "TEXT"),

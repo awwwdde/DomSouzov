@@ -33,6 +33,19 @@ class Settings(BaseSettings):
     # Публичный адрес сайта — для canonical, og:url, sitemap.xml.
     SITE_URL: str = "https://union.awwwdde.art"
 
+    # ── SMTP (отправка заявок с формы «Организаторам») ──────────────────────
+    # Транспорт берётся из окружения; получатель письма настраивается в админке
+    # (ключ настройки `organizers_form_email`) с фолбэком на SMTP_TO / email_rent.
+    # Если SMTP_HOST пуст — письма не шлются, но заявки всё равно сохраняются в БД.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""          # адрес отправителя; по умолчанию = SMTP_USER
+    SMTP_TO: str = ""            # запасной получатель, если в админке не задан
+    SMTP_USE_TLS: bool = True    # STARTTLS (587). Для SSL (465) поставьте False + порт 465
+    SMTP_USE_SSL: bool = False   # прямой SSL-сокет (порт 465)
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",")]

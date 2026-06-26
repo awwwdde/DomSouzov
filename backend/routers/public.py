@@ -20,7 +20,10 @@ from models import (
     AboutScatteredPhoto,
     AboutTimelineEvent,
     NewsletterSubscriber,
+    OrganizerRequest,
 )
+from config import settings as app_settings
+import mailer
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -44,6 +47,60 @@ def subscribe(body: SubscribeIn, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
+    return {"ok": True}
+
+
+class OrganizerRequestIn(BaseModel):
+    name: str
+    email: str
+    phone: str = ""
+    message: str = ""
+    consent: bool = False
+
+
+@router.post("/organizers/request")
+def organizers_request(body: OrganizerRequestIn, db: Session = Depends(get_db)):
+    name = (body.name or "").strip()
+    email = (body.email or "").strip()
+    phone = (body.phone or "").strip()
+    message = (body.message or "").strip()
+
+    if not name:
+        raise HTTPException(400, "Укажите имя")
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(400, "Некорректный email")
+    if not body.consent:
+        raise HTTPException(400, "Необходимо согласие на обработку персональных данных")
+
+    req = OrganizerRequest(
+        name=name, email=email, phone=phone, message=message, consent=True, emailed=False
+    )
+    db.add(req)
+    db.commit()
+    db.refresh(req)
+
+    # Получатель: настройка из админки → запасной SMTP_TO → email_rent из настроек.
+    recipient_row = db.query(SiteSettings).filter_by(key="organizers_form_email").first()
+    recipient = (recipient_row.value_ru if recipient_row else "") or app_settings.SMTP_TO
+    if not recipient:
+        rent_row = db.query(SiteSettings).filter_by(key="email_rent").first()
+        recipient = rent_row.value_ru if rent_row else ""
+
+    subject = f"Заявка с сайта (Организаторам) — {name}"
+    text = (
+        "Новая заявка с формы «Организаторам»:\n\n"
+        f"Имя: {name}\n"
+        f"Email: {email}\n"
+        f"Телефон: {phone or '—'}\n\n"
+        f"Сообщение:\n{message or '—'}\n\n"
+        f"Согласие на обработку ПДн (152-ФЗ): да\n"
+        f"Заявка №{req.id}"
+    )
+    emailed = mailer.send_email(recipient, subject, text, reply_to=email) if recipient else False
+    if emailed:
+        req.emailed = True
+        db.commit()
+
     return {"ok": True}
 
 
@@ -186,7 +243,9 @@ def _event_out(db: Session, e: Event) -> dict:
         "price": {"ru": e.price_ru, "en": e.price_en},
         "description": {"ru": e.description_ru or "", "en": e.description_en or ""},
         "image": e.image,
+        "image_vertical": getattr(e, "image_vertical", None),
         "is_featured": e.is_featured,
+        "is_lead": bool(getattr(e, "is_lead", False)),
         "has_ticket": bool(getattr(e, "has_ticket", False)),
         "ticket_url": getattr(e, "ticket_url", None),
         "age_rating": getattr(e, "age_rating", None),

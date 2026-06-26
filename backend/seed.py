@@ -23,6 +23,47 @@ from config import settings
 from migrate_db import migrate_sqlite
 
 
+def _audience_items_json() -> str:
+    """Дефолтные карточки «Коротко о главном» для страницы «Зрителям».
+
+    Формат совпадает с ListEditor в админке: массив объектов
+    {icon: str, title: {ru,en}, desc: {ru,en}}. Иконка — имя из реестра
+    Lucide (frontend/src/lib/lucideIcons.ts)."""
+    items = [
+        ("Accessibility", "Доступная среда", "Accessible environment",
+         "Залы Дома Союзов оснащены пандусами и приспособлены для маломобильных и малоподвижных граждан. Допускаются собаки-поводыри.",
+         "The halls are equipped with ramps and adapted for visitors with limited mobility. Guide dogs are welcome."),
+        ("Ban", "Запрещённые предметы", "Prohibited items",
+         "Нельзя проносить оружие, опасные и пахучие вещества, колющие и режущие предметы, пиротехнику, лазерные фонарики, алкоголь, еду, чемоданы и крупные сумки.",
+         "No weapons, hazardous or odorous substances, sharp objects, pyrotechnics, laser pointers, alcohol, food, suitcases or large bags."),
+        ("Shirt", "Верхняя одежда — в гардероб", "Outerwear to the cloakroom",
+         "В залы нельзя входить в верхней одежде и проносить её с собой. Крупные сумки, рюкзаки, пакеты и коляски в гардероб не принимаются.",
+         "Outerwear is not allowed in the halls. Large bags, backpacks and strollers are not accepted in the cloakroom."),
+        ("CupSoda", "Еда и напитки", "Food and drinks",
+         "Проносить и употреблять еду и напитки в залах запрещено — исключение только бутилированная вода без газа.",
+         "Food and drinks are not allowed in the halls — the only exception is still bottled water."),
+        ("CigaretteOff", "Курение запрещено", "No smoking",
+         "Курение табака, электронных сигарет и иной никотиносодержащей продукции в помещениях Дома Союзов запрещено (ФЗ № 15-ФЗ).",
+         "Smoking of tobacco, e-cigarettes and other nicotine products is prohibited indoors (Federal Law No. 15-FZ)."),
+        ("Baby", "Дети до 14 лет", "Children under 14",
+         "Посетители до 14 лет допускаются только в сопровождении совершеннолетних. Для групп — не менее одного сопровождающего на 10 детей.",
+         "Visitors under 14 are admitted only when accompanied by adults. For groups — at least one adult per 10 children."),
+        ("Dog", "С животными нельзя", "No animals",
+         "Вход с животными запрещён. Исключение — собаки-поводыри для лиц с ограниченными возможностями.",
+         "Entry with animals is prohibited. The exception is guide dogs for people with disabilities."),
+        ("AlertTriangle", "Бесхозные вещи", "Unattended items",
+         "Обнаружив оставленные без присмотра предметы, немедленно сообщите сотрудникам охраны. Трогать и перемещать их строго запрещается.",
+         "If you notice unattended items, inform security immediately. Touching or moving them is strictly forbidden."),
+    ]
+    return json.dumps(
+        [
+            {"icon": icon, "title": {"ru": t_ru, "en": t_en}, "desc": {"ru": d_ru, "en": d_en}}
+            for icon, t_ru, t_en, d_ru, d_en in items
+        ],
+        ensure_ascii=False,
+    )
+
+
 def seed():
     Base.metadata.create_all(bind=engine)
     # Добавляем недостающие колонки в уже существующие таблицы (важно на Postgres,
@@ -110,6 +151,10 @@ def seed():
         ("about_timeline_heading",
          "Годы Дома Союзов",
          "Years of the House"),
+        # ── Audience page: карточки «Коротко о главном» (icon + title + desc) ──
+        ("audience_items", _audience_items_json(), ""),
+        # ── Organizers page: email-получатель заявок (форма «Оставить заявку») ──
+        ("organizers_form_email", "", ""),
     ]
     for key, val_ru, val_en in defaults:
         if not db.query(SiteSettings).filter_by(key=key).first():

@@ -22,6 +22,7 @@ from models import (
     AboutTimelineEvent,
     MediaFile,
     NewsletterSubscriber,
+    OrganizerRequest,
 )
 from schemas import (
     Token, LoginRequest,
@@ -232,6 +233,25 @@ def list_subscribers(db: Session = Depends(get_db), _: AdminUser = Depends(get_c
     rows = db.query(NewsletterSubscriber).order_by(NewsletterSubscriber.created_at.desc()).all()
     return [
         {"id": r.id, "email": r.email, "created_at": r.created_at.isoformat() if r.created_at else None}
+        for r in rows
+    ]
+
+
+# ──────────── ORGANIZER REQUESTS (заявки с формы «Организаторам») ────────────
+
+@router.get("/organizer-requests")
+def list_organizer_requests(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    rows = db.query(OrganizerRequest).order_by(OrganizerRequest.created_at.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "email": r.email,
+            "phone": r.phone,
+            "message": r.message,
+            "emailed": bool(r.emailed),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
         for r in rows
     ]
 

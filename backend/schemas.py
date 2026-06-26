@@ -64,7 +64,9 @@ class EventBase(BaseModel):
     description_ru: Optional[str] = None
     description_en: Optional[str] = None
     image: Optional[str] = None
+    image_vertical: Optional[str] = None
     is_featured: bool = False
+    is_lead: bool = False
     is_active: bool = True
     sort_order: int = 0
     has_ticket: bool = False

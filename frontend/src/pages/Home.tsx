@@ -50,7 +50,7 @@ export default function Home() {
   const ctaBg = t('cta_background_url');
 
   const sortedEvents = useMemo(() => sortEventsByDate(events, lang), [events, lang]);
-  const homeEvents = useMemo(() => pickHomeEvents(sortedEvents, 6), [sortedEvents]);
+  const homeEvents = useMemo(() => pickHomeEvents(sortedEvents, 3), [sortedEvents]);
   const homeNews = useMemo(() => pickHomeNews(news, 4), [news]);
 
   const marqueeItems = list<RawItem>('home_marquee', DEFAULT_MARQUEE)
@@ -407,9 +407,9 @@ function EditorialCardGrid({
                     {ev.age_rating}
                   </span>
                 ) : null}
-                {ev.image ? (
+                {ev.image_vertical || ev.image ? (
                   <motion.img
-                    src={ev.image}
+                    src={ev.image_vertical || ev.image || ''}
                     alt={title}
                     loading="lazy"
                     decoding="async"
