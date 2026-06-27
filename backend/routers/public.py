@@ -96,6 +96,9 @@ def organizers_request(body: OrganizerRequestIn, db: Session = Depends(get_db)):
         f"Согласие на обработку ПДн (152-ФЗ): да\n"
         f"Заявка №{req.id}"
     )
+    print(f"[organizers] заявка #{req.id}: получатель={recipient!r}")
+    if not recipient:
+        print("[organizers] получатель не определён (нет organizers_form_email / SMTP_TO / email_rent)")
     emailed = mailer.send_email(recipient, subject, text, reply_to=email) if recipient else False
     if emailed:
         req.emailed = True

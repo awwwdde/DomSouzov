@@ -43,6 +43,7 @@ const AdminAbout = lazy(() => import('./pages/admin/AdminAbout'));
 const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminPartners = lazy(() => import('./pages/admin/AdminPartners'));
+const AdminRequests = lazy(() => import('./pages/admin/AdminRequests'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 function PublicLayout() {
@@ -104,6 +105,7 @@ function AppShell() {
           <Route path="about" element={<AdminAbout />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="partners" element={<AdminPartners />} />
+          <Route path="requests" element={<AdminRequests />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>

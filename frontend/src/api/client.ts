@@ -154,6 +154,13 @@ export const adminApi = {
   // Newsletter
   getSubscribers: () => api.get('/admin/subscribers').then((r) => r.data),
 
+  // Заявки с формы «Организаторам»
+  getOrganizerRequests: () => api.get('/admin/organizer-requests').then((r) => r.data),
+  updateOrganizerRequest: (id: number, data: unknown) =>
+    api.put(`/admin/organizer-requests/${id}`, data).then((r) => r.data),
+  deleteOrganizerRequest: (id: number) =>
+    api.delete(`/admin/organizer-requests/${id}`).then((r) => r.data),
+
   changePassword: (current_password: string, new_password: string) =>
     api.post('/admin/change-password', { current_password, new_password }).then((r) => r.data),
 

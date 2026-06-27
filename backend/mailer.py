@@ -23,11 +23,16 @@ def send_email(to_addr: str, subject: str, body: str, reply_to: str | None = Non
     """
     host = (settings.SMTP_HOST or "").strip()
     to_addr = (to_addr or "").strip()
-    if not host or not to_addr:
+    if not host:
+        print("[mailer] SMTP_HOST не задан — письмо не отправлено")
+        return False
+    if not to_addr:
+        print("[mailer] получатель пуст — письмо не отправлено")
         return False
 
     from_addr = (settings.SMTP_FROM or settings.SMTP_USER or "").strip()
     if not from_addr:
+        print("[mailer] SMTP_FROM/SMTP_USER не задан — письмо не отправлено")
         return False
 
     msg = EmailMessage()
@@ -52,7 +57,8 @@ def send_email(to_addr: str, subject: str, body: str, reply_to: str | None = Non
                 if settings.SMTP_USER:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
+        print(f"[mailer] письмо отправлено: {from_addr} -> {to_addr} (host={host}:{settings.SMTP_PORT}, ssl={settings.SMTP_USE_SSL})")
         return True
     except Exception as exc:  # noqa: BLE001 — почта не критична для запроса
-        print(f"[mailer] send failed: {exc}")
+        print(f"[mailer] send failed: {type(exc).__name__}: {exc}")
         return False

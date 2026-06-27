@@ -38,7 +38,7 @@ from schemas import (
     AboutTimelineEventCreate, AboutTimelineEventUpdate, AboutTimelineEventOut,
 )
 from auth import verify_password, create_access_token, get_current_admin, get_current_super_admin, hash_password
-from schemas import AdminUserCreate, AdminUserOut, AdminPasswordReset
+from schemas import AdminUserCreate, AdminUserOut, AdminPasswordReset, OrganizerRequestUpdate
 from config import settings as app_settings
 import aiofiles
 
@@ -239,21 +239,46 @@ def list_subscribers(db: Session = Depends(get_db), _: AdminUser = Depends(get_c
 
 # ──────────── ORGANIZER REQUESTS (заявки с формы «Организаторам») ────────────
 
+def _organizer_request_out(r: OrganizerRequest) -> dict:
+    return {
+        "id": r.id,
+        "name": r.name,
+        "email": r.email,
+        "phone": r.phone,
+        "message": r.message,
+        "emailed": bool(r.emailed),
+        "created_at": r.created_at.isoformat() if r.created_at else None,
+    }
+
+
 @router.get("/organizer-requests")
 def list_organizer_requests(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
     rows = db.query(OrganizerRequest).order_by(OrganizerRequest.created_at.desc()).all()
-    return [
-        {
-            "id": r.id,
-            "name": r.name,
-            "email": r.email,
-            "phone": r.phone,
-            "message": r.message,
-            "emailed": bool(r.emailed),
-            "created_at": r.created_at.isoformat() if r.created_at else None,
-        }
-        for r in rows
-    ]
+    return [_organizer_request_out(r) for r in rows]
+
+
+@router.put("/organizer-requests/{req_id}")
+def update_organizer_request(req_id: int, body: OrganizerRequestUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    r = db.query(OrganizerRequest).filter_by(id=req_id).first()
+    if not r:
+        raise HTTPException(404, "Not found")
+    r.name = (body.name or "").strip()
+    r.email = (body.email or "").strip()
+    r.phone = (body.phone or "").strip()
+    r.message = (body.message or "").strip()
+    db.commit()
+    db.refresh(r)
+    return _organizer_request_out(r)
+
+
+@router.delete("/organizer-requests/{req_id}")
+def delete_organizer_request(req_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    r = db.query(OrganizerRequest).filter_by(id=req_id).first()
+    if not r:
+        raise HTTPException(404, "Not found")
+    db.delete(r)
+    db.commit()
+    return {"ok": True}
 
 
 # ──────────── SETTINGS ────────────

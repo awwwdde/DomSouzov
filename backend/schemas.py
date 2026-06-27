@@ -35,6 +35,14 @@ class AdminUserOut(BaseModel):
         from_attributes = True
 
 
+# Заявки с формы «Организаторам» (редактирование из админки)
+class OrganizerRequestUpdate(BaseModel):
+    name: str
+    email: str
+    phone: Optional[str] = ""
+    message: Optional[str] = ""
+
+
 # Site Settings
 class SettingItem(BaseModel):
     key: str
