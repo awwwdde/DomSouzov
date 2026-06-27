@@ -577,7 +577,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     </span>
                   </div>
 
-                  <div className="aspect-[580/394] w-full overflow-hidden bg-paper-soft">
+                  <div className="aspect-[3/2] w-full overflow-hidden bg-paper-soft">
                     {event.image ? (
                       <motion.img
                         className="h-full w-full object-cover"

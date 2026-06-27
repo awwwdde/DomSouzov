@@ -401,7 +401,7 @@ function EditorialCardGrid({
                   {title}
                 </h3>
               </Link>
-              <Link to={href} className="relative aspect-[4/5] w-full overflow-hidden">
+              <Link to={href} className="relative aspect-[4/5] w-full overflow-hidden bg-paper-soft">
                 {ev.age_rating ? (
                   <span className="absolute right-3 top-3 z-10 rounded-full bg-ink/85 px-2.5 py-1 text-[10px] font-bold tabular-nums text-paper backdrop-blur-sm">
                     {ev.age_rating}
@@ -413,7 +413,7 @@ function EditorialCardGrid({
                     alt={title}
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                     variants={{
                       rest: { scale: 1 },
                       hover: { scale: reduced ? 1 : 1.04 },
