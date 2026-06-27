@@ -32,6 +32,8 @@ def migrate_sqlite() -> None:
         ("about_timeline_events", "tag_en", "VARCHAR"),
         ("admin_users", "is_super", bool_default),
         ("halls", "gallery", "TEXT"),
+        ("organizer_requests", "attachment_url", "VARCHAR"),
+        ("organizer_requests", "attachment_name", "VARCHAR"),
     ]
 
     for table, col, coltype in columns:

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, LayoutGrid, ArrowUpRight, Mail, X, Check, Loader2 } from 'lucide-react';
+import { FileText, LayoutGrid, ArrowUpRight, Mail, X, Check, Loader2, Paperclip } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
@@ -60,9 +60,11 @@ export default function Organizers() {
           className="block h-[68vh] max-h-[800px] min-h-[440px] w-full bg-ink object-cover"
           src={videoUrl}
           poster={videoPoster || undefined}
-          controls
-          preload="metadata"
+          muted
+          autoPlay
+          loop
           playsInline
+          preload="metadata"
         />
       ) : (
         <div className="flex h-[68vh] max-h-[800px] min-h-[440px] w-full items-center justify-center border-b border-line bg-paper-soft text-center text-[12px] font-bold uppercase tracking-[0.18em] text-muted">
@@ -145,10 +147,32 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+
+  const MAX_FILE_MB = 25;
+  const ACCEPT_FILES = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+  const pickFile = (f: File | undefined | null) => {
+    setError('');
+    if (!f) {
+      setFile(null);
+      return;
+    }
+    const ext = f.name.split('.').pop()?.toLowerCase() || '';
+    if (!['pdf', 'doc', 'docx'].includes(ext)) {
+      setError(lang === 'ru' ? 'Можно прикрепить только PDF или DOCX' : 'Only PDF or DOCX files are allowed');
+      return;
+    }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(lang === 'ru' ? `Файл больше ${MAX_FILE_MB} МБ` : `File exceeds ${MAX_FILE_MB} MB`);
+      return;
+    }
+    setFile(f);
+  };
 
   /* Закрытие по Esc + блокировка прокрутки фона. */
   useEffect(() => {
@@ -172,7 +196,7 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
     setSending(true);
     setError('');
     try {
-      await submitOrganizerRequest({ name, email, phone, message, consent });
+      await submitOrganizerRequest({ name, email, phone, message, consent, file });
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : lang === 'ru' ? 'Ошибка отправки' : 'Submission error');
@@ -305,6 +329,43 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
                 }
               />
             </label>
+
+            <div className="grid gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-soft">
+                {lang === 'ru' ? 'Файл (PDF или DOCX)' : 'File (PDF or DOCX)'}
+              </span>
+              {file ? (
+                <div className="flex items-center justify-between gap-3 border border-line bg-paper-soft px-4 py-3">
+                  <span className="flex min-w-0 items-center gap-2 text-sm text-ink">
+                    <Paperclip size={15} className="shrink-0 text-accent" />
+                    <span className="truncate">{file.name}</span>
+                    <span className="shrink-0 text-muted">({(file.size / (1024 * 1024)).toFixed(1)} МБ)</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFile(null)}
+                    aria-label={lang === 'ru' ? 'Убрать файл' : 'Remove file'}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-ink transition hover:border-ink hover:bg-ink hover:text-paper"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer items-center gap-3 border border-dashed border-line bg-paper px-4 py-3 text-sm text-ink-soft transition hover:border-ink">
+                  <Paperclip size={15} className="shrink-0 text-accent" />
+                  <span>{lang === 'ru' ? 'Прикрепить файл' : 'Attach a file'}</span>
+                  <span className="ml-auto text-[11px] uppercase tracking-[0.12em] text-muted">
+                    {lang === 'ru' ? `до ${MAX_FILE_MB} МБ` : `up to ${MAX_FILE_MB} MB`}
+                  </span>
+                  <input
+                    type="file"
+                    accept={ACCEPT_FILES}
+                    onChange={(e) => pickFile(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
 
             <label className="flex cursor-pointer items-start gap-3">
               <input

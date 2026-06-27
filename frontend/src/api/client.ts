@@ -54,11 +54,21 @@ export interface OrganizerRequestPayload {
   phone?: string;
   message?: string;
   consent: boolean;
+  file?: File | null;
 }
 
 export const submitOrganizerRequest = async (payload: OrganizerRequestPayload): Promise<void> => {
   try {
-    await api.post('/organizers/request', payload);
+    const form = new FormData();
+    form.append('name', payload.name);
+    form.append('email', payload.email);
+    form.append('phone', payload.phone ?? '');
+    form.append('message', payload.message ?? '');
+    form.append('consent', String(payload.consent));
+    if (payload.file) form.append('file', payload.file);
+    await api.post('/organizers/request', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   } catch (error) {
     throw new Error(extractApiErrorMessage(error));
   }

@@ -1,6 +1,7 @@
 """Public read-only API endpoints."""
 import re
-from fastapi import APIRouter, Depends, HTTPException
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -21,9 +22,11 @@ from models import (
     AboutTimelineEvent,
     NewsletterSubscriber,
     OrganizerRequest,
+    MediaFile,
 )
 from config import settings as app_settings
 import mailer
+import email_templates
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -50,30 +53,62 @@ def subscribe(body: SubscribeIn, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
-class OrganizerRequestIn(BaseModel):
-    name: str
-    email: str
-    phone: str = ""
-    message: str = ""
-    consent: bool = False
+# Вложение к заявке — только документы (PDF/DOCX/DOC).
+ALLOWED_REQUEST_EXT = {"pdf", "docx", "doc"}
+ALLOWED_REQUEST_MIME = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/octet-stream",  # некоторые браузеры так помечают .docx
+}
 
 
 @router.post("/organizers/request")
-def organizers_request(body: OrganizerRequestIn, db: Session = Depends(get_db)):
-    name = (body.name or "").strip()
-    email = (body.email or "").strip()
-    phone = (body.phone or "").strip()
-    message = (body.message or "").strip()
+async def organizers_request(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(""),
+    message: str = Form(""),
+    consent: bool = Form(False),
+    file: UploadFile | None = File(None),
+    db: Session = Depends(get_db),
+):
+    name = (name or "").strip()
+    email = (email or "").strip()
+    phone = (phone or "").strip()
+    message = (message or "").strip()
 
     if not name:
         raise HTTPException(400, "Укажите имя")
     if not _EMAIL_RE.match(email):
         raise HTTPException(400, "Некорректный email")
-    if not body.consent:
+    if not consent:
         raise HTTPException(400, "Необходимо согласие на обработку персональных данных")
 
+    # Необязательный файл-вложение: валидируем тип/размер, кладём в БД (MediaFile).
+    attachment_url = None
+    attachment_name = None
+    att_bytes = None
+    att_mime = None
+    if file is not None and file.filename:
+        ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+        if ext not in ALLOWED_REQUEST_EXT and (file.content_type or "") not in ALLOWED_REQUEST_MIME:
+            raise HTTPException(400, "Можно прикрепить только PDF или DOCX")
+        content = await file.read()
+        max_bytes = app_settings.MAX_UPLOAD_MB * 1024 * 1024
+        if len(content) > max_bytes:
+            raise HTTPException(413, f"Файл слишком большой. Максимум — {app_settings.MAX_UPLOAD_MB} МБ.")
+        stored = f"{uuid.uuid4().hex}.{ext or 'bin'}"
+        att_mime = file.content_type or "application/octet-stream"
+        db.add(MediaFile(filename=stored, content_type=att_mime, data=content, size=len(content)))
+        db.commit()
+        attachment_url = f"/uploads/{stored}"
+        attachment_name = file.filename
+        att_bytes = content
+
     req = OrganizerRequest(
-        name=name, email=email, phone=phone, message=message, consent=True, emailed=False
+        name=name, email=email, phone=phone, message=message, consent=True, emailed=False,
+        attachment_url=attachment_url, attachment_name=attachment_name,
     )
     db.add(req)
     db.commit()
@@ -94,12 +129,22 @@ def organizers_request(body: OrganizerRequestIn, db: Session = Depends(get_db)):
         f"Телефон: {phone or '—'}\n\n"
         f"Сообщение:\n{message or '—'}\n\n"
         f"Согласие на обработку ПДн (152-ФЗ): да\n"
+        f"Вложение: {attachment_name or '—'}\n"
         f"Заявка №{req.id}"
     )
-    print(f"[organizers] заявка #{req.id}: получатель={recipient!r}")
+    html = email_templates.organizer_request_html(
+        name=name, email=email, phone=phone, message=message,
+        request_id=req.id, attachment_name=attachment_name or "",
+    )
+    attachments = [(attachment_name, att_bytes, att_mime)] if att_bytes else None
+    print(f"[organizers] заявка #{req.id}: получатель={recipient!r}, вложение={attachment_name!r}")
     if not recipient:
         print("[organizers] получатель не определён (нет organizers_form_email / SMTP_TO / email_rent)")
-    emailed = mailer.send_email(recipient, subject, text, reply_to=email) if recipient else False
+    emailed = (
+        mailer.send_email(recipient, subject, text, reply_to=email, html=html, attachments=attachments)
+        if recipient
+        else False
+    )
     if emailed:
         req.emailed = True
         db.commit()

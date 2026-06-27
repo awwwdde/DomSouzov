@@ -15,8 +15,20 @@ def smtp_configured() -> bool:
     return bool(settings.SMTP_HOST and settings.SMTP_FROM or settings.SMTP_USER)
 
 
-def send_email(to_addr: str, subject: str, body: str, reply_to: str | None = None) -> bool:
-    """Отправляет простое текстовое письмо. Возвращает True при успехе.
+def send_email(
+    to_addr: str,
+    subject: str,
+    body: str,
+    reply_to: str | None = None,
+    html: str | None = None,
+    attachments: list[tuple[str, bytes, str]] | None = None,
+) -> bool:
+    """Отправляет письмо. Возвращает True при успехе.
+
+    • body  — текстовая версия (обязательна, фолбэк для клиентов без HTML);
+    • html  — необязательная HTML-версия (красивое оформление);
+    • attachments — список (имя_файла, байты, mime-тип), напр.
+      ("бриф.pdf", b"...", "application/pdf").
 
     Любая ошибка (нет конфигурации, недоступен сервер, отказ авторизации)
     проглатывается и возвращается False — форма не должна падать из-за почты.
@@ -42,6 +54,21 @@ def send_email(to_addr: str, subject: str, body: str, reply_to: str | None = Non
     if reply_to:
         msg["Reply-To"] = reply_to
     msg.set_content(body)
+    if html:
+        msg.add_alternative(html, subtype="html")
+
+    for att in attachments or []:
+        try:
+            filename, data, mime = att
+            maintype, _, subtype = (mime or "application/octet-stream").partition("/")
+            msg.add_attachment(
+                data,
+                maintype=maintype or "application",
+                subtype=subtype or "octet-stream",
+                filename=filename,
+            )
+        except Exception as exc:  # noqa: BLE001 — вложение не должно ронять письмо
+            print(f"[mailer] не удалось приложить файл: {exc}")
 
     try:
         if settings.SMTP_USE_SSL:

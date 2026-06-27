@@ -247,6 +247,8 @@ def _organizer_request_out(r: OrganizerRequest) -> dict:
         "phone": r.phone,
         "message": r.message,
         "emailed": bool(r.emailed),
+        "attachment_url": getattr(r, "attachment_url", None),
+        "attachment_name": getattr(r, "attachment_name", None),
         "created_at": r.created_at.isoformat() if r.created_at else None,
     }
 

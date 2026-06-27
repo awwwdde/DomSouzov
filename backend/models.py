@@ -42,6 +42,9 @@ class OrganizerRequest(Base):
     message = Column(Text, nullable=True)
     consent = Column(Boolean, default=False)   # согласие на обработку ПДн (152-ФЗ)
     emailed = Column(Boolean, default=False)   # удалось ли отправить письмо
+    # Прикреплённый файл (PDF/DOCX): URL раздачи и оригинальное имя.
+    attachment_url = Column(String, nullable=True)
+    attachment_name = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Inbox, Loader2, Mail, MailX, Phone, RefreshCw, Save, Trash2 } from 'lucide-react';
+import { Inbox, Loader2, Mail, MailX, Paperclip, Phone, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/client';
 
 /* ============================================================ */
@@ -16,6 +16,8 @@ interface RequestItem {
   phone: string;
   message: string;
   emailed: boolean;
+  attachment_url: string | null;
+  attachment_name: string | null;
   created_at: string | null;
 }
 
@@ -170,6 +172,18 @@ export default function AdminRequests() {
                     className="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-paper px-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink transition hover:border-ink"
                   >
                     <Phone size={13} /> Позвонить
+                  </a>
+                ) : null}
+                {it.attachment_url ? (
+                  <a
+                    href={it.attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={it.attachment_name || undefined}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-paper px-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink transition hover:border-ink"
+                    title={it.attachment_name || 'Вложение'}
+                  >
+                    <Paperclip size={13} /> Файл
                   </a>
                 ) : null}
                 <span className="flex-1" />
