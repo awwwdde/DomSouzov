@@ -32,6 +32,11 @@ export interface Event {
   gallery?: EventGalleryImage[];
 }
 
+export interface NewsMedia {
+  type: 'image' | 'video';
+  url: string;
+}
+
 export interface NewsArticle {
   id: number;
   tag: BilingualString;
@@ -39,7 +44,7 @@ export interface NewsArticle {
   excerpt: BilingualString;
   content: BilingualString;
   image: string | null;
-  gallery?: string[];
+  gallery?: NewsMedia[];
   is_lead: boolean;
   is_pinned?: boolean;
   pin_order?: number;

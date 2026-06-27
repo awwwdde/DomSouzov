@@ -37,12 +37,14 @@ export default function NewsDetail() {
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 
-  const gallery = useMemo(() => (article?.gallery ?? []).filter(Boolean), [article]);
+  const gallery = useMemo(() => (article?.gallery ?? []).filter((m) => m && m.url), [article]);
+  /** Лайтбокс — только для фото; видео проигрывается прямо в карточке. */
+  const imageUrls = useMemo(() => gallery.filter((m) => m.type !== 'video').map((m) => m.url), [gallery]);
 
   const lightboxItems: LightboxItem[] = useMemo(() => {
     if (!article) return [];
-    return gallery.map((src) => ({ src: mediaUrl(src), alt: l(article.title) }));
-  }, [article, gallery, lang]);
+    return imageUrls.map((src) => ({ src: mediaUrl(src), alt: l(article.title) }));
+  }, [article, imageUrls, lang]);
 
   if (!article) {
     return (
@@ -63,9 +65,12 @@ export default function NewsDetail() {
   const seoDesc = excerpt || contentParas[0]?.slice(0, 200) || l(article.title);
   const seoImage = article.image ? mediaUrl(article.image) : undefined;
 
-  const openLightboxAt = (i: number) => {
-    setLightboxIndex(i);
-    setLightboxOpen(true);
+  const openImage = (url: string) => {
+    const i = imageUrls.indexOf(url);
+    if (i >= 0) {
+      setLightboxIndex(i);
+      setLightboxOpen(true);
+    }
   };
 
   return (
@@ -149,30 +154,50 @@ export default function NewsDetail() {
           </div>
         </div>
 
-        {/* Галерея доп. фотографий (опционально) */}
+        {/* Галерея доп. медиа (фото и видео, опционально) */}
         {gallery.length > 0 ? (
           <div className="flex flex-col gap-4 lg:[grid-area:gallery]">
-            {gallery.map((src, gi) => (
-              <motion.button
-                key={gi}
-                type="button"
-                onClick={() => openLightboxAt(gi)}
-                className="group block w-full overflow-hidden border border-line bg-paper-soft"
-                variants={fadeUp(reduced)}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, amount: 0.15 }}
-                transition={reduced ? { duration: 0 } : transitionBase}
-              >
-                <img
-                  src={mediaUrl(src)}
-                  alt={l(article.title)}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
-                />
-              </motion.button>
-            ))}
+            {gallery.map((m, gi) =>
+              m.type === 'video' ? (
+                <motion.div
+                  key={`${m.url}-${gi}`}
+                  className="w-full overflow-hidden border border-line bg-ink"
+                  variants={fadeUp(reduced)}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={reduced ? { duration: 0 } : transitionBase}
+                >
+                  <video
+                    src={mediaUrl(m.url)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full"
+                  />
+                </motion.div>
+              ) : (
+                <motion.button
+                  key={`${m.url}-${gi}`}
+                  type="button"
+                  onClick={() => openImage(m.url)}
+                  className="group block w-full overflow-hidden border border-line bg-paper-soft"
+                  variants={fadeUp(reduced)}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={reduced ? { duration: 0 } : transitionBase}
+                >
+                  <img
+                    src={mediaUrl(m.url)}
+                    alt={l(article.title)}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                  />
+                </motion.button>
+              )
+            )}
           </div>
         ) : null}
 

@@ -312,7 +312,16 @@ def _news_out(n: NewsArticle) -> dict:
         try:
             parsed = json.loads(raw)
             if isinstance(parsed, list):
-                gallery = [str(u) for u in parsed if u]
+                for u in parsed:
+                    # Легаси: строка-URL = фото. Новый формат: {type, url}.
+                    if isinstance(u, str) and u:
+                        gallery.append({"type": "image", "url": u})
+                    elif isinstance(u, dict) and u.get("url"):
+                        kind = u.get("type")
+                        gallery.append({
+                            "type": kind if kind in ("image", "video") else "image",
+                            "url": u["url"],
+                        })
         except Exception:
             gallery = []
     return {

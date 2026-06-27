@@ -18,10 +18,22 @@ const EMPTY = {
   created_at: '',
 };
 
-function parseGallery(s: string): string[] {
+type Media = { type: 'image' | 'video'; url: string };
+
+/** Разбирает галерею: легаси-строки = фото, новый формат — объекты {type,url}. */
+function parseGallery(s: string): Media[] {
   try {
     const a = JSON.parse(s || '[]');
-    return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
+    if (!Array.isArray(a)) return [];
+    return a
+      .map((x): Media | null => {
+        if (typeof x === 'string') return x ? { type: 'image', url: x } : null;
+        if (x && typeof x === 'object' && typeof x.url === 'string' && x.url) {
+          return { type: x.type === 'video' ? 'video' : 'image', url: x.url };
+        }
+        return null;
+      })
+      .filter((x): x is Media => x !== null);
   } catch {
     return [];
   }
@@ -61,22 +73,36 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   const [publishAt, setPublishAt] = useState(toLocalInput((item as typeof EMPTY)?.created_at || ''));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const gallery = parseGallery(form.gallery);
-  const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
-  const addImage = async (file: File | undefined) => {
-    if (!file) return;
+  const setGallery = (arr: Media[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
+
+  /** Пачка файлов: грузим по очереди, видео определяем по MIME. */
+  const addFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
     setGalBusy(true);
     try {
-      const url = await adminApi.uploadFile(file);
-      setGallery([...gallery, url]);
+      const uploaded: Media[] = [];
+      for (const f of Array.from(files)) {
+        const url = await adminApi.uploadFile(f);
+        uploaded.push({ type: f.type.startsWith('video') ? 'video' : 'image', url });
+      }
+      setGallery([...gallery, ...uploaded]);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Ошибка загрузки');
     } finally {
       setGalBusy(false);
     }
   };
-  const removeImage = (i: number) => setGallery(gallery.filter((_, j) => j !== i));
+  const removeMedia = (i: number) => setGallery(gallery.filter((_, j) => j !== i));
+  const moveMedia = (from: number, to: number) => {
+    if (to < 0 || to >= gallery.length || from === to) return;
+    const next = [...gallery];
+    const [it] = next.splice(from, 1);
+    next.splice(to, 0, it);
+    setGallery(next);
+  };
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -156,24 +182,86 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       />
 
       <div className="grid gap-2">
-        <label>Доп. фотографии (галерея новости)</label>
+        <label>Медиа новости (фото и видео)</label>
+        <span className="text-[11px] normal-case tracking-normal text-muted">
+          Можно выбрать несколько файлов сразу. Перетащите карточки, чтобы изменить порядок, или используйте стрелки.
+        </span>
         <div className="flex flex-wrap gap-3">
-          {gallery.map((url, i) => (
-            <div key={i} className="relative h-24 w-32 overflow-hidden rounded-lg border border-line">
-              <img src={url} alt="" className="h-full w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeImage(i)}
-                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
-                aria-label="Удалить"
-              >
-                ×
-              </button>
+          {gallery.map((m, i) => (
+            <div
+              key={`${m.url}-${i}`}
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIndex !== null) moveMedia(dragIndex, i);
+                setDragIndex(null);
+              }}
+              onDragEnd={() => setDragIndex(null)}
+              className={`group relative h-28 w-36 cursor-move overflow-hidden rounded-lg border bg-ink ${dragIndex === i ? 'border-accent opacity-60' : 'border-line'}`}
+            >
+              {m.type === 'video' ? (
+                <>
+                  <video src={m.url} className="h-full w-full object-cover" muted preload="metadata" />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/70 text-paper">▶</span>
+                  </span>
+                  <span className="absolute left-1 top-1 rounded bg-ink/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-paper">видео</span>
+                </>
+              ) : (
+                <img src={m.url} alt="" className="h-full w-full object-cover" />
+              )}
+
+              {/* Порядковый номер */}
+              <span className="absolute bottom-1 left-1 rounded bg-ink/80 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-paper">
+                {i + 1}
+              </span>
+
+              {/* Управление: влево / вправо / удалить */}
+              <div className="absolute right-1 top-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => moveMedia(i, i - 1)}
+                  disabled={i === 0}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white disabled:opacity-30"
+                  aria-label="Левее"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveMedia(i, i + 1)}
+                  disabled={i === gallery.length - 1}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white disabled:opacity-30"
+                  aria-label="Правее"
+                >
+                  ›
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeMedia(i)}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600/90 text-sm text-white"
+                  aria-label="Удалить"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           ))}
-          <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
-            {galBusy ? '…' : '+ Фото'}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
+          <label className="flex h-28 w-36 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+            {galBusy ? 'Загрузка…' : '+ Фото / видео'}
+            <span className="text-[10px] font-normal text-muted">можно пачкой</span>
+            <input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = '';
+              }}
+            />
           </label>
         </div>
       </div>
