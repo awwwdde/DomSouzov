@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { adminApi } from '../../api/client';
@@ -39,6 +39,16 @@ function parseGallery(s: string): Media[] {
   }
 }
 
+/** Имя файла из URL — для подписи видео-плашки. */
+function fileName(url: string): string {
+  const last = url.split('/').pop() || 'видео';
+  try {
+    return decodeURIComponent(last);
+  } catch {
+    return last;
+  }
+}
+
 /** ISO-строка → значение для <input type="datetime-local"> (локальное время). */
 function toLocalInput(iso: string): string {
   if (!iso) return '';
@@ -73,7 +83,8 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   const [publishAt, setPublishAt] = useState(toLocalInput((item as typeof EMPTY)?.created_at || ''));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // ref, а не state — чтобы перетаскивание не вызывало ре-рендер всей формы.
+  const dragIndexRef = useRef<number | null>(null);
 
   const gallery = parseGallery(form.gallery);
   const setGallery = (arr: Media[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
@@ -184,33 +195,36 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       <div className="grid gap-2">
         <label>Медиа новости (фото и видео)</label>
         <span className="text-[11px] normal-case tracking-normal text-muted">
-          Можно выбрать несколько файлов сразу. Перетащите карточки, чтобы изменить порядок, или используйте стрелки.
+          Можно выбрать несколько файлов сразу. Перетащите карточку на нужное место, чтобы изменить порядок.
         </span>
         <div className="flex flex-wrap gap-3">
           {gallery.map((m, i) => (
             <div
               key={`${m.url}-${i}`}
               draggable
-              onDragStart={() => setDragIndex(i)}
-              onDragOver={(e) => e.preventDefault()}
+              onDragStart={(e) => {
+                dragIndexRef.current = i;
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }}
               onDrop={(e) => {
                 e.preventDefault();
-                if (dragIndex !== null) moveMedia(dragIndex, i);
-                setDragIndex(null);
+                if (dragIndexRef.current !== null) moveMedia(dragIndexRef.current, i);
+                dragIndexRef.current = null;
               }}
-              onDragEnd={() => setDragIndex(null)}
-              className={`group relative h-28 w-36 cursor-move overflow-hidden rounded-lg border bg-ink ${dragIndex === i ? 'border-accent opacity-60' : 'border-line'}`}
+              className="group relative h-28 w-36 cursor-move select-none overflow-hidden rounded-lg border border-line bg-ink"
             >
               {m.type === 'video' ? (
-                <>
-                  <video src={m.url} className="h-full w-full object-cover" muted preload="metadata" />
-                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/70 text-paper">▶</span>
-                  </span>
-                  <span className="absolute left-1 top-1 rounded bg-ink/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-paper">видео</span>
-                </>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-neutral-800 to-neutral-950 text-paper">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg">▶</span>
+                  <span className="max-w-[120px] truncate px-2 text-[10px] text-white/70">{fileName(m.url)}</span>
+                  <span className="absolute left-1 top-1 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-paper">видео</span>
+                </div>
               ) : (
-                <img src={m.url} alt="" className="h-full w-full object-cover" />
+                <img src={m.url} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />
               )}
 
               {/* Порядковый номер */}
@@ -218,35 +232,15 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
                 {i + 1}
               </span>
 
-              {/* Управление: влево / вправо / удалить */}
-              <div className="absolute right-1 top-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={() => moveMedia(i, i - 1)}
-                  disabled={i === 0}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white disabled:opacity-30"
-                  aria-label="Левее"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveMedia(i, i + 1)}
-                  disabled={i === gallery.length - 1}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white disabled:opacity-30"
-                  aria-label="Правее"
-                >
-                  ›
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeMedia(i)}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600/90 text-sm text-white"
-                  aria-label="Удалить"
-                >
-                  ×
-                </button>
-              </div>
+              {/* Удалить */}
+              <button
+                type="button"
+                onClick={() => removeMedia(i)}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600/90 text-sm text-white opacity-0 transition group-hover:opacity-100"
+                aria-label="Удалить"
+              >
+                ×
+              </button>
             </div>
           ))}
           <label className="flex h-28 w-36 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
