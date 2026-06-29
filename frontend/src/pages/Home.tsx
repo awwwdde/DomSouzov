@@ -118,7 +118,7 @@ export default function Home() {
         <div className="relative w-full overflow-hidden bg-ink">
           {heroVideo ? (
             <video
-              className="block h-[60vh] max-h-[640px] min-h-[400px] w-full bg-ink object-cover"
+              className="block h-[50vh] max-h-[520px] min-h-[340px] w-full bg-ink object-cover"
               src={heroVideo}
               poster={heroPoster || undefined}
               preload="metadata"
@@ -131,7 +131,7 @@ export default function Home() {
             <img
               src={heroPoster}
               alt=""
-              className="block h-[60vh] max-h-[640px] min-h-[400px] w-full object-cover"
+              className="block h-[50vh] max-h-[520px] min-h-[340px] w-full object-cover"
             />
           ) : (
             // Fallback: типографический hero на тёмном фоне с радиальным свечением.
@@ -173,7 +173,7 @@ export default function Home() {
       {/* ============================================================ */}
       {/* 2. INTRO THESIS — центрированная цитата + CTA                 */}
       {/* ============================================================ */}
-      <Section tone="paper" spacing="sm" bordered>
+      <Section tone="paper" spacing="xs" bordered>
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}

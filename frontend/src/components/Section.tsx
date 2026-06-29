@@ -26,10 +26,11 @@ const TONE_BG: Record<Tone, string> = {
   transparent: '',
 };
 
-type Spacing = 'sm' | 'md' | 'lg' | 'none';
+type Spacing = 'xs' | 'sm' | 'md' | 'lg' | 'none';
 
 const SPACING_Y: Record<Spacing, string> = {
   none: 'py-0',
+  xs: 'py-7 md:py-10',
   sm: 'py-14 md:py-20',
   md: 'py-20 md:py-28',
   lg: 'py-28 md:py-40',

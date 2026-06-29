@@ -8,7 +8,7 @@ export default function HeroA() {
 
   return (
     <section className="px-6 pt-24 md:px-12">
-      <div className="relative h-[60vh] max-h-[640px] min-h-[400px] overflow-hidden rounded-[32px] bg-ink">
+      <div className="relative h-[50vh] max-h-[520px] min-h-[340px] overflow-hidden rounded-[32px] bg-ink">
         <div className="absolute inset-0">
           {heroVideo ? (
             <video

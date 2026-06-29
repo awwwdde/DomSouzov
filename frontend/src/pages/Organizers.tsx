@@ -57,7 +57,7 @@ export default function Organizers() {
       {/* ВИДЕО — крупный блок во всю ширину (как видео-герой на «О Доме») */}
       {videoUrl ? (
         <video
-          className="block h-[60vh] max-h-[640px] min-h-[400px] w-full bg-ink object-cover"
+          className="block h-[50vh] max-h-[520px] min-h-[340px] w-full bg-ink object-cover"
           src={videoUrl}
           poster={videoPoster || undefined}
           muted
