@@ -11,6 +11,7 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
+from sqlalchemy import text as _sql_text
 from config import settings
 from database import engine, Base, SessionLocal
 from migrate_db import migrate_sqlite
@@ -51,21 +52,46 @@ os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 
 _RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)")
+# Размер отдаваемого куска: открытые/большие Range-запросы режем чанками, чтобы
+# не вытаскивать из БД весь видеофайл и быстро стартовать воспроизведение.
+_STREAM_CHUNK = 2 * 1024 * 1024  # 2 МБ
+_IS_SQLITE = settings.DATABASE_URL.startswith("sqlite")
+
+
+def _read_blob_slice(db, media_id: int, start: int, length: int) -> bytes:
+    """Читает из БД только нужный кусок файла, не загружая весь блоб в память."""
+    if length <= 0:
+        return b""
+    # substr/substring — 1-индексные, поэтому start + 1.
+    if _IS_SQLITE:
+        sql = "SELECT substr(data, :s, :l) FROM media_files WHERE id = :id"
+    else:
+        sql = "SELECT substring(data FROM :s FOR :l) FROM media_files WHERE id = :id"
+    row = db.execute(_sql_text(sql), {"s": start + 1, "l": length, "id": media_id}).first()
+    if not row or row[0] is None:
+        return b""
+    return bytes(row[0])
 
 
 @app.get("/uploads/{filename}", include_in_schema=False)
 def serve_upload(filename: str, request: Request):
     db = SessionLocal()
     try:
-        m = db.query(MediaFile).filter(MediaFile.filename == filename).first()
-        if m is not None:
-            data = m.data
-            media_type = m.content_type or "application/octet-stream"
-            size = len(data)
+        # Тянем только метаданные (id/тип/размер) — без самого блоба.
+        meta = (
+            db.query(MediaFile.id, MediaFile.content_type, MediaFile.size)
+            .filter(MediaFile.filename == filename)
+            .first()
+        )
+        if meta is not None:
+            media_id, content_type, size = meta
+            media_type = content_type or "application/octet-stream"
+            if not size or size <= 0:
+                # Легаси-строки без size — разово берём длину блоба.
+                blob = db.query(MediaFile.data).filter(MediaFile.id == media_id).scalar() or b""
+                size = len(blob)
             base_headers = {
                 "Cache-Control": "public, max-age=31536000, immutable",
-                # Accept-Ranges нужен видеоплееру для перемотки и потоковой отдачи;
-                # без него браузер/прокси тянут весь файл (это и роняло видео).
                 "Accept-Ranges": "bytes",
             }
             range_header = request.headers.get("range")
@@ -87,7 +113,9 @@ def serve_upload(filename: str, request: Request):
                             headers={**base_headers, "Content-Range": f"bytes */{size}"},
                         )
                     end = min(end, size - 1)
-                    chunk = data[start : end + 1]
+                    # Чанк: не отдаём больше _STREAM_CHUNK за раз (быстрый старт + лёгкая БД).
+                    end = min(end, start + _STREAM_CHUNK - 1)
+                    chunk = _read_blob_slice(db, media_id, start, end - start + 1)
                     return Response(
                         content=chunk,
                         status_code=206,
@@ -98,10 +126,12 @@ def serve_upload(filename: str, request: Request):
                             "Content-Length": str(len(chunk)),
                         },
                     )
+            # Без Range (картинки, документы) — отдаём целиком.
+            blob = db.query(MediaFile.data).filter(MediaFile.id == media_id).scalar() or b""
             return Response(
-                content=data,
+                content=blob,
                 media_type=media_type,
-                headers={**base_headers, "Content-Length": str(size)},
+                headers={**base_headers, "Content-Length": str(len(blob))},
             )
     finally:
         db.close()
