@@ -27,12 +27,6 @@ export default function Organizers() {
     (lang === 'ru'
       ? 'Колонный, Октябрьский и Малый залы Дома Союзов — для концертов, церемоний, форумов и съёмок. Историческая архитектура в центре Москвы, акустика класса A, вместимость до 1 200 гостей и собственная техническая команда.'
       : 'The Hall of Columns, the October and Small halls of the House of Unions — for concerts, ceremonies, forums and filming. Historic architecture in the heart of Moscow, class A acoustics, capacity up to 1,200 guests and an in-house technical crew.');
-  const note =
-    tStrict('organizers_note') ||
-    (lang === 'ru'
-      ? 'Скачайте технический райдер и презентацию залов или отправьте запрос — мы ответим с доступными датами и сметой.'
-      : 'Download the technical rider and the halls presentation, or send a request — we will reply with available dates and a quote.');
-
   const riderPdf = t('organizers_rider_pdf');
   const hallsPdf = t('organizers_halls_pdf');
   const videoUrl = t('organizers_video_url');
@@ -74,8 +68,6 @@ export default function Organizers() {
 
       {/* ДЕЙСТВИЯ: кнопки PDF + заявка */}
       <RevealSection className="px-5 py-16 md:px-12 md:py-24">
-        <p className="mb-10 max-w-3xl text-base leading-7 text-ink-soft md:text-lg">{note}</p>
-
         <div className="grid gap-4 md:grid-cols-2 md:gap-6">
           <PdfButton
             href={riderPdf}

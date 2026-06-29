@@ -83,7 +83,7 @@ export default function Header() {
               alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
               className="h-14 w-auto md:h-20"
             />
-            <span className="font-heading text-lg font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink md:text-2xl">
+            <span className="whitespace-nowrap font-heading text-2xl font-bold uppercase leading-none tracking-[0.02em] text-ink md:text-5xl lg:text-6xl xl:text-7xl">
               {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
             </span>
           </Link>
