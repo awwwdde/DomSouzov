@@ -38,7 +38,7 @@ export default function Gallery() {
 
   return (
     <>
-      <Seo title={`${title} — Дом Союзов`} description={lead} path="gallery" lang={lang} />
+      <Seo title={`${title} — Дом Союзов`} description={lead} path="gallery" lang={lang} keywords={['галерея', 'фото', 'интерьеры', 'съёмки']} />
 
       <RevealSection className="border-b border-line bg-paper px-5 pb-14 pt-28 md:px-12 md:pb-16 md:pt-32">
         <PageKicker>{lang === 'ru' ? 'Главная · Галерея' : 'Home · Gallery'}</PageKicker>

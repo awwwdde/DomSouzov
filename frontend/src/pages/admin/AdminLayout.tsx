@@ -7,7 +7,7 @@ import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
   { path: '/admin/events', label: 'Мероприятия', icon: CalendarDays },
-  { path: '/admin/news', label: 'Хроники', icon: Newspaper },
+  { path: '/admin/news', label: 'Архив мероприятий', icon: Newspaper },
   { path: '/admin/halls', label: 'Залы', icon: Landmark },
   { path: '/admin/about', label: 'О Доме', icon: BookOpen },
   { path: '/admin/gallery', label: 'Галерея', icon: GalleryHorizontal },

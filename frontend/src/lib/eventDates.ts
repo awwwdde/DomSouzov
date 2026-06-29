@@ -71,11 +71,34 @@ export function sortEventsByDate(events: Event[], lang: Lang): Event[] {
   });
 }
 
-/** Формат DD.MM для карточки афиши (design.md §2.2). */
+/** Формат DD.MM для карточки афиши (design.md §2.2).
+ *  Для мультидат — диапазон «DD.MM–DD.MM» (первая и последняя дата). */
 export function formatDayMonthFromEvent(event: Event, lang: Lang): string {
-  const d = parseEventDateForEvent(event, lang);
-  if (!d) return '—';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}.${mm}`;
+  const occ = eventOccurrences(event, lang);
+  const dd = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+  if (occ.length === 0) return '—';
+  const first = occ[0].date;
+  const last = occ[occ.length - 1].date;
+  if (occ.length === 1 || dateKey(first) === dateKey(last)) return dd(first);
+  return `${dd(first)}–${dd(last)}`;
+}
+
+/** Один сеанс мероприятия: распарсенная дата + время. */
+export interface ParsedOccurrence {
+  date: Date;
+  time: string;
+}
+
+/** Разворачивает мероприятие в список сеансов (отсортированных по дате).
+ *  Если заданы мультидаты — берём их; иначе одиночная date/time. */
+export function eventOccurrences(event: Event, lang: Lang): ParsedOccurrence[] {
+  const raw = event.dates && event.dates.length > 0
+    ? event.dates
+    : [{ date: event.date.ru, date_en: event.date.en, time: event.time }];
+  const out: ParsedOccurrence[] = [];
+  for (const o of raw) {
+    const d = parseEventDate(lang === 'ru' ? o.date : (o.date_en || o.date));
+    if (d) out.push({ date: d, time: o.time || event.time });
+  }
+  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
 }

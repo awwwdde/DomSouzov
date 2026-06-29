@@ -82,16 +82,38 @@ export default function NewsDetail() {
         image={seoImage}
         type="article"
         lang={lang}
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'NewsArticle',
-          headline: l(article.title),
-          description: seoDesc,
-          image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
-          datePublished: article.created_at ?? undefined,
-          publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
-          mainEntityOfPage: `${SITE_URL}/news/${article.id}`,
-        }}
+        keywords={[l(article.tag), l(article.title), 'новости Дома Союзов', 'афиша Москва']}
+        articleTags={[l(article.tag)]}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'NewsArticle',
+            headline: l(article.title),
+            description: seoDesc,
+            image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
+            articleSection: l(article.tag),
+            inLanguage: lang === 'ru' ? 'ru-RU' : 'en-US',
+            datePublished: article.created_at ?? undefined,
+            dateModified: article.created_at ?? undefined,
+            author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+            publisher: {
+              '@type': 'Organization',
+              name: SITE_NAME,
+              url: SITE_URL,
+              logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo-house.svg` },
+            },
+            mainEntityOfPage: `${SITE_URL}/news/${article.id}`,
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: lang === 'ru' ? 'Главная' : 'Home', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: lang === 'ru' ? 'Архив мероприятий' : 'Events archive', item: `${SITE_URL}/news` },
+              { '@type': 'ListItem', position: 3, name: l(article.title), item: `${SITE_URL}/news/${article.id}` },
+            ],
+          },
+        ]}
       />
 
       {/* Шапка — как у афиши */}
@@ -144,8 +166,8 @@ export default function NewsDetail() {
         </div>
 
         {/* Текст статьи — sticky на ПК */}
-        <div className="border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
-          <div className="space-y-5 text-[16px] leading-[1.8] text-ink-soft">
+        <div className="border-t border-line pt-8 lg:sticky lg:top-32 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
+          <div className="space-y-4 text-[14px] leading-[1.7] text-ink-soft">
             {contentParas.length > 0
               ? contentParas.map((para, i) => <p key={i}>{para}</p>)
               : excerpt

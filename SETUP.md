@@ -120,7 +120,7 @@ URL: `http://localhost:5173/admin/login`
 | `/organizers` | Организаторам |
 | `/audience` | Зрителям |
 | `/contacts` | Контакты |
-| `/news` | Хроники |
+| `/news` | Архив мероприятий |
 | `/news/:id` | Статья |
 | `/admin` | Админ-панель |
 | `/admin/login` | Вход в CMS |

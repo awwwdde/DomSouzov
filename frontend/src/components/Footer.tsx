@@ -103,7 +103,7 @@ export default function Footer() {
                 {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
               </span>
               <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">
-                {lang === 'ru' ? 'Большая Дмитровка 1' : 'Bolshaya Dmitrovka 1'}
+                {lang === 'ru' ? 'Большая Дмитровка, дом 1' : 'Bolshaya Dmitrovka 1'}
               </span>
             </div>
           </Link>
@@ -183,11 +183,11 @@ export default function Footer() {
               {lang === 'ru' ? 'Адрес' : 'Address'}
             </div>
             <address className="not-italic text-paper/85">
-              {t('address_ru') || (lang === 'ru' ? 'Большая Дмитровка 1, Москва' : 'Bolshaya Dmitrovka 1, Moscow')}
+              {t('address_ru') || (lang === 'ru' ? 'Большая Дмитровка, дом 1, Москва' : 'Bolshaya Dmitrovka 1, Moscow')}
             </address>
             <p className="text-paper/55">
               {lang === 'ru'
-                ? 'Ст. метро «Охотный ряд», «Театральная»'
+                ? 'Ст. метро «Охотный Ряд», «Театральная»'
                 : 'Okhotny Ryad, Teatralnaya metro stations'}
             </p>
           </div>

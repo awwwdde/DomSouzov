@@ -57,7 +57,7 @@ export default function Halls() {
 
   return (
     <>
-      <Seo title={`${title} — Дом Союзов`} description={lead} path="halls" lang={lang} />
+      <Seo title={`${title} — Дом Союзов`} description={lead} path="halls" lang={lang} keywords={['аренда зала', 'Колонный зал', 'Октябрьский зал', 'вместимость']} />
       <RevealSection className="grid gap-8 border-b border-line bg-paper px-5 pb-14 pt-28 md:grid-cols-[1.1fr_1fr] md:px-12 md:pb-16 md:pt-32">
         <div>
           <PageKicker>{lang === 'ru' ? 'Главная · Залы' : 'Home · Halls'}</PageKicker>

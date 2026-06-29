@@ -75,7 +75,7 @@ export default function Header() {
         <div className="mx-auto flex h-[80px] w-full max-w-[1800px] items-center justify-between gap-3 px-5 md:h-[104px] md:w-[95%] md:px-6">
           <Link
             to="/"
-            className="flex items-center leading-none"
+            className="flex items-center gap-3 leading-none md:gap-4"
             aria-label={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
           >
             <img
@@ -83,6 +83,9 @@ export default function Header() {
               alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
               className="h-14 w-auto md:h-20"
             />
+            <span className="font-heading text-lg font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink md:text-2xl">
+              {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
+            </span>
           </Link>
 
           <div className="flex items-center gap-2 md:gap-3">

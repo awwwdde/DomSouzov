@@ -80,19 +80,36 @@ export default function Home() {
         description={thesis}
         path=""
         lang={lang}
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'PerformingArtsTheater',
-          name: SITE_NAME,
-          alternateName: 'House of Unions',
-          url: SITE_URL,
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: 'Большая Дмитровка, 1',
-            addressLocality: 'Москва',
-            addressCountry: 'RU',
+        keywords={['концертный зал Москва', 'афиша', 'концерты', 'церемонии', '1784']}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'PerformingArtsTheater',
+            name: SITE_NAME,
+            alternateName: 'House of Unions',
+            url: SITE_URL,
+            image: `${SITE_URL}/og-default.jpg`,
+            logo: `${SITE_URL}/logo-house.svg`,
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Большая Дмитровка, 1',
+              addressLocality: 'Москва',
+              postalCode: '125009',
+              addressCountry: 'RU',
+            },
+            geo: { '@type': 'GeoCoordinates', latitude: '55.7596', longitude: '37.6156' },
+            hasMap: 'https://yandex.ru/maps/?text=55.7596,37.6156',
           },
-        }}
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: SITE_NAME,
+            alternateName: 'House of Unions',
+            url: SITE_URL,
+            inLanguage: lang === 'ru' ? 'ru-RU' : 'en-US',
+            publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+          },
+        ]}
       />
       {/* ============================================================ */}
       {/* 1. HERO — full-bleed медиа (или типографический fallback)     */}
@@ -258,7 +275,7 @@ export default function Home() {
 
         {homeNews.length === 0 ? (
           <EmptyEditorialState
-            label={lang === 'ru' ? 'Хроника' : 'Chronicle'}
+            label={lang === 'ru' ? 'Архив мероприятий' : 'Events archive'}
             body={
               lang === 'ru'
                 ? 'Свежие материалы редакции скоро появятся здесь. Заходите за новостями о премьерах и архитектурной истории Дома.'

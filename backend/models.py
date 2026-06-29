@@ -74,9 +74,13 @@ class Event(Base):
     id = Column(Integer, primary_key=True)
     title_ru = Column(String, nullable=False)
     title_en = Column(String, nullable=False)
-    date = Column(String, nullable=False)          # "19 ИЮН 2026"
+    date = Column(String, nullable=False)          # "19 ИЮН 2026" — главная/первая дата
     date_en = Column(String, nullable=False)        # "19 JUN 2026"
     time = Column(String, nullable=False)           # "19:30"
+    # Мультидаты: JSON-массив сеансов [{date, date_en, time, weekday_ru, weekday_en}].
+    # Пусто/нет → одиночная дата (поля date/time выше). Заполнено → расписание
+    # (напр. ёлка идёт 2 недели). Первый сеанс синхронизируется с date/time.
+    dates = Column(Text, nullable=True)
     weekday_ru = Column(String, nullable=False)     # "Пт"
     weekday_en = Column(String, nullable=False)     # "Fri"
     hall_ru = Column(String, nullable=False)

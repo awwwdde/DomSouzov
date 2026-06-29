@@ -17,7 +17,7 @@ export default function NewsSection() {
           <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
             {lang === 'ru' ? 'Журнал · События · Интервью' : 'Notes · Events · Interviews'}
           </div>
-          <h2 className="font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Хроники' : 'Journal'}</h2>
+          <h2 className="font-heading text-[clamp(48px,6vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">{lang === 'ru' ? 'Архив мероприятий' : 'Events archive'}</h2>
         </div>
         <div>
           <ActionButton to="/news" text={`${lang === 'ru' ? 'Архив' : 'Archive'} →`} />

@@ -263,6 +263,33 @@ def get_gallery(db: Session = Depends(get_db)):
     return [_gallery_out(g) for g in gallery]
 
 
+def _event_dates(e: Event) -> list:
+    """Сеансы мультидат: JSON-массив из поля dates → список объектов.
+    Пусто/невалидно → пустой список (фронт использует одиночную date/time)."""
+    import json
+    raw = getattr(e, "dates", None)
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    out = []
+    for x in parsed:
+        if not isinstance(x, dict) or not x.get("date"):
+            continue
+        out.append({
+            "date": x.get("date", ""),
+            "date_en": x.get("date_en", "") or x.get("date", ""),
+            "time": x.get("time", "") or e.time,
+            "weekday_ru": x.get("weekday_ru", ""),
+            "weekday_en": x.get("weekday_en", ""),
+        })
+    return out
+
+
 def _event_out(db: Session, e: Event) -> dict:
     imgs = (
         db.query(EventGalleryImage)
@@ -286,6 +313,7 @@ def _event_out(db: Session, e: Event) -> dict:
         "date": {"ru": e.date, "en": e.date_en},
         "time": e.time,
         "weekday": {"ru": e.weekday_ru, "en": e.weekday_en},
+        "dates": _event_dates(e),
         "hall": {"ru": e.hall_ru, "en": e.hall_en},
         "tag": {"ru": e.tag_ru, "en": e.tag_en},
         "price": {"ru": e.price_ru, "en": e.price_en},

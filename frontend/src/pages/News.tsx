@@ -9,16 +9,16 @@ import { formatNewsShortDate } from '../lib/newsDates';
 export default function News() {
   const { lang, content, t: tr, loading } = useSite();
   const news = content?.news ?? [];
-  const heroTitle = tr('news_title') || (lang === 'ru' ? 'Хроники' : 'Journal');
+  const heroTitle = tr('news_title') || (lang === 'ru' ? 'Архив мероприятий' : 'Events archive');
   const heroLead = tr('news_lead') || (lang === 'ru'
     ? 'Журнал Дома Союзов: события, интервью, репортажи, история места.'
     : 'The House of Unions journal: events, interviews, features, the history of the place.');
 
   return (
     <>
-      <Seo title={`${heroTitle} — Дом Союзов`} description={heroLead} path="news" lang={lang} />
+      <Seo title={`${heroTitle} — Дом Союзов`} description={heroLead} path="news" lang={lang} keywords={['новости', 'анонсы', 'пресс-релизы', 'афиша Москва']} />
       <RevealSection className="border-b border-line bg-paper px-5 pb-14 pt-28 md:px-12 md:pb-16 md:pt-32">
-        <PageKicker>{lang === 'ru' ? 'Главная · Хроники' : 'Home · Journal'}</PageKicker>
+        <PageKicker>{lang === 'ru' ? 'Главная · Архив мероприятий' : 'Home · Events archive'}</PageKicker>
         <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">
           {heroTitle}
         </h1>

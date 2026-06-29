@@ -63,26 +63,50 @@ export default function EventDetail() {
         image={seoImage}
         type="event"
         lang={lang}
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'Event',
-          name: l(event.title),
-          startDate: l(event.date),
-          description: seoDesc,
-          image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
-          location: {
-            '@type': 'Place',
-            name: `${SITE_NAME}, ${l(event.hall)}`,
-            address: {
-              '@type': 'PostalAddress',
-              streetAddress: 'Большая Дмитровка, 1',
-              addressLocality: 'Москва',
-              addressCountry: 'RU',
+        keywords={[l(event.tag), l(event.hall), l(event.title), 'афиша', 'купить билет', 'концерт Москва']}
+        articleTags={[l(event.tag), l(event.hall)]}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Event',
+            name: l(event.title),
+            startDate: l(event.date),
+            ...(event.dates && event.dates.length > 1
+              ? { endDate: lang === 'ru' ? event.dates[event.dates.length - 1].date : event.dates[event.dates.length - 1].date_en }
+              : {}),
+            eventStatus: 'https://schema.org/EventScheduled',
+            eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+            description: seoDesc,
+            image: seoImage ? (seoImage.startsWith('http') ? seoImage : `${SITE_URL}${seoImage}`) : undefined,
+            location: {
+              '@type': 'Place',
+              name: `${SITE_NAME}, ${l(event.hall)}`,
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: 'Большая Дмитровка, 1',
+                addressLocality: 'Москва',
+                postalCode: '125009',
+                addressCountry: 'RU',
+              },
+              geo: { '@type': 'GeoCoordinates', latitude: '55.7596', longitude: '37.6156' },
             },
+            organizer: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+            performer: { '@type': 'Organization', name: SITE_NAME },
+            ...(event.has_ticket && event.ticket_url
+              ? { offers: { '@type': 'Offer', url: event.ticket_url, availability: 'https://schema.org/InStock' } }
+              : {}),
+            url: `${SITE_URL}/events/${event.id}`,
           },
-          organizer: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
-          url: `${SITE_URL}/events/${event.id}`,
-        }}
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: lang === 'ru' ? 'Главная' : 'Home', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: lang === 'ru' ? 'Афиша' : 'Programme', item: `${SITE_URL}/events` },
+              { '@type': 'ListItem', position: 3, name: l(event.title), item: `${SITE_URL}/events/${event.id}` },
+            ],
+          },
+        ]}
       />
       <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
@@ -129,11 +153,29 @@ export default function EventDetail() {
           <dl className="grid gap-4 text-sm">
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
-                {lang === 'ru' ? 'Когда' : 'When'}
+                {event.dates && event.dates.length > 1
+                  ? lang === 'ru' ? 'Расписание сеансов' : 'Schedule'
+                  : lang === 'ru' ? 'Когда' : 'When'}
               </dt>
-              <dd className="mt-1 text-ink-soft">
-                {l(event.date)} · {l(event.weekday)} · {event.time}
-              </dd>
+              {event.dates && event.dates.length > 1 ? (
+                <dd className="mt-1 grid max-h-64 gap-1.5 overflow-y-auto pr-1 text-ink-soft" data-lenis-prevent>
+                  {event.dates.map((o, i) => {
+                    const d = lang === 'ru' ? o.date : (o.date_en || o.date);
+                    const wd = lang === 'ru' ? o.weekday_ru : o.weekday_en;
+                    return (
+                      <div key={`${d}-${o.time}-${i}`} className="flex items-baseline gap-2 border-b border-line/60 pb-1.5 last:border-0">
+                        <span className="font-semibold text-ink">{d}</span>
+                        {wd ? <span className="text-[11px] uppercase tracking-[0.1em] text-muted">{wd}</span> : null}
+                        <span className="ml-auto tabular-nums text-ink">{o.time}</span>
+                      </div>
+                    );
+                  })}
+                </dd>
+              ) : (
+                <dd className="mt-1 text-ink-soft">
+                  {l(event.date)} · {l(event.weekday)} · {event.time}
+                </dd>
+              )}
             </div>
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">

@@ -10,12 +10,22 @@ export interface EventGalleryImage {
   order: number;
 }
 
+export interface EventOccurrence {
+  date: string;       // RU, напр. "20 ДЕК 2025"
+  date_en: string;    // EN, напр. "20 DEC 2025"
+  time: string;       // "12:00"
+  weekday_ru?: string;
+  weekday_en?: string;
+}
+
 export interface Event {
   id: number;
   title: BilingualString;
   date: BilingualString;
   time: string;
   weekday: BilingualString;
+  /** Сеансы мультидат; пусто/нет → одиночная дата (date/time выше). */
+  dates?: EventOccurrence[];
   hall: BilingualString;
   tag: BilingualString;
   price: BilingualString;

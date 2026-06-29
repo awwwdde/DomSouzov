@@ -1,5 +1,4 @@
 import { useState, useEffect, ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Plus, X } from 'lucide-react';
 
 interface Column<T> {
@@ -68,12 +67,7 @@ export default function AdminCrudPage<T extends { id: number }>({
 
   if (editing !== 'none' as unknown) {
     return (
-      <motion.div
-        className="grid gap-8"
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
+      <div className="grid gap-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{subtitle}</div>
@@ -91,17 +85,12 @@ export default function AdminCrudPage<T extends { id: number }>({
           () => setEditing('none' as unknown as null)
           )}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      className="grid gap-8"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-    >
+    <div className="grid gap-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{subtitle}</div>
@@ -156,6 +145,6 @@ export default function AdminCrudPage<T extends { id: number }>({
           </table>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

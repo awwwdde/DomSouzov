@@ -101,6 +101,34 @@ def sitemap_xml():
     return Response(content=xml, media_type="application/xml")
 
 
+# llms.txt — машиночитаемая выжимка сайта для LLM/AI-ассистентов (llmstxt.org).
+@app.get("/llms.txt", include_in_schema=False)
+def llms_txt():
+    db = SessionLocal()
+    try:
+        txt = seo.build_llms_txt(db)
+    finally:
+        db.close()
+    return PlainTextResponse(
+        txt, headers={"Cache-Control": "public, max-age=3600"}
+    )
+
+
+# RSS-лента новостей — для агрегаторов и AI-краулеров.
+@app.get("/rss.xml", include_in_schema=False)
+def rss_xml():
+    db = SessionLocal()
+    try:
+        xml = seo.build_rss(db)
+    finally:
+        db.close()
+    return Response(
+        content=xml,
+        media_type="application/rss+xml",
+        headers={"Cache-Control": "public, max-age=1800"},
+    )
+
+
 # ── SPA: раздаём собранный фронт тем же процессом ────────────────────────────
 # Каталог задаётся переменной STATIC_DIR (см. Dockerfile в корне репо).
 # Если статика не подмонтирована — гасим SPA-раздачу: удобно для dev-режима,

@@ -15,7 +15,7 @@ export default function Events() {
 
   return (
     <>
-      <Seo title={`${title} — Дом Союзов`} description={lead} path="events" lang={lang} />
+      <Seo title={`${title} — Дом Союзов`} description={lead} path="events" lang={lang} keywords={['афиша', 'афиша Москва', 'концерты', 'мероприятия', 'купить билет']} />
       <RevealSection className="border-b border-line bg-paper px-5 pb-14 pt-28 md:px-12 md:pb-16 md:pt-32">
         <PageKicker>{lang === 'ru' ? 'Главная · Мероприятия' : 'Home · Events'}</PageKicker>
         <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">{title}</h1>

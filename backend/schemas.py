@@ -63,6 +63,8 @@ class EventBase(BaseModel):
     time: str
     weekday_ru: str
     weekday_en: str
+    # JSON-массив сеансов для мультидат; None/"" — одиночная дата.
+    dates: Optional[str] = None
     hall_ru: str
     hall_en: str
     tag_ru: str

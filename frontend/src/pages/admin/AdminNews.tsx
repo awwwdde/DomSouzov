@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { adminApi } from '../../api/client';
-import { NEWS_CATEGORIES } from '../../lib/categories';
+import { EVENT_CATEGORIES as NEWS_CATEGORIES } from '../../lib/categories';
 
 const EMPTY = {
   id: 0,
@@ -61,7 +61,7 @@ function toLocalInput(iso: string): string {
 export default function AdminNews() {
   return (
     <AdminCrudPage
-      title="Хроники"
+      title="Архив мероприятий"
       subtitle="НОВОСТИ · СТАТЬИ · ИНТЕРВЬЮ"
       columns={[
         { key: 'tag_ru', label: 'Рубрика' },

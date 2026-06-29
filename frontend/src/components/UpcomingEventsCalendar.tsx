@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from './ActionButton';
 import { eventCategoryIcon } from '../lib/eventCategory';
 import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
-import { addDays, dateKey, parseEventDateForEvent, startOfDay } from '../lib/eventDates';
+import { addDays, dateKey, eventOccurrences, formatDayMonthFromEvent, startOfDay } from '../lib/eventDates';
 import type { Event, Lang } from '../types';
 
 export type CalendarVariant = 'full' | 'compact';
@@ -57,13 +57,29 @@ const formatRange = (dates: Date[], lang: Lang) => {
     : `${EN_MONTHS[first.getMonth()]} ${first.getDate()} - ${EN_MONTHS[last.getMonth()]} ${last.getDate()}`;
 };
 
-function sortParsed(items: { event: Event; date: Date | null }[]) {
-  return [...items].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
-    return a.date.getTime() - b.date.getTime();
-  });
+/** Один сеанс на сетке: мероприятие + конкретные дата и время.
+ *  Мультидаты разворачиваются в несколько таких записей (по сеансу на день). */
+type Occurrence = { event: Event; date: Date; time: string };
+
+/** Разворачивает список мероприятий в плоский список сеансов, отсортированный по дате. */
+function expandOccurrences(events: Event[], lang: Lang): Occurrence[] {
+  return events
+    .flatMap((event) =>
+      eventOccurrences(event, lang).map((o) => ({ event, date: o.date, time: o.time }))
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+/** Уникальные мероприятия (по первому/раннему сеансу) — для списка «все события». */
+function uniqueByEvent(items: Occurrence[]): Occurrence[] {
+  const seen = new Set<number>();
+  const out: Occurrence[] = [];
+  for (const it of items) {
+    if (seen.has(it.event.id)) continue;
+    seen.add(it.event.id);
+    out.push(it);
+  }
+  return out;
 }
 
 function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
@@ -75,21 +91,11 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
   );
   const [selected, setSelected] = useState(() => startOfDay(new Date()));
 
-  const parsedEvents = useMemo(
-    () =>
-      sortParsed(
-        events.map((event) => ({
-          event,
-          date: parseEventDateForEvent(event, lang),
-        }))
-      ),
-    [events, lang]
-  );
+  const parsedEvents = useMemo(() => expandOccurrences(events, lang), [events, lang]);
 
   const eventCountByDate = useMemo(() => {
     const acc: Record<string, number> = {};
     parsedEvents.forEach((item) => {
-      if (!item.date) return;
       const k = dateKey(item.date);
       acc[k] = (acc[k] ?? 0) + 1;
     });
@@ -97,9 +103,7 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
   }, [parsedEvents]);
 
   const selectedKey = dateKey(selected);
-  const dayEvents = parsedEvents
-    .filter((item) => item.date && dateKey(item.date) === selectedKey)
-    .map((item) => item.event);
+  const dayEvents = parsedEvents.filter((item) => dateKey(item.date) === selectedKey);
 
   return (
     <section className="border-y border-line bg-paper px-5 py-10 md:px-12 md:py-12">
@@ -169,13 +173,13 @@ function CompactStrip({ events, lang }: { events: Event[]; lang: Lang }) {
                 {lang === 'ru' ? 'На эту дату событий в афише нет.' : 'No events listed for this date.'}
               </p>
             ) : (
-              dayEvents.map((ev) => (
+              dayEvents.map(({ event: ev, time }) => (
                 <Link
-                  key={ev.id}
+                  key={`${ev.id}-${time}`}
                   to={`/events/${ev.id}`}
                   className="group grid gap-1 border-b border-line pb-4 last:border-0 md:grid-cols-[100px_1fr]"
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{ev.time}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">{time}</span>
                   <div>
                     <div className="font-heading text-lg font-bold uppercase tracking-[0.04em] text-ink transition group-hover:underline group-hover:underline-offset-4 md:text-xl">
                       {l(ev.title)}
@@ -209,19 +213,13 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
   };
 
   const parsedEvents = useMemo(
-    () =>
-      sortParsed(
-        events
-          .filter(matchesFilter)
-          .map((event) => ({ event, date: parseEventDateForEvent(event, lang) }))
-      ),
+    () => expandOccurrences(events.filter(matchesFilter), lang),
     [events, lang, filterIdx]
   );
 
   const eventCountByDate = useMemo(() => {
     const acc: Record<string, number> = {};
     parsedEvents.forEach((item) => {
-      if (!item.date) return;
       const k = dateKey(item.date);
       acc[k] = (acc[k] ?? 0) + 1;
     });
@@ -250,9 +248,10 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
   const listedEvents = useMemo(() => {
     if (selected) {
       const k = dateKey(selected);
-      return parsedEvents.filter((item) => item.date && dateKey(item.date) === k).map((item) => item.event);
+      return parsedEvents.filter((item) => dateKey(item.date) === k);
     }
-    return parsedEvents.map((item) => item.event);
+    // Без выбранного дня — по одной карточке на мероприятие (ранний сеанс).
+    return uniqueByEvent(parsedEvents);
   }, [parsedEvents, selected]);
 
   const shift = (dir: -1 | 1) => {
@@ -462,11 +461,11 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
 
                 <div className="mt-auto hidden flex-col gap-0.5 md:flex">
                   {parsedEvents
-                    .filter((item) => item.date && dateKey(item.date) === k)
+                    .filter((item) => dateKey(item.date) === k)
                     .slice(0, 2)
-                    .map((item) => (
+                    .map((item, ii) => (
                       <span
-                        key={item.event.id}
+                        key={`${item.event.id}-${ii}`}
                         className={[
                           'truncate text-[10px] font-semibold uppercase tracking-[0.06em]',
                           isSelected ? 'text-white/85' : 'text-ink-soft',
@@ -538,18 +537,16 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
             animate={{ opacity: 1 }}
             transition={reduced ? { duration: 0 } : { duration: 0.45, ease: EASE_DS }}
           >
-            {listedEvents.map((event, index) => {
-              const eventDate = parseEventDateForEvent(event, lang);
-              const day = eventDate?.getDate() ?? l(event.date).match(/\d{1,2}/)?.[0] ?? '';
-              const month = eventDate
-                ? lang === 'ru'
-                  ? RU_MONTHS[eventDate.getMonth()]
-                  : EN_MONTHS[eventDate.getMonth()]
-                : l(event.date).replace(String(day), '').trim();
+            {listedEvents.map((item, index) => {
+              const event = item.event;
+              const eventDate = item.date;
+              const day = eventDate.getDate();
+              const month = lang === 'ru' ? RU_MONTHS[eventDate.getMonth()] : EN_MONTHS[eventDate.getMonth()];
+              const isMulti = (event.dates?.length ?? 0) > 1;
 
               return (
                 <div
-                  key={event.id}
+                  key={`${event.id}-${dateKey(eventDate)}`}
                   className="sticky top-[105px] bg-white md:top-[120px]"
                   style={{ zIndex: index + 1 }}
                 >
@@ -583,6 +580,8 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         className="h-full w-full object-cover"
                         src={event.image}
                         alt={l(event.title)}
+                        loading="lazy"
+                        decoding="async"
                         initial={reduced ? false : { scale: 1.04 }}
                         animate={{ scale: 1 }}
                         transition={reduced ? { duration: 0 } : { duration: 1.1, ease: EASE_DS }}
@@ -601,8 +600,15 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         return <Icon size={14} strokeWidth={1.7} className="text-accent" />;
                       })()}
                       <span>{event.weekday[lang]}</span>
-                      <span>{event.time}</span>
+                      <span>{item.time}</span>
                       <span>{l(event.hall)}</span>
+                      {isMulti && !selected ? (
+                        <span className="rounded-full border border-accent px-2 py-0.5 text-accent">
+                          {lang === 'ru'
+                            ? `${event.dates!.length} сеансов · ${formatDayMonthFromEvent(event, lang)}`
+                            : `${event.dates!.length} dates · ${formatDayMonthFromEvent(event, lang)}`}
+                        </span>
+                      ) : null}
                       {event.age_rating ? (
                         <span className="rounded-full border border-line px-2 py-0.5 tabular-nums text-ink-soft">
                           {event.age_rating}

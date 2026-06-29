@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Мероприятия', num: counts.events, to: '/admin/events' },
-    { label: 'Хроники', num: counts.news, to: '/admin/news' },
+    { label: 'Архив мероприятий', num: counts.news, to: '/admin/news' },
     { label: 'Залы', num: counts.halls, to: '/admin/halls' },
     { label: 'Галерея', num: counts.gallery, to: '/admin/gallery' },
   ];
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           </div>
           <ul className="space-y-2 text-sm leading-6 text-ink-soft">
             <li>— <strong>Мероприятия</strong>: концерты, события, даты, цены</li>
-            <li>— <strong>Хроники</strong>: новости, статьи, интервью</li>
+            <li>— <strong>Архив мероприятий</strong>: новости, статьи, интервью</li>
             <li>— <strong>Залы</strong>: Колонный, Октябрьский</li>
             <li>— <strong>Галерея</strong>: фотографии и медиа</li>
             <li>— <strong>Настройки</strong>: тексты, адрес, контакты</li>
