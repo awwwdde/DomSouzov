@@ -98,7 +98,14 @@ export default function AdminEvents() {
 }
 
 function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
+  const [form, setForm] = useState(() => {
+    const base = { ...EMPTY, ...(item as typeof EMPTY || {}) };
+    if (!base.tag_ru) {
+      base.tag_ru = CATEGORIES[0].ru;
+      base.tag_en = CATEGORIES[0].en;
+    }
+    return base;
+  });
   const [saving, setSaving] = useState(false);
 
   // ── Мультидаты (расписание сеансов) ──────────────────────────────
@@ -329,13 +336,16 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
       <div className="grid gap-2">
         <label>Категория</label>
         <select
-          value={form.tag_ru || 'Концерт'}
+          value={form.tag_ru || CATEGORIES[0].ru}
           onChange={(e) => {
             const ru = e.target.value;
             const en = CATEGORIES.find((c) => c.ru === ru)?.en || ru;
             setForm((p) => ({ ...p, tag_ru: ru, tag_en: en }));
           }}
         >
+          {form.tag_ru && !CATEGORIES.some((c) => c.ru === form.tag_ru) ? (
+            <option value={form.tag_ru}>{form.tag_ru} (старая категория)</option>
+          ) : null}
           {CATEGORIES.map((c) => (
             <option key={c.ru} value={c.ru}>{c.ru}</option>
           ))}

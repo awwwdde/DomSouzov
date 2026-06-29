@@ -79,7 +79,15 @@ export default function AdminNews() {
 }
 
 function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
+  const [form, setForm] = useState(() => {
+    const base = { ...EMPTY, ...(item as typeof EMPTY || {}) };
+    // Новая запись без рубрики — ставим первую из списка (иначе сохранится пустая).
+    if (!base.tag_ru) {
+      base.tag_ru = NEWS_CATEGORIES[0].ru;
+      base.tag_en = NEWS_CATEGORIES[0].en;
+    }
+    return base;
+  });
   const [publishAt, setPublishAt] = useState(toLocalInput((item as typeof EMPTY)?.created_at || ''));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
@@ -147,6 +155,11 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
             setForm((p) => ({ ...p, tag_ru: ru, tag_en: en }));
           }}
         >
+          {/* Текущая рубрика отсутствует в списке (легаси) — показываем её, чтобы
+              значение select совпадало с form и клик по новой рубрике срабатывал. */}
+          {form.tag_ru && !NEWS_CATEGORIES.some((c) => c.ru === form.tag_ru) ? (
+            <option value={form.tag_ru}>{form.tag_ru} (старая рубрика)</option>
+          ) : null}
           {NEWS_CATEGORIES.map((c) => (
             <option key={c.ru} value={c.ru}>{c.ru}</option>
           ))}
