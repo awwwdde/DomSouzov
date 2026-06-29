@@ -118,7 +118,7 @@ export default function Home() {
         <div className="relative w-full overflow-hidden bg-ink">
           {heroVideo ? (
             <video
-              className="block h-[50vh] max-h-[520px] min-h-[340px] w-full bg-ink object-cover"
+              className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
               src={heroVideo}
               poster={heroPoster || undefined}
               preload="metadata"
@@ -131,7 +131,7 @@ export default function Home() {
             <img
               src={heroPoster}
               alt=""
-              className="block h-[50vh] max-h-[520px] min-h-[340px] w-full object-cover"
+              className="block h-[86vh] max-h-[900px] min-h-[480px] w-full object-cover"
             />
           ) : (
             // Fallback: типографический hero на тёмном фоне с радиальным свечением.

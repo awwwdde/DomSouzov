@@ -171,40 +171,34 @@ function NarrativeStage({
   lang: 'ru' | 'en';
   reduced: boolean;
 }) {
-  /* Текст → абзацы → части с hover-фразами. */
+  /* Текст → абзацы → части с hover-фразами.
+     Абзац = любая строка (Enter). Пустые строки игнорируем, поэтому работает
+     и при одинарных, и при двойных переносах — «как пользователь разметил». */
   const paragraphs = useMemo(
     () =>
       text
-        .split(/\n{2,}/)
+        .split(/\n+/)
         .map((p) => p.trim())
         .filter(Boolean)
         .map((p) => parseTextWithTips(p, tips, lang)),
     [text, tips, lang]
   );
 
-  /* Переплетаем: текст, фото, текст, фото… Пара «текст + следующий снимок»
-     получает общую сторону (зигзаг: лево, право, лево…). «Хвост» (если
-     одного больше) продолжает чередоваться сам по себе. */
+  /* Каждый абзац → сразу за ним снимок (фото идут по кругу, если их меньше,
+     чем абзацев — чтобы фото было ПОСЛЕ КАЖДОГО абзаца, сколько бы текста ни
+     было). Если снимков больше, чем абзацев — лишние показываем в конце.
+     Пара «абзац + фото» уходит то влево, то вправо (зигзаг). */
   const blocks = useMemo<NarrativeBlock[]>(() => {
     const out: NarrativeBlock[] = [];
-    let ti = 0;
-    let pi = 0;
-    let pair = 0;
-    let wantText = true;
-    while (ti < paragraphs.length || pi < photos.length) {
-      const side: 'left' | 'right' = pair % 2 === 0 ? 'left' : 'right';
-      if (wantText && ti < paragraphs.length) {
-        out.push({ kind: 'text', parts: paragraphs[ti], first: ti === 0, side });
-        ti += 1;
-      } else if (pi < photos.length) {
-        out.push({ kind: 'photo', photo: photos[pi], side });
-        pi += 1;
-        pair += 1; // пара завершена — следующая уходит на другую сторону
-      } else if (ti < paragraphs.length) {
-        out.push({ kind: 'text', parts: paragraphs[ti], first: ti === 0, side });
-        ti += 1;
-      }
-      wantText = !wantText;
+    const pc = photos.length;
+    paragraphs.forEach((parts, i) => {
+      const side: 'left' | 'right' = i % 2 === 0 ? 'left' : 'right';
+      out.push({ kind: 'text', parts, first: i === 0, side });
+      if (pc > 0) out.push({ kind: 'photo', photo: photos[i % pc], side });
+    });
+    // Снимков больше, чем абзацев (или текста вовсе нет) — добавим оставшиеся.
+    for (let j = paragraphs.length; j < pc; j += 1) {
+      out.push({ kind: 'photo', photo: photos[j], side: j % 2 === 0 ? 'left' : 'right' });
     }
     return out;
   }, [paragraphs, photos]);

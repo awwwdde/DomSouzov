@@ -126,6 +126,14 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
       return next;
     });
   };
+  // Режим «мультидата»: при включении верхние поля даты блокируются —
+  // дата берётся только из расписания (первый сеанс).
+  const [multi, setMulti] = useState(occurrences.length > 0);
+  const toggleMulti = (on: boolean) => {
+    setMulti(on);
+    if (!on) setOccurrences([]); // выключили — возвращаемся к одиночной дате
+  };
+
   const [periodStart, setPeriodStart] = useState('');
   const [periodEnd, setPeriodEnd] = useState('');
   const [periodTimes, setPeriodTimes] = useState('');
@@ -188,7 +196,7 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input]:transition [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted [&_select]:min-h-11 [&_select]:rounded-xl [&_select]:border [&_select]:border-line [&_select]:bg-white [&_select]:px-3 [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:outline-none [&_textarea:focus]:border-ink">
+    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input]:transition [&_input:focus]:border-ink [&_input:disabled]:bg-paper-soft [&_input:disabled]:text-muted [&_input:disabled]:cursor-not-allowed [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted [&_select]:min-h-11 [&_select]:rounded-xl [&_select]:border [&_select]:border-line [&_select]:bg-white [&_select]:px-3 [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:outline-none [&_textarea:focus]:border-ink">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Название (RU)</label>
@@ -200,42 +208,57 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
         </div>
       </div>
 
+      {multi ? (
+        <div className="rounded-xl border border-dashed border-line bg-paper-soft px-4 py-3 text-[12px] normal-case tracking-normal text-muted">
+          Включена мультидата — дата, время и день недели берутся из расписания ниже (первый сеанс). Поля выше отключены.
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Дата (RU, напр. «19 ИЮН 2026»)</label>
-          <input value={form.date} onChange={set('date')} required placeholder="19 ИЮН 2026" />
+          <input value={form.date} onChange={set('date')} required={!multi} disabled={multi} placeholder="19 ИЮН 2026" />
         </div>
         <div className="grid gap-2">
           <label>Date (EN, e.g. «19 JUN 2026»)</label>
-          <input value={form.date_en} onChange={set('date_en')} required placeholder="19 JUN 2026" />
+          <input value={form.date_en} onChange={set('date_en')} required={!multi} disabled={multi} placeholder="19 JUN 2026" />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Время (напр. «19:30»)</label>
-          <input value={form.time} onChange={set('time')} required placeholder="19:30" />
+          <input value={form.time} onChange={set('time')} required={!multi} disabled={multi} placeholder="19:30" />
         </div>
         <div className="grid gap-2">
           <label>День недели RU / EN (напр. «Пт» / «Fri»)</label>
           <div className="grid grid-cols-2 gap-2">
-            <input value={form.weekday_ru} onChange={set('weekday_ru')} placeholder="Пт" />
-            <input value={form.weekday_en} onChange={set('weekday_en')} placeholder="Fri" />
+            <input value={form.weekday_ru} onChange={set('weekday_ru')} disabled={multi} placeholder="Пт" />
+            <input value={form.weekday_en} onChange={set('weekday_en')} disabled={multi} placeholder="Fri" />
           </div>
         </div>
       </div>
 
       {/* ── Мультидаты / расписание сеансов ──────────────────────────── */}
       <div className="grid gap-4 rounded-2xl border border-line bg-paper-soft p-4">
-        <div className="grid gap-1">
-          <label className="!text-ink">Расписание (мультидаты)</label>
-          <span className="text-[11px] normal-case tracking-normal text-muted">
-            Для мероприятий на несколько дней (напр. ёлка идёт 2 недели). Добавьте период или отдельные даты.
-            Если расписание пустое — используется одиночная дата выше. Первый сеанс автоматически подставляется
-            в поля «Дата/Время/День недели».
+        <label className="flex cursor-pointer items-start gap-2.5 normal-case tracking-normal">
+          <input
+            type="checkbox"
+            checked={multi}
+            onChange={(e) => toggleMulti(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+          />
+          <span>
+            <span className="text-sm font-bold uppercase tracking-[0.08em] text-ink">Мультидата (несколько дат / сеансов)</span>
+            <span className="mt-1 block text-[11px] text-muted">
+              Для мероприятий на несколько дней (напр. ёлка идёт 2 недели). При включении дата, время и день недели
+              берутся из расписания ниже (первый сеанс), а поля даты вверху блокируются.
+            </span>
           </span>
-        </div>
+        </label>
 
+        {multi ? (
+          <>
         {/* Период: с — по + времена сеансов */}
         <div className="grid gap-3 rounded-xl border border-line bg-white p-3 md:grid-cols-[1fr_1fr_1.4fr_auto] md:items-end">
           <div className="grid gap-2">
@@ -313,6 +336,8 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
               ))}
             </div>
           </div>
+        ) : null}
+          </>
         ) : null}
       </div>
 

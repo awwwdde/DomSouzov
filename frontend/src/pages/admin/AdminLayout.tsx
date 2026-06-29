@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
@@ -105,14 +105,13 @@ export default function AdminLayout() {
         </div>
       </motion.aside>
 
-      <motion.main
-        className="min-w-0 bg-paper p-5 text-ink md:p-8"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.06 }}
-      >
-        <Outlet />
-      </motion.main>
+      <main className="min-w-0 bg-paper p-5 text-ink md:p-8">
+        {/* Локальный Suspense: при переключении вкладок перерисовывается только
+            контент, а каркас и сайдбар остаются на месте — без «моргания». */}
+        <Suspense fallback={<div className="text-sm text-muted">Загрузка…</div>}>
+          <Outlet />
+        </Suspense>
+      </main>
     </div>
   );
 }
