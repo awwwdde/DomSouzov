@@ -57,7 +57,7 @@ export default function Organizers() {
       {/* ВИДЕО — крупный блок во всю ширину (как видео-герой на «О Доме») */}
       {videoUrl ? (
         <video
-          className="block h-[50vh] max-h-[520px] min-h-[340px] w-full bg-ink object-cover"
+          className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
           src={videoUrl}
           poster={videoPoster || undefined}
           muted
@@ -67,7 +67,7 @@ export default function Organizers() {
           preload="metadata"
         />
       ) : (
-        <div className="flex h-[68vh] max-h-[800px] min-h-[440px] w-full items-center justify-center border-b border-line bg-paper-soft text-center text-[12px] font-bold uppercase tracking-[0.18em] text-muted">
+        <div className="flex h-[86vh] max-h-[900px] min-h-[480px] w-full items-center justify-center border-b border-line bg-paper-soft text-center text-[12px] font-bold uppercase tracking-[0.18em] text-muted">
           {lang === 'ru' ? 'Видео-презентация появится здесь' : 'Presentation video will appear here'}
         </div>
       )}

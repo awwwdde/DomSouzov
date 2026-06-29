@@ -98,7 +98,7 @@ function HeroStage({
       <div className="relative w-full overflow-hidden bg-ink">
         {video ? (
           <video
-            className="block h-[50vh] max-h-[520px] min-h-[340px] w-full bg-ink object-cover"
+            className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
             src={video}
             poster={poster || undefined}
             preload="metadata"
@@ -111,7 +111,7 @@ function HeroStage({
           <img
             src={poster}
             alt=""
-            className="block h-[50vh] max-h-[520px] min-h-[340px] w-full object-cover"
+            className="block h-[86vh] max-h-[900px] min-h-[480px] w-full object-cover"
           />
         ) : (
           <div className="relative flex h-[78vh] max-h-[860px] min-h-[520px] w-full items-end justify-start overflow-hidden">
