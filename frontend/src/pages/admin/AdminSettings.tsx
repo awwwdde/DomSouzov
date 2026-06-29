@@ -886,7 +886,7 @@ function MediaPreview({ url, type }: { url: string; type: 'image' | 'video' }) {
       src={url}
       controls
       muted
-      className="h-44 w-full rounded-2xl bg-ink object-cover"
+      className="aspect-video w-full rounded-2xl bg-ink object-cover"
     />
   );
 }

@@ -98,7 +98,7 @@ function HeroStage({
       <div className="relative w-full overflow-hidden bg-ink">
         {video ? (
           <video
-            className="block h-[78vh] max-h-[860px] min-h-[520px] w-full object-cover"
+            className="block aspect-[16/9] max-h-[92vh] w-full bg-ink object-cover"
             src={video}
             poster={poster || undefined}
             preload="metadata"
@@ -111,7 +111,7 @@ function HeroStage({
           <img
             src={poster}
             alt=""
-            className="block h-[78vh] max-h-[860px] min-h-[520px] w-full object-cover"
+            className="block aspect-[16/9] max-h-[92vh] w-full object-cover"
           />
         ) : (
           <div className="relative flex h-[78vh] max-h-[860px] min-h-[520px] w-full items-end justify-start overflow-hidden">
@@ -419,7 +419,7 @@ function HoverPhrase({
                 {tip.media_type === 'video' ? (
                   <video
                     src={tip.media_url}
-                    className="block h-full w-full object-cover"
+                    className="block h-full w-full bg-ink object-contain"
                     autoPlay
                     muted
                     loop

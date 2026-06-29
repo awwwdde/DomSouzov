@@ -8,11 +8,11 @@ export default function HeroA() {
 
   return (
     <section className="px-6 pt-24 md:px-12">
-      <div className="relative h-[70vh] min-h-[520px] overflow-hidden rounded-[32px]">
+      <div className="relative aspect-[16/9] max-h-[92vh] overflow-hidden rounded-[32px] bg-ink">
         <div className="absolute inset-0">
           {heroVideo ? (
             <video
-              className="h-full w-full object-cover"
+              className="h-full w-full bg-ink object-cover"
               src={heroVideo}
               poster={heroPoster || undefined}
               muted

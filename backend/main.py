@@ -1,6 +1,7 @@
 import os
+import re
 import sys
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, PlainTextResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -49,20 +50,63 @@ async def security_headers(request, call_next):
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 
+_RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)")
+
+
 @app.get("/uploads/{filename}", include_in_schema=False)
-def serve_upload(filename: str):
+def serve_upload(filename: str, request: Request):
     db = SessionLocal()
     try:
         m = db.query(MediaFile).filter(MediaFile.filename == filename).first()
         if m is not None:
+            data = m.data
+            media_type = m.content_type or "application/octet-stream"
+            size = len(data)
+            base_headers = {
+                "Cache-Control": "public, max-age=31536000, immutable",
+                # Accept-Ranges нужен видеоплееру для перемотки и потоковой отдачи;
+                # без него браузер/прокси тянут весь файл (это и роняло видео).
+                "Accept-Ranges": "bytes",
+            }
+            range_header = request.headers.get("range")
+            if range_header:
+                mr = _RANGE_RE.match(range_header.strip())
+                if mr:
+                    start_s, end_s = mr.group(1), mr.group(2)
+                    if start_s == "" and end_s == "":
+                        start, end = 0, size - 1
+                    elif start_s == "":  # суффиксный запрос: последние N байт
+                        n = int(end_s)
+                        start, end = max(0, size - n), size - 1
+                    else:
+                        start = int(start_s)
+                        end = int(end_s) if end_s else size - 1
+                    if start >= size:
+                        return Response(
+                            status_code=416,
+                            headers={**base_headers, "Content-Range": f"bytes */{size}"},
+                        )
+                    end = min(end, size - 1)
+                    chunk = data[start : end + 1]
+                    return Response(
+                        content=chunk,
+                        status_code=206,
+                        media_type=media_type,
+                        headers={
+                            **base_headers,
+                            "Content-Range": f"bytes {start}-{end}/{size}",
+                            "Content-Length": str(len(chunk)),
+                        },
+                    )
             return Response(
-                content=m.data,
-                media_type=m.content_type or "application/octet-stream",
-                headers={"Cache-Control": "public, max-age=31536000, immutable"},
+                content=data,
+                media_type=media_type,
+                headers={**base_headers, "Content-Length": str(size)},
             )
     finally:
         db.close()
-    # Фолбэк: файл на диске (локальная разработка или legacy).
+    # Фолбэк: файл на диске (локальная разработка или legacy). FileResponse
+    # сам поддерживает Range/Accept-Ranges.
     path = os.path.join(settings.UPLOAD_DIR, filename)
     if os.path.isfile(path):
         return FileResponse(path)

@@ -118,7 +118,7 @@ export default function Home() {
         <div className="relative w-full overflow-hidden bg-ink">
           {heroVideo ? (
             <video
-              className="block h-[78vh] max-h-[860px] min-h-[520px] w-full object-cover"
+              className="block aspect-[16/9] max-h-[92vh] w-full bg-ink object-cover"
               src={heroVideo}
               poster={heroPoster || undefined}
               preload="metadata"
@@ -131,7 +131,7 @@ export default function Home() {
             <img
               src={heroPoster}
               alt=""
-              className="block h-[78vh] max-h-[860px] min-h-[520px] w-full object-cover"
+              className="block aspect-[16/9] max-h-[92vh] w-full object-cover"
             />
           ) : (
             // Fallback: типографический hero на тёмном фоне с радиальным свечением.
@@ -242,23 +242,29 @@ export default function Home() {
       {/* ПАРНЫЕ БЛОКИ — Организаторам / Зрителям                       */}
       {/* ============================================================ */}
       <Section tone="paper" spacing="md" bordered>
-        <div className="grid gap-12 md:grid-cols-2 md:gap-px md:bg-line">
-          <InfoBlock
-            index="01"
-            kicker={lang === 'ru' ? 'Залы' : 'Halls'}
-            title={lang === 'ru' ? 'Организаторам' : 'For organizers'}
-            body={organizersBody}
-            ctaText={lang === 'ru' ? 'Залы и условия' : 'Halls & terms'}
-            ctaTo="/organizers"
-          />
-          <InfoBlock
-            index="02"
-            kicker={lang === 'ru' ? 'Посещение' : 'Visit'}
-            title={lang === 'ru' ? 'Зрителям' : 'For visitors'}
-            body={visitorsBody}
-            ctaText={lang === 'ru' ? 'Афиша и билеты' : 'Programme & tickets'}
-            ctaTo="/audience"
-          />
+        {/* Контент выровнен по краям секции (как афиша/новости): боковые отступы
+            убраны, разделитель — по центру (divide-x). */}
+        <div className="grid gap-12 md:grid-cols-2 md:gap-0 md:divide-x md:divide-line">
+          <div className="md:pr-10 lg:pr-14">
+            <InfoBlock
+              index="01"
+              kicker={lang === 'ru' ? 'Залы' : 'Halls'}
+              title={lang === 'ru' ? 'Организаторам' : 'For organizers'}
+              body={organizersBody}
+              ctaText={lang === 'ru' ? 'Залы и условия' : 'Halls & terms'}
+              ctaTo="/organizers"
+            />
+          </div>
+          <div className="md:pl-10 lg:pl-14">
+            <InfoBlock
+              index="02"
+              kicker={lang === 'ru' ? 'Посещение' : 'Visit'}
+              title={lang === 'ru' ? 'Зрителям' : 'For visitors'}
+              body={visitorsBody}
+              ctaText={lang === 'ru' ? 'Афиша и билеты' : 'Programme & tickets'}
+              ctaTo="/audience"
+            />
+          </div>
         </div>
       </Section>
 
@@ -424,13 +430,15 @@ function EditorialCardGrid({
                     {ev.age_rating}
                   </span>
                 ) : null}
-                {ev.image_vertical || ev.image ? (
+                {/* На главной используем ТОЛЬКО вертикальное фото. Нет вертикального
+                    — показываем «билет» с названием мероприятия (а не горизонтальное). */}
+                {ev.image_vertical ? (
                   <motion.img
-                    src={ev.image_vertical || ev.image || ''}
+                    src={ev.image_vertical}
                     alt={title}
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-cover"
                     variants={{
                       rest: { scale: 1 },
                       hover: { scale: reduced ? 1 : 1.04 },
@@ -572,7 +580,7 @@ function InfoBlock({
   ctaTo: string;
 }) {
   return (
-    <div className="flex flex-col bg-paper md:p-8 lg:p-10">
+    <div className="flex h-full flex-col bg-paper">
       <div className="flex items-baseline justify-between gap-4 border-b border-ink pb-3">
         <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-ink-soft">
           {kicker}
