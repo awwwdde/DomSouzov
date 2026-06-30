@@ -169,7 +169,7 @@ def get_all_content(db: Session = Depends(get_db)) -> Dict[str, Any]:
     news = (
         db.query(NewsArticle)
         .filter(NewsArticle.is_active == True)
-        .order_by(desc(NewsArticle.is_pinned), desc(NewsArticle.pin_order), NewsArticle.sort_order, desc(NewsArticle.created_at))
+        .order_by(desc(NewsArticle.is_pinned), desc(NewsArticle.pin_order), desc(NewsArticle.created_at))
         .all()
     )
     halls = db.query(Hall).order_by(Hall.sort_order).all()
@@ -236,7 +236,7 @@ def get_news(db: Session = Depends(get_db)):
     news = (
         db.query(NewsArticle)
         .filter(NewsArticle.is_active == True)
-        .order_by(desc(NewsArticle.is_pinned), desc(NewsArticle.pin_order), NewsArticle.sort_order, desc(NewsArticle.created_at))
+        .order_by(desc(NewsArticle.is_pinned), desc(NewsArticle.pin_order), desc(NewsArticle.created_at))
         .all()
     )
     return [_news_out(n) for n in news]
