@@ -147,26 +147,81 @@ export default function NewsDetail() {
           Текст справа-внизу «прилипает» (sticky): при 100+ фото слева
           текст остаётся на месте. Длинный текст решается сам — текст и
           галерея растут вниз в своих рядах. */}
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.15fr_minmax(0,460px)] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:[grid-template-areas:'cover_info'_'gallery_text']">
-        {/* Обложка */}
-        <div className="w-full overflow-hidden border border-line bg-paper-soft lg:[grid-area:cover]">
-          {article.image ? (
-            <img
-              src={mediaUrl(article.image)}
-              alt={l(article.title)}
-              loading="lazy"
-              decoding="async"
-              className="w-full object-cover"
-            />
-          ) : (
-            <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
-              {l(article.title)}
+      {/* Раскладка ПК: слева обложка + галерея (растут вниз), справа —
+          текст + инфо, «прилипающие» (sticky) при скролле. Левая медиа-колонка
+          выше правой, поэтому у sticky-колонки есть место — она корректно
+          фиксируется под хедером, а не уезжает за него. */}
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.15fr_minmax(0,460px)] lg:items-start lg:gap-x-14">
+        {/* Левая колонка: обложка + галерея */}
+        <div className="flex flex-col gap-8">
+          {/* Обложка */}
+          <div className="w-full overflow-hidden border border-line bg-paper-soft">
+            {article.image ? (
+              <img
+                src={mediaUrl(article.image)}
+                alt={l(article.title)}
+                loading="lazy"
+                decoding="async"
+                className="w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
+                {l(article.title)}
+              </div>
+            )}
+          </div>
+
+          {/* Галерея доп. медиа (фото и видео, опционально) */}
+          {gallery.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {gallery.map((m, gi) =>
+                m.type === 'video' ? (
+                  <motion.div
+                    key={`${m.url}-${gi}`}
+                    className="w-full overflow-hidden border border-line bg-ink"
+                    variants={fadeUp(reduced)}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={reduced ? { duration: 0 } : transitionBase}
+                  >
+                    <video
+                      src={mediaUrl(m.url)}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key={`${m.url}-${gi}`}
+                    type="button"
+                    onClick={() => openImage(m.url)}
+                    className="group block w-full overflow-hidden border border-line bg-paper-soft"
+                    variants={fadeUp(reduced)}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={reduced ? { duration: 0 } : transitionBase}
+                  >
+                    <img
+                      src={mediaUrl(m.url)}
+                      alt={l(article.title)}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                    />
+                  </motion.button>
+                )
+              )}
             </div>
-          )}
+          ) : null}
         </div>
 
-        {/* Текст статьи — sticky на ПК */}
-        <div className="border-t border-line pt-8 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
+        {/* Правая колонка: текст + инфо — sticky на ПК */}
+        <div className="flex flex-col gap-8 border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          {/* Текст статьи */}
           <div className="space-y-4 text-[14px] leading-[1.7] text-ink-soft">
             {contentParas.length > 0
               ? contentParas.map((para, i) => <p key={i}>{para}</p>)
@@ -174,69 +229,22 @@ export default function NewsDetail() {
                 ? <p>{excerpt}</p>
                 : null}
           </div>
+
+          {/* Инфо о новости: дата, рубрика, кнопка */}
+          <aside className="flex flex-col gap-6 border-t border-line pt-8">
+            <dl className="grid gap-4 text-sm">
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Дата' : 'Date'}</dt>
+                <dd className="mt-1 text-ink-soft">{formatNewsLongDate(article, lang) || dayHeader}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Рубрика' : 'Category'}</dt>
+                <dd className="mt-1 text-ink-soft">{l(article.tag)}</dd>
+              </div>
+            </dl>
+            <ActionButton to="/news" text={lang === 'ru' ? 'Все новости' : 'All news'} />
+          </aside>
         </div>
-
-        {/* Галерея доп. медиа (фото и видео, опционально) */}
-        {gallery.length > 0 ? (
-          <div className="flex flex-col gap-4 lg:[grid-area:gallery]">
-            {gallery.map((m, gi) =>
-              m.type === 'video' ? (
-                <motion.div
-                  key={`${m.url}-${gi}`}
-                  className="w-full overflow-hidden border border-line bg-ink"
-                  variants={fadeUp(reduced)}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={reduced ? { duration: 0 } : transitionBase}
-                >
-                  <video
-                    src={mediaUrl(m.url)}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full"
-                  />
-                </motion.div>
-              ) : (
-                <motion.button
-                  key={`${m.url}-${gi}`}
-                  type="button"
-                  onClick={() => openImage(m.url)}
-                  className="group block w-full overflow-hidden border border-line bg-paper-soft"
-                  variants={fadeUp(reduced)}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={reduced ? { duration: 0 } : transitionBase}
-                >
-                  <img
-                    src={mediaUrl(m.url)}
-                    alt={l(article.title)}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full object-cover transition duration-700 group-hover:scale-[1.02]"
-                  />
-                </motion.button>
-              )
-            )}
-          </div>
-        ) : null}
-
-        {/* Инфо о новости: рубрика, дата, поделиться, кнопка */}
-        <aside className="flex flex-col gap-6 border-t border-line pt-8 lg:border-t-0 lg:pt-0 lg:[grid-area:info] lg:self-start">
-          <dl className="grid gap-4 text-sm">
-            <div>
-              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Дата' : 'Date'}</dt>
-              <dd className="mt-1 text-ink-soft">{formatNewsLongDate(article, lang) || dayHeader}</dd>
-            </div>
-            <div>
-              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{lang === 'ru' ? 'Рубрика' : 'Category'}</dt>
-              <dd className="mt-1 text-ink-soft">{l(article.tag)}</dd>
-            </div>
-          </dl>
-          <ActionButton to="/news" text={lang === 'ru' ? 'Все новости' : 'All news'} />
-        </aside>
       </section>
 
       {/* Похожие новости */}
