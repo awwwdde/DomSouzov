@@ -44,7 +44,7 @@ import aiofiles
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"}
 ALLOWED_VIDEO_TYPES = {
     "video/mp4",
     "video/webm",
@@ -56,7 +56,7 @@ ALLOWED_VIDEO_TYPES = {
     "application/mp4",
 }
 ALLOWED_DOC_TYPES = {"application/pdf"}
-ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif", "svg"}
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "ogg", "mov", "m4v", "avi", "mkv"}
 ALLOWED_DOC_EXTENSIONS = {"pdf"}
 
@@ -188,7 +188,7 @@ async def upload_file(
     if not is_known_mime and not (is_known_ext and is_octet_stream) and not is_known_ext:
         raise HTTPException(
             400,
-            "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF. "
+            "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF/SVG. "
             "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF",
         )
 

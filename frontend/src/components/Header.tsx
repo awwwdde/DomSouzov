@@ -72,7 +72,7 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-[200] border-b border-line bg-paper-soft">
         {/* --- Единственный ряд: логотип + утилиты --- */}
-        <div className="mx-auto flex h-[80px] w-full max-w-[1800px] items-center justify-between gap-3 px-5 md:h-[104px] md:w-[95%] md:px-6">
+        <div className="flex h-[80px] w-full items-center justify-between gap-3 px-5 md:h-[104px] md:px-8">
           <Link
             to="/"
             className="flex items-center gap-3 leading-none md:gap-4"
@@ -139,7 +139,7 @@ export default function Header() {
               aria-label={lang === 'ru' ? 'Основное меню' : 'Main'}
             >
               <motion.div
-                className="mx-auto flex w-full max-w-[1800px] flex-col items-stretch px-5 py-4 lg:w-[95%] lg:flex-row lg:gap-x-16 lg:overflow-x-auto lg:px-6 lg:py-6 lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden"
+                className="flex w-full flex-col items-stretch px-5 py-4 lg:flex-row lg:gap-x-16 lg:overflow-x-auto lg:px-8 lg:py-6 lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden"
                 variants={{
                   hidden: {},
                   visible: {

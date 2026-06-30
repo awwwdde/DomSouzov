@@ -27,8 +27,8 @@ export default function PartnersSection({ partners, lang }: Props) {
         </h2>
       </div>
 
-      {/* Крупная сетка логотипов: до 4 в ряд, бокс выше — лого читаемые. */}
-      <RevealList className="grid grid-cols-2 gap-x-10 gap-y-14 sm:grid-cols-2 md:grid-cols-3 md:gap-x-14 md:gap-y-16 lg:grid-cols-4">
+      {/* Сетка логотипов: 6 в ряд, одинаковые боксы, левый край — под заголовком. */}
+      <RevealList className="grid grid-cols-3 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-6 md:gap-x-8 md:gap-y-12">
         {rows.map((p) => (
           <RevealItem key={p.id} y={12} className="will-change-transform">
             <PartnerItem partner={p} label={l(p.name)} reduced={reduced} />
