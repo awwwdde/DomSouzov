@@ -22,12 +22,16 @@ type Block = { kind: Kind; text: string; marker?: string; id: string };
 // \b не работает после кириллицы в JS-regex — требуем пробел/точку/цифру после слова.
 const SECTION_RE = /^(раздел|глава|статья|приложение|часть|section|article|chapter|part|appendix|clause)[\s.\d]/i;
 const LIST_RE = /^(\d+)\)\s*(.*)$/;
+// Маркер-тире/буллет: «— …», «– …», «• …», «- …» — ненумерованный пункт.
+const DASH_RE = /^[—–•·-]\s+(.*)$/;
 
 function classify(line: string): { kind: Kind; text: string; marker?: string } {
   const t = line.trim();
   if (SECTION_RE.test(t)) return { kind: 'h1', text: t };
   const li = t.match(LIST_RE);
   if (li) return { kind: 'li', text: li[2], marker: `${li[1]})` };
+  const dash = t.match(DASH_RE);
+  if (dash) return { kind: 'li', text: dash[1], marker: '—' };
   // Короткая строка-«вводка» перед перечислением: «3.1. Оператор обязан:».
   if (t.length <= 90 && /:$/.test(t)) return { kind: 'h2', text: t };
   // Короткий самостоятельный заголовок без завершающей пунктуации.

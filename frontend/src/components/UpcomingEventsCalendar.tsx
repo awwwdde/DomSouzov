@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from './ActionButton';
-import { eventCategoryIcon } from '../lib/eventCategory';
+import { eventCategoryIcon, eventCategoryColor } from '../lib/eventCategory';
 import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
 import { addDays, dateKey, eventOccurrences, formatDayMonthFromEvent, startOfDay } from '../lib/eventDates';
 import type { Event, Lang } from '../types';
@@ -25,13 +25,13 @@ const EN_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const RU_WEEKDAYS_MON = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
 const EN_WEEKDAYS_MON = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-const FILTERS_RU = ['Все', 'Концерт', 'Мероприятие', 'Экскурсия', 'Собрание'];
-const FILTERS_EN = ['All', 'Concert', 'Event', 'Excursion', 'Meeting'];
+const FILTERS_RU = ['Все', 'Концерты', 'Балы', 'Форумы', 'Спектакли'];
+const FILTERS_EN = ['All', 'Concerts', 'Balls', 'Forums', 'Performances'];
 const FILTER_TOKENS: Record<number, string[]> = {
   1: ['Концерт', 'Concert', 'симфон', 'камерн', 'хор', 'музык', 'music', 'symphon', 'chamber', 'choir'],
-  2: ['Мероприятие', 'Event', 'премьер', 'фестивал', 'гала', 'спектакл', 'литератур', 'premiere', 'festival', 'gala'],
-  3: ['Экскурс', 'Excursion', 'tour', 'лекци', 'lecture'],
-  4: ['Собрание', 'Meeting', 'конференц', 'форум', 'съезд', 'заседан', 'assembly', 'conference', 'forum'],
+  2: ['Бал', 'Ball', 'танц', 'dance'],
+  3: ['Форум', 'Forum', 'Собрание', 'Meeting', 'конференц', 'съезд', 'заседан', 'assembly', 'conference'],
+  4: ['Спектакл', 'Performance', 'театр', 'theatre', 'theater', 'балет', 'ballet', 'опера', 'opera', 'литератур', 'премьер', 'фестивал', 'гала', 'спектакль'],
 };
 
 const addMonths = (date: Date, months: number) => new Date(date.getFullYear(), date.getMonth() + months, 1);
@@ -226,6 +226,17 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
     return acc;
   }, [parsedEvents]);
 
+  // Цвет дня = оттенок зелёного категории первого (раннего) события этого дня.
+  // parsedEvents отсортирован по дате, поэтому первый встреченный — ранний.
+  const dayColorByDate = useMemo(() => {
+    const acc: Record<string, string> = {};
+    parsedEvents.forEach((item) => {
+      const k = dateKey(item.date);
+      if (!acc[k]) acc[k] = eventCategoryColor(item.event.tag.ru || item.event.tag.en);
+    });
+    return acc;
+  }, [parsedEvents]);
+
   const weekDates = useMemo(() => getWeekDates(cursor), [cursor]);
 
   const monthGridCells = useMemo<(Date | null)[]>(() => {
@@ -413,6 +424,9 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
             const isSelected = !!selected && k === dateKey(selected);
             const isOutOfMonth = view === 'month' && d.getMonth() !== cursor.getMonth();
             const isPast = d.getTime() < today.getTime();
+            // Закраска ячейки оттенком зелёного по категории события этого дня.
+            const cellColor = !isSelected && !isOutOfMonth && count > 0 ? dayColorByDate[k] : undefined;
+            const hasColor = !!cellColor;
 
             return (
               <motion.button
@@ -421,15 +435,18 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                 onClick={() => handleSelectDay(d)}
                 whileHover={reduced ? undefined : { y: -1 }}
                 transition={reduced ? { duration: 0 } : { duration: 0.18, ease: EASE_DS }}
+                style={hasColor ? { backgroundColor: cellColor } : undefined}
                 className={[
                   'group relative flex min-h-16 flex-col items-stretch gap-1 border-b border-r border-line px-2 py-2 text-left transition md:min-h-24 md:px-3 md:py-3',
                   isSelected
                     ? 'bg-ink text-white'
                     : isOutOfMonth
                       ? 'bg-paper-soft/40 text-ink-soft/50'
-                      : isPast
-                        ? 'bg-white text-ink-soft hover:bg-paper-soft'
-                        : 'bg-white text-ink hover:bg-paper-soft',
+                      : hasColor
+                        ? 'text-white'
+                        : isPast
+                          ? 'bg-white text-ink-soft hover:bg-paper-soft'
+                          : 'bg-white text-ink hover:bg-paper-soft',
                   isToday && !isSelected ? 'shadow-[inset_0_-3px_0_0_#0a0a0a]' : '',
                 ].join(' ')}
                 aria-label={
@@ -442,7 +459,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                   <span
                     className={[
                       'font-heading text-xl font-bold leading-none md:text-2xl',
-                      isSelected ? 'text-white' : '',
+                      isSelected || hasColor ? 'text-white' : '',
                     ].join(' ')}
                   >
                     {d.getDate()}
@@ -451,7 +468,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     <span
                       className={[
                         'inline-flex h-5 min-w-5 items-center justify-center px-1 text-[10px] font-bold leading-none',
-                        isSelected ? 'bg-white text-ink' : 'bg-ink text-white',
+                        isSelected || hasColor ? 'bg-white text-ink' : 'bg-ink text-white',
                       ].join(' ')}
                     >
                       {count}
@@ -468,7 +485,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         key={`${item.event.id}-${ii}`}
                         className={[
                           'truncate text-[10px] font-semibold uppercase tracking-[0.06em]',
-                          isSelected ? 'text-white/85' : 'text-ink-soft',
+                          isSelected || hasColor ? 'text-white/90' : 'text-ink-soft',
                         ].join(' ')}
                       >
                         · {l(item.event.title)}
@@ -478,7 +495,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     <span
                       className={[
                         'text-[9px] font-bold uppercase tracking-[0.14em]',
-                        isSelected ? 'text-white/70' : 'text-muted',
+                        isSelected || hasColor ? 'text-white/75' : 'text-muted',
                       ].join(' ')}
                     >
                       +{count - 2}
@@ -621,7 +638,17 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft md:text-base">
                       {l(event.tag)}
                     </p>
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <div className="mt-5 flex flex-col gap-3">
+                      {event.has_ticket && event.ticket_url ? (
+                        <a
+                          href={event.ticket_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-6 text-[12px] font-bold uppercase tracking-[0.14em] text-paper transition hover:bg-accent-deep"
+                        >
+                          {lang === 'ru' ? 'Купить билет' : 'Buy tickets'}
+                        </a>
+                      ) : null}
                       <ActionButton
                         to={`/events/${event.id}`}
                         text={lang === 'ru' ? 'Подробнее' : 'Details'}
@@ -629,16 +656,6 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                         textColor="#0a0a0a"
                         strokeColor="#0a0a0a"
                       />
-                      {event.has_ticket && event.ticket_url ? (
-                        <a
-                          href={event.ticket_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex min-h-10 items-center justify-center rounded-full bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-paper transition hover:bg-accent-deep"
-                        >
-                          {lang === 'ru' ? 'Купить билет' : 'Buy tickets'}
-                        </a>
-                      ) : null}
                     </div>
                   </div>
                 </motion.article>

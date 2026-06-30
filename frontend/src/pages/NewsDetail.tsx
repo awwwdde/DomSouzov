@@ -166,7 +166,7 @@ export default function NewsDetail() {
         </div>
 
         {/* Текст статьи — sticky на ПК */}
-        <div className="border-t border-line pt-8 lg:sticky lg:top-32 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
+        <div className="border-t border-line pt-8 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 lg:[grid-area:text]">
           <div className="space-y-4 text-[14px] leading-[1.7] text-ink-soft">
             {contentParas.length > 0
               ? contentParas.map((para, i) => <p key={i}>{para}</p>)
