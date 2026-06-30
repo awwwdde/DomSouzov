@@ -29,7 +29,6 @@ const News = lazy(() => import('./pages/News'));
 const NewsDetail = lazy(() => import('./pages/NewsDetail'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const PersonalDataConsent = lazy(() => import('./pages/PersonalDataConsent'));
-const Terms = lazy(() => import('./pages/Terms'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin pages — отдельный бандл, грузится только в /admin.
@@ -76,7 +75,6 @@ function PublicLayout() {
               <Route path="news/:id" element={<NewsDetail />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="personal-data-consent" element={<PersonalDataConsent />} />
-              <Route path="terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

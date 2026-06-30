@@ -6,11 +6,13 @@ import { RevealSection } from '../components/Reveal';
 const ADDRESS_QUERY = 'Москва, Большая Дмитровка, 1';
 const DEFAULT_MAP_EMBED = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(ADDRESS_QUERY)}&z=16`;
 const ROUTE_URL = `https://yandex.ru/maps/?rtext=~${encodeURIComponent(ADDRESS_QUERY)}&rtt=mt`;
+// Виджет отзывов Яндекс Карт (организация «Дом Союзов», обновляется автоматически).
+const DEFAULT_REVIEWS_EMBED = 'https://yandex.ru/maps-reviews-widget/1101563021?comments';
 
 export default function Contacts() {
   const { lang, t } = useSite();
   const mapEmbed = t('map_embed_url') || DEFAULT_MAP_EMBED;
-  const reviewsUrl = t('yandex_reviews_url');
+  const reviewsUrl = t('yandex_reviews_url') || DEFAULT_REVIEWS_EMBED;
 
   return (
     <>
@@ -29,21 +31,16 @@ export default function Contacts() {
           <PageKicker>{lang === 'ru' ? 'Главная · Контакты' : 'Home · Contacts'}</PageKicker>
           <h1 className="font-heading text-[clamp(52px,9vw,140px)] font-bold uppercase leading-[0.86] tracking-[0.04em] text-ink">{lang === 'ru' ? 'Контакты' : 'Contacts'}</h1>
         </div>
-        <p className="max-w-2xl self-end text-lg leading-8 text-ink-soft">
-          {lang === 'ru'
-            ? 'Билетная касса, залы и мероприятия, пресс-служба, администрация — все контакты и часы работы.'
-            : 'Box office, venues, press, administration — contacts and opening hours.'}
-        </p>
       </RevealSection>
 
       <RevealSection className="grid gap-10 px-5 py-16 md:grid-cols-[1fr_1fr] md:px-12">
         <div>
           <PageKicker>{lang === 'ru' ? 'Расположение' : 'Location'}</PageKicker>
           <h2 className="font-heading text-[clamp(42px,5vw,78px)] font-bold uppercase leading-[0.88] tracking-[0.04em]">
-            {lang === 'ru' ? 'Москва · Большая Дмитровка 1' : 'Moscow · Bolshaya Dmitrovka 1'}
+            {lang === 'ru' ? 'Москва · Большая Дмитровка · дом 1' : 'Moscow · Bolshaya Dmitrovka · 1'}
           </h2>
           <dl className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-5 text-sm">
-            <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Касса' : 'Box office'}</dt>
+            <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Вход' : 'Entrance'}</dt>
             <dd className="leading-6 text-ink-soft">
               {t('phone')}<br />
               <span className="text-muted">{lang === 'ru' ? 'Вт–Вс · 10:00—21:30' : 'Tue–Sun · 10:00—21:30'}</span>

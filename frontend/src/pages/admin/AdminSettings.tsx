@@ -416,23 +416,6 @@ const PAGES: PageDef[] = [
       },
     ],
   },
-  {
-    id: 'terms',
-    label: 'Пользовательское соглашение',
-    description: 'Заголовок и полный текст.',
-    group: 'Документы',
-    icon: FileText,
-    href: '/terms',
-    sections: [
-      {
-        title: 'Документ',
-        fields: [
-          { key: 'terms_title', label: 'Заголовок', type: 'text' },
-          { key: 'terms_body', label: 'Полный текст', type: 'textarea', rows: 16, hint: 'Параграфы разделяйте пустой строкой.' },
-        ],
-      },
-    ],
-  },
 ];
 
 const PAGE_GROUPS: Array<{ name: string; ids: string[] }> = [

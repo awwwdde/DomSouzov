@@ -140,7 +140,6 @@ STATIC_ROUTES = {
     "news": ("Новости — Дом Союзов", "Новости, анонсы и пресс-релизы Дома Союзов."),
     "privacy-policy": ("Политика конфиденциальности — Дом Союзов", "Политика обработки персональных данных Дома Союзов."),
     "personal-data-consent": ("Согласие на обработку ПД — Дом Союзов", "Согласие на обработку персональных данных."),
-    "terms": ("Пользовательское соглашение — Дом Союзов", "Условия использования сайта Дома Союзов."),
 }
 
 # Доп. ключевики под конкретный статический маршрут (к BRAND_KEYWORDS).
@@ -426,7 +425,7 @@ def build_sitemap(db: Session) -> str:
 
     for route in STATIC_ROUTES:
         # правовые страницы в карту не добавляем
-        if route in {"privacy-policy", "personal-data-consent", "terms"}:
+        if route in {"privacy-policy", "personal-data-consent"}:
             continue
         urls.append((_abs(route), None))
 

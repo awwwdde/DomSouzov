@@ -210,8 +210,8 @@ export default function Footer() {
             ) : null}
             <p className="text-paper/55">
               {lang === 'ru'
-                ? t('hours_ru') || 'Касса: пн–вс 11:00–20:00'
-                : t('hours_en') || 'Box office: Mon–Sun 11:00–20:00'}
+                ? t('hours_ru') || 'Вход: пн–вс 11:00–20:00'
+                : t('hours_en') || 'Entrance: Mon–Sun 11:00–20:00'}
             </p>
           </div>
           <div className="md:col-span-3 space-y-2 text-[13px] leading-relaxed">
@@ -257,9 +257,14 @@ export default function Footer() {
             <Link to="/personal-data-consent" className="transition hover:underline hover:underline-offset-4">
               {lang === 'ru' ? 'Согласие на обработку ПД' : 'Personal data consent'}
             </Link>
-            <Link to="/terms" className="transition hover:underline hover:underline-offset-4">
-              {lang === 'ru' ? 'Пользовательское соглашение' : 'Terms'}
-            </Link>
+            <a
+              href="https://awwwdde.art"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition hover:underline hover:underline-offset-4"
+            >
+              {lang === 'ru' ? 'Сделано awwwdde' : 'Made by awwwdde'}
+            </a>
           </div>
         </div>
       </div>
