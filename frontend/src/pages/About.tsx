@@ -459,7 +459,7 @@ function PhotoFallback() {
 function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean; t: (k: string) => string }) {
   /* Берём fact1..fact4 из site_settings; если 4-го нет — дополняем дефолтом. */
   const facts = [1, 2, 3, 4].map((i) => ({
-    num: t(`fact${i}_number`) || ['1784', '28', '1 200', 'XIX'][i - 1],
+    num: t(`fact${i}_number`) || ['1784', '28', '1 021', 'XIX'][i - 1],
     label: t(`fact${i}_label`) || ['Год постройки', 'Коринфских колонн', 'Мест в Колонном зале', 'Век великих премьер'][i - 1],
   }));
 
