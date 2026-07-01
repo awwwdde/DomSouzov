@@ -1,0 +1,71 @@
+# ============================================================================
+# Прод-развёртывание «Дома Союзов» на одном сервере (Timeweb Cloud VPS, Docker).
+#
+# Три сервиса:
+#   db    — PostgreSQL (данные в volume pgdata; переживает перезапуски/редеплой);
+#   app   — наш сайт (корневой Dockerfile: FastAPI + собранная SPA), порт 8080;
+#   caddy — обратный прокси с автоматическим HTTPS (Let's Encrypt) на 80/443.
+#
+# Перед запуском: заполнить .env (см. .env.prod.example) и Caddyfile (домен).
+# Запуск:   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+# ============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-domuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      POSTGRES_DB: ${DB_NAME:-domsoyuzov}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-domuser} -d ${DB_NAME:-domsoyuzov}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${DB_USER:-domuser}:${DB_PASSWORD}@db:5432/${DB_NAME:-domsoyuzov}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      SITE_URL: ${SITE_URL:-https://domsojuzov.ru}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://domsojuzov.ru}
+      BOOTSTRAP_ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      SEED_DEMO_CONTENT: "false"
+      # SMTP (заявки «Организаторам») — заполнить при необходимости:
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_TO: ${SMTP_TO:-}
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

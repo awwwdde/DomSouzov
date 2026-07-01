@@ -1,0 +1,8 @@
+# Обратный прокси с автоматическим HTTPS (Let's Encrypt).
+# Caddy сам выпустит и продлит TLS-сертификат, когда домен будет
+# указывать A-записью на этот сервер. Замените домен при необходимости.
+
+domsojuzov.ru, www.domsojuzov.ru {
+	encode zstd gzip
+	reverse_proxy app:8080
+}

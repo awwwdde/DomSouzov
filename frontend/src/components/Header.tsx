@@ -139,7 +139,7 @@ export default function Header() {
               aria-label={lang === 'ru' ? 'Основное меню' : 'Main'}
             >
               <motion.div
-                className="flex w-full flex-col items-stretch px-5 py-4 lg:flex-row lg:gap-x-16 lg:overflow-x-auto lg:px-8 lg:py-6 lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden"
+                className="flex w-full flex-col items-stretch px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6 lg:overflow-x-auto lg:px-8 lg:py-6 lg:[scrollbar-width:none] lg:[-ms-overflow-style:none] lg:[&::-webkit-scrollbar]:hidden"
                 variants={{
                   hidden: {},
                   visible: {
