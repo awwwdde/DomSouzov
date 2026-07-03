@@ -18,9 +18,22 @@ export function NewsRowStrip({
   return (
     <Link
       to={`/news/${article.id}`}
-      className="group grid border-b border-line bg-paper transition-colors hover:bg-paper-soft md:grid-cols-[minmax(0,280px)_1fr]"
+      className="group grid border-b-2 border-accent bg-paper transition-colors hover:bg-paper-soft md:border-b md:border-line md:grid-cols-[minmax(0,280px)_1fr]"
     >
-      <div className="relative aspect-[4/3] overflow-hidden border-b border-line bg-paper-soft md:border-b-0 md:border-r md:border-line">
+      {/* Мобильная шапка: дата и название над фото. */}
+      <div className="flex flex-col gap-3 p-5 pb-4 md:hidden">
+        <time
+          className="font-heading text-[clamp(20px,2vw,30px)] font-bold leading-none tracking-[0.01em] text-ink"
+          dateTime={article.created_at ?? undefined}
+        >
+          {dayMonth}
+        </time>
+        <h2 className="font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] text-ink transition-colors group-hover:text-accent">
+          {title}
+        </h2>
+      </div>
+
+      <div className="relative aspect-[4/3] overflow-hidden border-y border-line bg-paper-soft md:border-y-0 md:border-r md:border-line">
         {article.image ? (
           <img
             src={article.image}
@@ -38,12 +51,12 @@ export function NewsRowStrip({
 
       <div className="flex flex-col justify-center gap-5 p-5 md:p-8">
         <time
-          className="font-heading text-[clamp(20px,2vw,30px)] font-bold leading-none tracking-[0.01em] text-ink"
+          className="hidden font-heading text-[clamp(20px,2vw,30px)] font-bold leading-none tracking-[0.01em] text-ink md:block"
           dateTime={article.created_at ?? undefined}
         >
           {dayMonth}
         </time>
-        <h2 className="font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] text-ink transition-colors group-hover:text-accent md:max-w-[50ch]">
+        <h2 className="hidden font-heading text-[clamp(18px,2.2vw,28px)] font-bold uppercase leading-tight tracking-[0.04em] text-ink transition-colors group-hover:text-accent md:block md:max-w-[50ch]">
           {title}
         </h2>
         <p className="line-clamp-3 text-sm leading-6 text-ink-soft">{l(article.excerpt)}</p>

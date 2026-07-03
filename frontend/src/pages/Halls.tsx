@@ -8,17 +8,25 @@ import ActionButton from '../components/ActionButton';
 import { useReducedMotionActive } from '../lib/motion';
 
 /* Авто-слайдер фото зала: перелистывает кадры каждые 6 секунд с плавным
-   переходом. Один кадр — без листания; нет фото — подпись-заглушка. */
+   переходом. Прозрачные стрелки — для ручного переключения (сбрасывают
+   таймер). Один кадр — без листания; нет фото — подпись-заглушка. */
 function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: string; fallbackLabel: string }) {
   const reduced = useReducedMotionActive();
   const valid = images.filter(Boolean);
   const [idx, setIdx] = useState(0);
+  // Меняется при ручном переключении — перезапускает интервал автолистания.
+  const [manualTick, setManualTick] = useState(0);
 
   useEffect(() => {
     if (reduced || valid.length < 2) return;
     const id = window.setInterval(() => setIdx((i) => (i + 1) % valid.length), 6000);
     return () => window.clearInterval(id);
-  }, [reduced, valid.length]);
+  }, [reduced, valid.length, manualTick]);
+
+  const go = (dir: 1 | -1) => {
+    setIdx((i) => (i + dir + valid.length) % valid.length);
+    setManualTick((n) => n + 1);
+  };
 
   if (valid.length === 0) {
     return (
@@ -41,6 +49,26 @@ function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: str
           aria-hidden={i !== idx}
         />
       ))}
+      {valid.length > 1 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            aria-label="Предыдущее фото"
+            className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45 focus-visible:bg-ink/45"
+          >
+            <span aria-hidden>←</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            aria-label="Следующее фото"
+            className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45 focus-visible:bg-ink/45"
+          >
+            <span aria-hidden>→</span>
+          </button>
+        </>
+      ) : null}
     </>
   );
 }

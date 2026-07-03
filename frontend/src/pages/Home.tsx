@@ -117,15 +117,25 @@ export default function Home() {
       <Section as="div" tone="paper" spacing="none" bleed>
         <div className="relative w-full overflow-hidden bg-ink">
           {heroVideo ? (
+            // Мобильные браузеры (iOS Safari) требуют DOM-атрибут muted и явный
+            // вызов play() — React проставляет muted только как свойство,
+            // поэтому дублируем через ref, иначе autoplay блокируется.
             <video
+              ref={(el) => {
+                if (!el) return;
+                el.muted = true;
+                el.setAttribute('muted', '');
+                el.play().catch(() => {});
+              }}
               className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
               src={heroVideo}
               poster={heroPoster || undefined}
-              preload="metadata"
+              preload="auto"
               muted
               autoPlay
               loop
               playsInline
+              disablePictureInPicture
             />
           ) : heroPoster ? (
             <img
