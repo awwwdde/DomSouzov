@@ -132,7 +132,7 @@ export default function EventDetail() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.1fr_380px] lg:gap-14">
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.1fr_380px] lg:items-start lg:gap-14">
         {/* Фото — как в новости: на всю ширину, без полей */}
         <div className="w-full overflow-hidden border border-line bg-paper-soft">
           {event.image ? (
