@@ -83,6 +83,22 @@ export function formatDayMonthFromEvent(event: Event, lang: Lang): string {
   return `${dd(first)}–${dd(last)}`;
 }
 
+/** Мероприятие «прошло», если его ПОСЛЕДНИЙ сеанс раньше сегодняшнего дня.
+ *  Многодневное скрывается только после последней даты; в день проведения
+ *  ещё показывается. Без распознаваемой даты — считаем актуальным (не прячем).
+ *  Дата берётся из RU-строк (они всегда есть) — значение не зависит от языка. */
+export function isEventPast(event: Event, now: Date = new Date()): boolean {
+  const occ = eventOccurrences(event, 'ru');
+  if (occ.length === 0) return false;
+  const last = occ[occ.length - 1].date;
+  return last.getTime() < startOfDay(now).getTime();
+}
+
+/** Оставляет только актуальные (непрошедшие) мероприятия — для публичной афиши. */
+export function filterUpcomingEvents(events: Event[], now: Date = new Date()): Event[] {
+  return events.filter((e) => !isEventPast(e, now));
+}
+
 /** Один сеанс мероприятия: распарсенная дата + время. */
 export interface ParsedOccurrence {
   date: Date;

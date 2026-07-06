@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { SiteContent, Lang } from '../types';
 import { getContent } from '../api/client';
+import { filterUpcomingEvents } from '../lib/eventDates';
 
 interface SiteContextValue {
   content: SiteContent | null;
@@ -49,6 +50,9 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         setContent({
           ...data,
+          // Прошедшие мероприятия остаются в бэке/админке, но на публичном
+          // сайте не показываются (скрываются на следующий день после события).
+          events: filterUpcomingEvents(data.events ?? []),
           partners: data.partners ?? [],
           gallery_categories: data.gallery_categories ?? [],
           about: data.about ?? { hover_tips: [], scattered_photos: [], timeline: [] },
