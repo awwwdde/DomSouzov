@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
+import RichTextArea from '../../components/admin/RichTextArea';
 import { adminApi } from '../../api/client';
 import { EVENT_CATEGORIES as NEWS_CATEGORIES } from '../../lib/categories';
 
@@ -191,13 +192,16 @@ function NewsForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Полный текст (RU)</label>
-          <textarea value={form.content_ru} onChange={set('content_ru')} rows={8} />
+          <RichTextArea value={form.content_ru} onChange={(v) => setForm((p) => ({ ...p, content_ru: v }))} rows={8} />
         </div>
         <div className="grid gap-2">
           <label>Full text (EN)</label>
-          <textarea value={form.content_en} onChange={set('content_en')} rows={8} />
+          <RichTextArea value={form.content_en} onChange={(v) => setForm((p) => ({ ...p, content_en: v }))} rows={8} />
         </div>
       </div>
+      <span className="-mt-3 text-[11px] normal-case tracking-normal text-muted">
+        Кнопка «Фото в текст» вставляет изображение прямо в текст на месте курсора — например, блок «партнёры» в конце.
+      </span>
 
       <ImageUpload
         label="Главное изображение статьи"

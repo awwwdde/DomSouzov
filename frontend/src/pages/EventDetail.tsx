@@ -7,6 +7,7 @@ import { PageKicker } from '../components/PageKicker';
 import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import { formatDayMonthFromEvent } from '../lib/eventDates';
+import { parseContentBlocks, firstTextBlock } from '../lib/richText';
 
 function mediaUrl(path: string) {
   if (!path) return '';
@@ -40,7 +41,7 @@ export default function EventDetail() {
   }
 
   const dayHeader = formatDayMonthFromEvent(event, lang);
-  const descParas = l(event.description).split('\n').map((s) => s.trim()).filter(Boolean);
+  const descBlocks = parseContentBlocks(l(event.description));
 
   // Похожие события: тот же жанр, кроме текущего, до 3.
   const related = (content?.events ?? [])
@@ -48,7 +49,7 @@ export default function EventDetail() {
     .slice(0, 3);
 
   const seoDesc =
-    descParas[0]?.slice(0, 220) ||
+    firstTextBlock(descBlocks).slice(0, 220) ||
     (lang === 'ru'
       ? `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Москва.`
       : `${l(event.title)} — ${l(event.date)}, ${l(event.hall)}. ${SITE_NAME}, Moscow.`);
@@ -213,14 +214,25 @@ export default function EventDetail() {
       </section>
 
       {/* Описание программы */}
-      {descParas.length > 0 ? (
+      {descBlocks.length > 0 ? (
         <section className="border-t border-line px-5 py-14 md:px-12">
           <div className="mx-auto max-w-[820px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
             <div className="space-y-5 text-[16px] leading-[1.7] text-ink-soft">
-              {descParas.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+              {descBlocks.map((b, i) =>
+                b.type === 'image' ? (
+                  <img
+                    key={i}
+                    src={mediaUrl(b.url)}
+                    alt={b.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full border border-line object-contain"
+                  />
+                ) : (
+                  <p key={i}>{b.value}</p>
+                )
+              )}
             </div>
           </div>
         </section>

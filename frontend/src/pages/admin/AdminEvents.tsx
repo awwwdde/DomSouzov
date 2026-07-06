@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AdminCrudPage from '../../components/admin/AdminCrudPage';
 import ImageUpload from '../../components/admin/ImageUpload';
+import RichTextArea from '../../components/admin/RichTextArea';
 import { adminApi } from '../../api/client';
 import { EVENT_CATEGORIES } from '../../lib/categories';
 
@@ -391,13 +392,16 @@ function EventForm({ item, onSave, onCancel }: { item: unknown; onSave: () => vo
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Описание (RU)</label>
-          <textarea value={form.description_ru} onChange={set('description_ru')} rows={4} />
+          <RichTextArea value={form.description_ru} onChange={(v) => setForm((p) => ({ ...p, description_ru: v }))} rows={5} />
         </div>
         <div className="grid gap-2">
           <label>Description (EN)</label>
-          <textarea value={form.description_en} onChange={set('description_en')} rows={4} />
+          <RichTextArea value={form.description_en} onChange={(v) => setForm((p) => ({ ...p, description_en: v }))} rows={5} />
         </div>
       </div>
+      <span className="-mt-3 text-[11px] normal-case tracking-normal text-muted">
+        Кнопка «Фото в текст» вставляет изображение прямо в описание на месте курсора — например, логотипы партнёров в конце.
+      </span>
 
       <div className="grid gap-4 md:grid-cols-2">
         <ImageUpload

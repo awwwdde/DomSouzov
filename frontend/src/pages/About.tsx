@@ -4,6 +4,7 @@ import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
 import { Section } from '../components/Section';
 import ActionButton from '../components/ActionButton';
+import HeroVideo from '../components/HeroVideo';
 import Seo from '../components/Seo';
 import type { AboutHoverTip, AboutScatteredPhoto, AboutTimelineEvent } from '../types';
 
@@ -97,15 +98,10 @@ function HeroStage({
     <Section as="div" tone="paper" spacing="none" bleed>
       <div className="relative w-full overflow-hidden bg-ink">
         {video ? (
-          <video
-            className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
+          <HeroVideo
             src={video}
-            poster={poster || undefined}
-            preload="metadata"
-            muted
-            autoPlay
-            loop
-            playsInline
+            poster={poster}
+            className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
           />
         ) : poster ? (
           <img
@@ -253,8 +249,12 @@ function NarrativeText({
       className={['w-full md:w-[60%]', side === 'right' ? 'md:ml-auto' : 'md:mr-auto'].join(' ')}
     >
       <p
+        lang={lang}
         className={[
           'text-ink text-lg leading-8 md:text-[22px] md:leading-[1.62]',
+          // На мобильной колонке выравниваем текст по обоим краям (иначе правый
+          // край «рваный»); на десктопе оставляем editorial-выключку влево.
+          'text-justify [hyphens:auto] md:text-left',
           first
             ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[64px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
             : '',
@@ -563,7 +563,10 @@ function TimelineStage({
                   {title}
                 </div>
                 {desc ? (
-                  <p className={['mt-3 max-w-[44ch] text-base leading-7 text-ink-soft', isLeft ? 'md:ml-auto' : ''].join(' ')}>
+                  <p
+                    lang={lang}
+                    className={['mt-3 max-w-[44ch] text-base leading-7 text-ink-soft text-justify [hyphens:auto] md:[text-align:inherit]', isLeft ? 'md:ml-auto' : ''].join(' ')}
+                  >
                     {desc}
                   </p>
                 ) : null}

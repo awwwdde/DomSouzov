@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import ActionButton from '../components/ActionButton';
 import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import Marquee from '../components/Marquee';
+import HeroVideo from '../components/HeroVideo';
 import PartnersSection from '../components/PartnersSection';
 import { Container, Section } from '../components/Section';
 import { RevealItem, RevealList } from '../components/Reveal';
@@ -117,25 +118,10 @@ export default function Home() {
       <Section as="div" tone="paper" spacing="none" bleed>
         <div className="relative w-full overflow-hidden bg-ink">
           {heroVideo ? (
-            // Мобильные браузеры (iOS Safari) требуют DOM-атрибут muted и явный
-            // вызов play() — React проставляет muted только как свойство,
-            // поэтому дублируем через ref, иначе autoplay блокируется.
-            <video
-              ref={(el) => {
-                if (!el) return;
-                el.muted = true;
-                el.setAttribute('muted', '');
-                el.play().catch(() => {});
-              }}
-              className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
+            <HeroVideo
               src={heroVideo}
-              poster={heroPoster || undefined}
-              preload="auto"
-              muted
-              autoPlay
-              loop
-              playsInline
-              disablePictureInPicture
+              poster={heroPoster}
+              className="block h-[86vh] max-h-[900px] min-h-[480px] w-full bg-ink object-cover"
             />
           ) : heroPoster ? (
             <img

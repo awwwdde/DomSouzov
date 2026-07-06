@@ -9,6 +9,7 @@ import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { formatNewsLongDate, formatNewsShortDate } from '../lib/newsDates';
+import { parseContentBlocks, firstTextBlock } from '../lib/richText';
 import { fadeUp, transitionBase, useReducedMotionActive } from '../lib/motion';
 
 function mediaUrl(path: string) {
@@ -55,14 +56,14 @@ export default function NewsDetail() {
   }
 
   const dayHeader = formatNewsShortDate(article, lang);
-  const contentParas = l(article.content).split('\n').map((s) => s.trim()).filter(Boolean);
+  const contentBlocks = parseContentBlocks(l(article.content));
   const excerpt = l(article.excerpt).trim();
 
   const related = (content?.news ?? [])
     .filter((n) => n.id !== article.id && n.tag.ru === article.tag.ru)
     .slice(0, 3);
 
-  const seoDesc = excerpt || contentParas[0]?.slice(0, 200) || l(article.title);
+  const seoDesc = excerpt || firstTextBlock(contentBlocks).slice(0, 200) || l(article.title);
   const seoImage = article.image ? mediaUrl(article.image) : undefined;
 
   const openImage = (url: string) => {
@@ -223,8 +224,21 @@ export default function NewsDetail() {
         <div className="flex flex-col gap-8 border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           {/* Текст статьи */}
           <div className="space-y-4 text-[14px] leading-[1.7] text-ink-soft">
-            {contentParas.length > 0
-              ? contentParas.map((para, i) => <p key={i}>{para}</p>)
+            {contentBlocks.length > 0
+              ? contentBlocks.map((b, i) =>
+                  b.type === 'image' ? (
+                    <img
+                      key={i}
+                      src={mediaUrl(b.url)}
+                      alt={b.alt}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full border border-line object-contain"
+                    />
+                  ) : (
+                    <p key={i}>{b.value}</p>
+                  )
+                )
               : excerpt
                 ? <p>{excerpt}</p>
                 : null}
