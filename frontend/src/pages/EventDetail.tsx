@@ -160,21 +160,33 @@ export default function EventDetail() {
               </dt>
               {event.dates && event.dates.length > 1 ? (
                 (() => {
-                  // Группируем сеансы по дате (сохраняя порядок).
-                  const groups: { date: string; wd?: string; times: string[] }[] = [];
+                  // Уникальные даты по порядку + их наборы времён.
+                  const groups: { date: string; times: string[] }[] = [];
                   event.dates.forEach((o) => {
                     const d = lang === 'ru' ? o.date : (o.date_en || o.date);
-                    const wd = lang === 'ru' ? o.weekday_ru : o.weekday_en;
                     const g = groups.find((x) => x.date === d);
                     if (g) { if (!g.times.includes(o.time)) g.times.push(o.time); }
-                    else groups.push({ date: d, wd, times: [o.time] });
+                    else groups.push({ date: d, times: [o.time] });
                   });
-                  // Одинаковый ли набор времён у всех дней → показываем диапазон + времена один раз.
+                  // Одинаковый ли набор времён у всех дней.
                   const sig = (t: string[]) => [...t].sort().join(',');
                   const uniform = groups.every((g) => sig(g.times) === sig(groups[0].times));
-                  const range = groups.length > 1
-                    ? `${groups[0].date} — ${groups[groups.length - 1].date}`
-                    : groups[0].date;
+
+                  // Кубик даты: «25 ДЕК 2026» → день + месяц.
+                  const Tile = ({ date }: { date: string }) => {
+                    const m = date.match(/(\d{1,2})\s+(\S+)/);
+                    return (
+                      <div className="flex min-w-[54px] flex-col items-center justify-center rounded-lg bg-accent px-2 py-2 text-paper">
+                        <span className="text-[16px] font-bold leading-none tabular-nums">{m ? m[1] : date}</span>
+                        {m ? <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-paper/85">{m[2]}</span> : null}
+                      </div>
+                    );
+                  };
+                  const Tiles = ({ dates }: { dates: string[] }) => (
+                    <div className="flex flex-wrap gap-1.5">
+                      {dates.map((d, i) => <Tile key={`${d}-${i}`} date={d} />)}
+                    </div>
+                  );
                   const Chips = ({ times }: { times: string[] }) => (
                     <div className="flex flex-wrap gap-1.5">
                       {times.map((tm, j) => (
@@ -185,28 +197,31 @@ export default function EventDetail() {
                     </div>
                   );
 
-                  return uniform ? (
-                    <dd className="mt-2 grid gap-2 text-ink-soft">
-                      <span className="font-semibold text-ink">{range}</span>
-                      <span className="text-[11px] uppercase tracking-[0.1em] text-muted">
-                        {lang === 'ru' ? `Ежедневно · ${groups.length} дн.` : `Daily · ${groups.length} days`}
-                      </span>
-                      <Chips times={groups[0].times} />
-                    </dd>
-                  ) : (
-                    <dd className="mt-2 grid gap-3 text-ink-soft">
-                      <span className="font-semibold text-ink">{range}</span>
-                      <div className="grid max-h-72 gap-3 overflow-y-auto pr-1" data-lenis-prevent>
-                        {groups.map((g, i) => (
-                          <div key={`${g.date}-${i}`} className="grid gap-2 border-b border-line/60 pb-3 last:border-0 last:pb-0">
-                            <div className="flex items-baseline gap-2">
-                              <span className="font-semibold text-ink">{g.date}</span>
-                              {g.wd ? <span className="text-[11px] uppercase tracking-[0.1em] text-muted">{g.wd}</span> : null}
-                            </div>
-                            <Chips times={g.times} />
-                          </div>
-                        ))}
-                      </div>
+                  if (uniform) {
+                    return (
+                      <dd className="mt-2 grid gap-3 text-ink-soft">
+                        <Tiles dates={groups.map((g) => g.date)} />
+                        <Chips times={groups[0].times} />
+                      </dd>
+                    );
+                  }
+
+                  // Времена различаются — группируем даты по одинаковому набору времён.
+                  const bySig: { s: string; dates: string[]; times: string[] }[] = [];
+                  groups.forEach((g) => {
+                    const s = sig(g.times);
+                    const b = bySig.find((x) => x.s === s);
+                    if (b) b.dates.push(g.date);
+                    else bySig.push({ s, dates: [g.date], times: g.times });
+                  });
+                  return (
+                    <dd className="mt-2 grid gap-4 text-ink-soft">
+                      {bySig.map((b, i) => (
+                        <div key={b.s || i} className="grid gap-2 border-b border-line/60 pb-4 last:border-0 last:pb-0">
+                          <Tiles dates={b.dates} />
+                          <Chips times={b.times} />
+                        </div>
+                      ))}
                     </dd>
                   );
                 })()
