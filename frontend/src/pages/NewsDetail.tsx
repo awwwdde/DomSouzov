@@ -233,7 +233,7 @@ export default function NewsDetail() {
                       alt={b.alt}
                       loading="lazy"
                       decoding="async"
-                      className="w-full border border-line object-contain"
+                      className="h-auto w-full"
                     />
                   ) : (
                     <p key={i}>{b.value}</p>

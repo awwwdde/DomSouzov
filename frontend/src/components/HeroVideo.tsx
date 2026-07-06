@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react';
 
 /* ================================================================ */
-/* HeroVideo — фоновое видео-hero с надёжным автоплеем на мобильных.  */
+/* HeroVideo — фоновое видео-hero с автоплеем, надёжным на мобильных. */
 /*                                                                  */
-/* iOS Safari и Android Chrome блокируют autoplay, пока не выполнены  */
-/* ВСЕ условия: реальный DOM-атрибут muted (React ставит только       */
-/* свойство), playsInline и явный вызов play(). Плюс видео может быть  */
-/* ещё не готово в момент mount — поэтому повторяем play() на          */
-/* loadeddata/canplay, а на случай Low Power Mode (где автоплей        */
-/* запрещён совсем) стартуем при первом касании/клике по странице.     */
+/* ВАЖНО про iOS: рабочий вариант — чисто декларативный              */
+/* (muted + autoplay + playsinline + preload="metadata"). Именно так  */
+/* автоплей работал на iPhone. НЕ ставим preload="auto": для тяжёлого  */
+/* видео iOS начинает буферизировать весь файл и застревает на первом  */
+/* кадре. Программный play() тоже не форсируем на монтировании —       */
+/* только как безопасный фолбэк по первому касанию (Low Power Mode),   */
+/* где это разрешено внутри пользовательского жеста.                   */
 /* ================================================================ */
 export default function HeroVideo({
   src,
@@ -25,27 +26,20 @@ export default function HeroVideo({
     const v = ref.current;
     if (!v) return;
 
+    // iOS проверяет именно DOM-атрибут muted (React ставит только свойство).
     v.muted = true;
     v.setAttribute('muted', '');
 
-    const tryPlay = () => {
+    // Фолбэк на случай, когда автоплей заблокирован (Low Power Mode и т.п.):
+    // стартуем при первом реальном касании/клике — это валидный жест.
+    const onInteract = () => {
       v.play().catch(() => {});
     };
-    tryPlay();
-
-    v.addEventListener('loadeddata', tryPlay);
-    v.addEventListener('canplay', tryPlay);
-
-    // Автоплей заблокирован (Low Power Mode и т.п.) — стартуем при первом
-    // взаимодействии пользователя, один раз.
-    const onInteract = () => tryPlay();
-    window.addEventListener('touchstart', onInteract, { once: true, passive: true });
+    window.addEventListener('touchend', onInteract, { once: true, passive: true });
     window.addEventListener('click', onInteract, { once: true });
 
     return () => {
-      v.removeEventListener('loadeddata', tryPlay);
-      v.removeEventListener('canplay', tryPlay);
-      window.removeEventListener('touchstart', onInteract);
+      window.removeEventListener('touchend', onInteract);
       window.removeEventListener('click', onInteract);
     };
   }, [src]);
@@ -56,12 +50,11 @@ export default function HeroVideo({
       className={className}
       src={src}
       poster={poster || undefined}
-      preload="auto"
+      preload="metadata"
       muted
       autoPlay
       loop
       playsInline
-      disablePictureInPicture
     />
   );
 }

@@ -159,19 +159,57 @@ export default function EventDetail() {
                   : lang === 'ru' ? 'Когда' : 'When'}
               </dt>
               {event.dates && event.dates.length > 1 ? (
-                <dd className="mt-1 grid max-h-64 gap-1.5 overflow-y-auto pr-1 text-ink-soft" data-lenis-prevent>
-                  {event.dates.map((o, i) => {
+                (() => {
+                  // Группируем сеансы по дате (сохраняя порядок).
+                  const groups: { date: string; wd?: string; times: string[] }[] = [];
+                  event.dates.forEach((o) => {
                     const d = lang === 'ru' ? o.date : (o.date_en || o.date);
                     const wd = lang === 'ru' ? o.weekday_ru : o.weekday_en;
-                    return (
-                      <div key={`${d}-${o.time}-${i}`} className="flex items-baseline gap-2 border-b border-line/60 pb-1.5 last:border-0">
-                        <span className="font-semibold text-ink">{d}</span>
-                        {wd ? <span className="text-[11px] uppercase tracking-[0.1em] text-muted">{wd}</span> : null}
-                        <span className="ml-auto tabular-nums text-ink">{o.time}</span>
+                    const g = groups.find((x) => x.date === d);
+                    if (g) { if (!g.times.includes(o.time)) g.times.push(o.time); }
+                    else groups.push({ date: d, wd, times: [o.time] });
+                  });
+                  // Одинаковый ли набор времён у всех дней → показываем диапазон + времена один раз.
+                  const sig = (t: string[]) => [...t].sort().join(',');
+                  const uniform = groups.every((g) => sig(g.times) === sig(groups[0].times));
+                  const range = groups.length > 1
+                    ? `${groups[0].date} — ${groups[groups.length - 1].date}`
+                    : groups[0].date;
+                  const Chips = ({ times }: { times: string[] }) => (
+                    <div className="flex flex-wrap gap-1.5">
+                      {times.map((tm, j) => (
+                        <span key={`${tm}-${j}`} className="rounded-full border border-line px-2.5 py-1 text-[12px] font-semibold tabular-nums text-ink">
+                          {tm}
+                        </span>
+                      ))}
+                    </div>
+                  );
+
+                  return uniform ? (
+                    <dd className="mt-2 grid gap-2 text-ink-soft">
+                      <span className="font-semibold text-ink">{range}</span>
+                      <span className="text-[11px] uppercase tracking-[0.1em] text-muted">
+                        {lang === 'ru' ? `Ежедневно · ${groups.length} дн.` : `Daily · ${groups.length} days`}
+                      </span>
+                      <Chips times={groups[0].times} />
+                    </dd>
+                  ) : (
+                    <dd className="mt-2 grid gap-3 text-ink-soft">
+                      <span className="font-semibold text-ink">{range}</span>
+                      <div className="grid max-h-72 gap-3 overflow-y-auto pr-1" data-lenis-prevent>
+                        {groups.map((g, i) => (
+                          <div key={`${g.date}-${i}`} className="grid gap-2 border-b border-line/60 pb-3 last:border-0 last:pb-0">
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-semibold text-ink">{g.date}</span>
+                              {g.wd ? <span className="text-[11px] uppercase tracking-[0.1em] text-muted">{g.wd}</span> : null}
+                            </div>
+                            <Chips times={g.times} />
+                          </div>
+                        ))}
                       </div>
-                    );
-                  })}
-                </dd>
+                    </dd>
+                  );
+                })()
               ) : (
                 <dd className="mt-1 text-ink-soft">
                   {l(event.date)} · {l(event.weekday)} · {event.time}
@@ -204,12 +242,12 @@ export default function EventDetail() {
               href={event.ticket_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-11 max-w-fit items-center justify-center rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-paper transition hover:bg-accent-deep"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-paper transition hover:bg-accent-deep"
             >
               {lang === 'ru' ? 'Купить билет' : 'Buy tickets'} →
             </a>
           ) : null}
-          <ActionButton to="/events" text={lang === 'ru' ? 'Вся афиша' : 'Full programme'} />
+          <ActionButton to="/events" text={lang === 'ru' ? 'Вся афиша' : 'Full programme'} className="w-full" />
         </aside>
       </section>
 
@@ -227,7 +265,7 @@ export default function EventDetail() {
                     alt={b.alt}
                     loading="lazy"
                     decoding="async"
-                    className="w-full border border-line object-contain"
+                    className="h-auto w-full"
                   />
                 ) : (
                   <p key={i}>{b.value}</p>
