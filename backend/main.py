@@ -215,6 +215,11 @@ if STATIC_DIR and os.path.isdir(STATIC_DIR):
 
     _INDEX = os.path.join(STATIC_DIR, "index.html")
 
+    # index.html НЕ кэшируем: иначе браузер (особенно Safari на iOS) держит
+    # старую оболочку и тянет старый хэшированный бандл после деплоя. Сами
+    # ассеты в /assets кэшируются надолго — у них хэш в имени.
+    _INDEX_HEADERS = {"Cache-Control": "no-cache, must-revalidate"}
+
     def _index_with_seo(full_path: str) -> HTMLResponse:
         """Отдаёт index.html с серверно внедрёнными мета-тегами по маршруту."""
         try:
@@ -226,10 +231,10 @@ if STATIC_DIR and os.path.isdir(STATIC_DIR):
             finally:
                 db.close()
             html_doc = seo.inject_head(html_doc, head)
-            return HTMLResponse(content=html_doc)
+            return HTMLResponse(content=html_doc, headers=_INDEX_HEADERS)
         except Exception:
             # При любой ошибке — отдаём обычный index.html, чтобы не уронить SPA.
-            return FileResponse(_INDEX)
+            return FileResponse(_INDEX, headers=_INDEX_HEADERS)
 
     # Catch-all регистрируем ПОСЛЕДНИМ, чтобы /api/*, /uploads/*, /healthz
     # успели сматчиться выше. Файлы из корня сборки (favicon, manifest) —
