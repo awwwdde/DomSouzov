@@ -1,9 +1,9 @@
 ﻿@import "tailwindcss";
 
 @theme {
-  --font-sans: "Manrope", system-ui, sans-serif;
-  --font-heading: "Roboto Condensed", "Arial Narrow", "Manrope", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --font-sans: "Manrope", system-ui, sans-serif;
+    --font-heading: "Roboto Condensed", "Arial Narrow", "Manrope", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   /* Ticket palette: тёплый кремовый paper + плотный чёрный ink. */
   --color-paper: #f0ebe0;
   --color-paper-soft: #f7f3e8;

@@ -208,6 +208,12 @@ const PAGES: PageDef[] = [
           { key: 'about_timeline_heading', label: 'Заголовок «Хронология»', type: 'text' },
         ],
       },
+      {
+        title: 'Блок «В цифрах»',
+        fields: [
+          { key: 'about_facts_image', label: 'Фото здания', type: 'image', single: true, hint: 'Вырезанное здание на прозрачном фоне (PNG). «Выпирает» из тёмного блока с цифрами. Показывается на десктопе.' },
+        ],
+      },
     ],
   },
   {

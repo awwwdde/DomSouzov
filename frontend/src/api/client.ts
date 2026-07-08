@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SiteContent, Event, NewsArticle, Hall, GalleryImage } from '../types';
+import { SiteContent, Event, NewsArticle, Hall, GalleryImage, ReviewsResponse } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -39,6 +39,9 @@ export const getHalls = (): Promise<Hall[]> =>
 
 export const getGallery = (): Promise<GalleryImage[]> =>
   api.get('/gallery').then((r) => r.data);
+
+export const getReviews = (): Promise<ReviewsResponse> =>
+  api.get('/reviews').then((r) => r.data);
 
 export const subscribeNewsletter = async (email: string): Promise<void> => {
   try {
@@ -112,6 +115,12 @@ export const adminApi = {
   createHall: (data: unknown) => api.post('/admin/halls', data).then((r) => r.data),
   updateHall: (id: number, data: unknown) => api.put(`/admin/halls/${id}`, data).then((r) => r.data),
   deleteHall: (id: number) => api.delete(`/admin/halls/${id}`).then((r) => r.data),
+
+  // Reviews (ручные отзывы)
+  getReviews: () => api.get('/admin/reviews').then((r) => r.data),
+  createReview: (data: unknown) => api.post('/admin/reviews', data).then((r) => r.data),
+  updateReview: (id: number, data: unknown) => api.put(`/admin/reviews/${id}`, data).then((r) => r.data),
+  deleteReview: (id: number) => api.delete(`/admin/reviews/${id}`).then((r) => r.data),
 
   // Gallery
   getGallery: () => api.get('/admin/gallery').then((r) => r.data),

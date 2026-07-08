@@ -1,25 +1,34 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, LayoutGrid, ArrowUpRight, Mail, X, Check, Loader2, Paperclip } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Users, Layers } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 import { submitOrganizerRequest } from '../api/client';
+import type { Hall } from '../types';
 
 /* ============================================================ */
-/* ОРГАНИЗАТОРАМ — минималистичная страница аренды.             */
-/* Короткий текст для понимания, без списков. Две ключевые      */
-/* кнопки открывают PDF (тех. райдер и презентацию залов),      */
-/* привязанные через CMS (site_settings):                       */
-/*   organizers_rider_pdf — ссылка на PDF технического райдера; */
-/*   organizers_halls_pdf — ссылка на PDF о залах.              */
+/* ОРГАНИЗАТОРАМ — страница аренды.                             */
+/* Короткий текст, видео-презентация, затем технический райдер: */
+/* блоки по каждому помещению (фото + схема, описание,          */
+/* оборудование). Данные — залы из CMS (админка «Залы»):        */
+/*   scheme — изображение схемы/плана;                          */
+/*   equipment_list — перечень оборудования (тех. райдер);      */
+/*   rider_only — буфет/анфилада (без оборудования).            */
 /* ============================================================ */
+
+function mediaUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('/')) return path;
+  return `/${path}`;
+}
 
 export default function Organizers() {
-  const { lang, t, tStrict } = useSite();
+  const { lang, t, tStrict, content } = useSite();
   const [modalOpen, setModalOpen] = useState(false);
+  const halls = content?.halls ?? [];
 
   const title = tStrict('organizers_title') || (lang === 'ru' ? 'Организаторам' : 'For Organizers');
   const lead =
@@ -27,8 +36,6 @@ export default function Organizers() {
     (lang === 'ru'
       ? 'Колонный, Октябрьский и Малый залы Дома Союзов — для концертов, церемоний, форумов и съёмок. Историческая архитектура в центре Москвы, акустика класса A, вместимость до 1 200 гостей и собственная техническая команда.'
       : 'The Hall of Columns, the October and Small halls of the House of Unions — for concerts, ceremonies, forums and filming. Historic architecture in the heart of Moscow, class A acoustics, capacity up to 1,200 guests and an in-house technical crew.');
-  const riderPdf = t('organizers_rider_pdf');
-  const hallsPdf = t('organizers_halls_pdf');
   const videoUrl = t('organizers_video_url');
   const videoPoster = t('organizers_video_poster');
 
@@ -66,35 +73,12 @@ export default function Organizers() {
         </div>
       )}
 
-      {/* ДЕЙСТВИЯ: кнопки PDF + заявка */}
-      <RevealSection className="px-5 py-16 md:px-12 md:py-24">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <PdfButton
-            href={riderPdf}
-            icon={<FileText size={22} strokeWidth={1.6} />}
-            label={lang === 'ru' ? 'Просмотреть технический райдер' : 'View technical rider'}
-            hint={lang === 'ru' ? 'PDF · откроется в новой вкладке' : 'PDF · opens in a new tab'}
-            soon={lang === 'ru' ? 'Скоро' : 'Soon'}
-          />
-          <PdfButton
-            href={hallsPdf}
-            fallbackTo="/halls"
-            icon={<LayoutGrid size={22} strokeWidth={1.6} />}
-            label={lang === 'ru' ? 'Залы' : 'Halls'}
-            hint={
-              hallsPdf
-                ? lang === 'ru'
-                  ? 'PDF · откроется в новой вкладке'
-                  : 'PDF · opens in a new tab'
-                : lang === 'ru'
-                  ? 'Перейти к описанию залов'
-                  : 'Go to the halls overview'
-            }
-            soon={lang === 'ru' ? 'Скоро' : 'Soon'}
-          />
-        </div>
+      {/* ТЕХНИЧЕСКИЙ РАЙДЕР: блоки по каждому помещению */}
+      <HallsRider halls={halls} lang={lang} />
 
-        {/* Заявка — кнопка во всю ширину (как обе кнопки выше), открывает форму */}
+      {/* ЗАЯВКА */}
+      <RevealSection className="px-5 py-16 md:px-12 md:py-24">
+        {/* Заявка — кнопка во всю ширину, открывает форму */}
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -402,77 +386,146 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
   );
 }
 
-/* ----------------------------------------------------------------- */
-/* PdfButton — крупная кнопка действия.                              */
-/*  • есть PDF → открывает его в новой вкладке;                      */
-/*  • нет PDF, но есть fallbackTo → ведёт на внутреннюю страницу;    */
-/*  • нет ничего → неактивная плашка «Скоро».                        */
-/* ----------------------------------------------------------------- */
-function PdfButton({
-  href,
-  fallbackTo,
-  icon,
-  label,
-  hint,
-  soon,
-}: {
-  href?: string;
-  fallbackTo?: string;
-  icon: ReactNode;
-  label: string;
-  hint: string;
-  soon: string;
-}) {
-  const base =
-    'group flex items-center justify-between gap-5 border border-line bg-paper-soft p-6 transition md:p-8';
-  const active = 'hover:border-accent hover:bg-accent hover:text-paper';
-
-  const inner = (
-    <>
-      <span className="flex items-center gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-current text-accent transition group-hover:text-paper">
-          {icon}
-        </span>
-        <span className="flex flex-col">
-          <span className="font-heading text-[clamp(20px,2vw,28px)] font-bold uppercase leading-[1.05] tracking-[0.02em]">
-            {label}
-          </span>
-          <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted transition group-hover:text-paper/80">
-            {hint}
-          </span>
-        </span>
-      </span>
-      <ArrowUpRight size={26} strokeWidth={1.6} className="shrink-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-    </>
-  );
-
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={`${base} ${active}`}>
-        {inner}
-      </a>
-    );
-  }
-  if (fallbackTo) {
-    return (
-      <Link to={fallbackTo} className={`${base} ${active}`}>
-        {inner}
-      </Link>
-    );
-  }
+/* ================================================================= */
+/* HallsRider — технический райдер: блок по каждому помещению.        */
+/*  Данные из CMS (залы). Для помещений без оборудования (буфет,      */
+/*  анфилада — rider_only) показываем аккуратную пометку.            */
+/* ================================================================= */
+function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
+  if (!halls.length) return null;
   return (
-    <div className={`${base} cursor-default opacity-60`} aria-disabled>
-      <span className="flex items-center gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-current text-muted">
-          {icon}
-        </span>
-        <span className="flex flex-col">
-          <span className="font-heading text-[clamp(20px,2vw,28px)] font-bold uppercase leading-[1.05] tracking-[0.02em]">
-            {label}
+    <RevealSection className="border-t border-line px-5 py-16 md:px-12 md:py-24">
+      <PageKicker>{lang === 'ru' ? 'Технический райдер' : 'Technical rider'}</PageKicker>
+      <h2 className="max-w-[18ch] font-heading text-[clamp(34px,5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
+        {lang === 'ru' ? 'Залы и помещения' : 'Halls & spaces'}
+      </h2>
+      <p className="mt-4 max-w-[60ch] text-[15px] leading-7 text-ink-soft">
+        {lang === 'ru'
+          ? 'Схемы рассадки, вместимость и сценическое оборудование каждого пространства Дома Союзов.'
+          : 'Seating plans, capacity and stage equipment for every space of the House of Unions.'}
+      </p>
+
+      <div className="mt-12 grid gap-12 md:mt-16 md:gap-20">
+        {halls.map((hall, i) => (
+          <HallRiderBlock key={hall.id} hall={hall} index={i} lang={lang} />
+        ))}
+      </div>
+    </RevealSection>
+  );
+}
+
+function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang: 'ru' | 'en' }) {
+  const name = hall.name?.[lang] || hall.name?.ru || '';
+  const description = hall.description?.[lang] || hall.description?.ru || '';
+  const equipment = hall.equipment_list?.[lang]?.length
+    ? hall.equipment_list[lang]
+    : hall.equipment_list?.ru ?? [];
+  const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : []).filter(Boolean);
+  const photo = photos[0];
+  const scheme = hall.scheme || null;
+
+  return (
+    <article className="border-t border-line pt-8 md:pt-10">
+      {/* Заголовок + вместимость */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <div className="flex items-baseline gap-4">
+          <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
+            N° {String(index + 1).padStart(2, '0')}
           </span>
-          <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted">{soon}</span>
-        </span>
-      </span>
-    </div>
+          <h3 className="font-heading text-[clamp(24px,3vw,44px)] font-bold uppercase leading-[1] tracking-[0.02em] text-ink">
+            {name}
+          </h3>
+        </div>
+        {hall.capacity ? (
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-soft px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+            <Users size={14} className="text-accent" strokeWidth={1.8} />
+            {hall.capacity}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Фото + схема */}
+      {(photo || scheme) ? (
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <RiderMedia
+            src={photo ? mediaUrl(photo) : ''}
+            alt={name}
+            label={lang === 'ru' ? 'Фото появится позже' : 'Photo coming soon'}
+            caption={lang === 'ru' ? 'Фотография' : 'Photo'}
+          />
+          <RiderMedia
+            src={scheme ? mediaUrl(scheme) : ''}
+            alt={`${name} — ${lang === 'ru' ? 'схема' : 'scheme'}`}
+            label={lang === 'ru' ? 'Схема появится позже' : 'Scheme coming soon'}
+            caption={lang === 'ru' ? 'Схема рассадки' : 'Seating plan'}
+            contain
+          />
+        </div>
+      ) : null}
+
+      {/* Описание */}
+      {description ? (
+        <p className="mt-6 max-w-[70ch] text-[15px] leading-7 text-ink-soft md:text-base">{description}</p>
+      ) : null}
+
+      {/* Оборудование */}
+      <div className="mt-6 border-t border-line pt-5">
+        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
+          <Layers size={15} className="text-accent" strokeWidth={1.8} />
+          {lang === 'ru' ? 'Оборудование' : 'Equipment'}
+        </div>
+        {equipment.length ? (
+          <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+            {equipment.map((item, j) => (
+              <li key={j} className="flex gap-3 text-[14px] leading-6 text-ink-soft">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 max-w-[60ch] text-[14px] leading-6 text-muted">
+            {lang === 'ru'
+              ? 'Сценическое оборудование не предусмотрено — пространство для выставок, фуршетов и презентаций.'
+              : 'No stage equipment — a space for exhibitions, receptions and presentations.'}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function RiderMedia({
+  src,
+  alt,
+  label,
+  caption,
+  contain,
+}: {
+  src: string;
+  alt: string;
+  label: string;
+  caption: string;
+  contain?: boolean;
+}) {
+  return (
+    <figure className="flex flex-col gap-2">
+      <div className="relative aspect-[4/3] overflow-hidden border border-line bg-paper-soft">
+        {src ? (
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className={`h-full w-full ${contain ? 'object-contain bg-white p-2' : 'object-cover'}`}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center p-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+            {label}
+          </div>
+        )}
+      </div>
+      <figcaption className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{caption}</figcaption>
+    </figure>
   );
 }

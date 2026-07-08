@@ -23,10 +23,12 @@ from models import (
     NewsletterSubscriber,
     OrganizerRequest,
     MediaFile,
+    Review,
 )
 from config import settings as app_settings
 import mailer
 import email_templates
+import reviews_yandex
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -257,6 +259,52 @@ def get_halls(db: Session = Depends(get_db)):
     return [_hall_out(h) for h in halls]
 
 
+@router.get("/reviews")
+def get_reviews(db: Session = Depends(get_db)):
+    """Отзывы для витрины: закреплённые/ручные (админка) + авто с Яндекс Карт.
+    Итог ограничиваем 8 карточками (сетка 4×2)."""
+    LIMIT = 8
+    manual = (
+        db.query(Review)
+        .filter(Review.is_active == True)
+        .order_by(Review.is_pinned.desc(), Review.sort_order, Review.id.desc())
+        .all()
+    )
+    manual_out = [
+        {
+            "author": r.author,
+            "text": r.text,
+            "rating": r.rating or 5,
+            "date_label": r.date_label or "",
+            "source": "manual",
+        }
+        for r in manual
+    ]
+
+    url_row = db.query(SiteSettings).filter_by(key="yandex_reviews_url").first()
+    yandex_url = (url_row.value_ru if url_row and url_row.value_ru else reviews_yandex.DEFAULT_WIDGET)
+    try:
+        y = reviews_yandex.get_yandex_reviews(yandex_url)
+    except Exception:
+        y = {"rating": None, "reviews": []}
+
+    # Ручные — первыми, затем авто; не дублируем по (автор+начало текста).
+    seen = {(r["author"].lower(), r["text"][:40].lower()) for r in manual_out}
+    merged = list(manual_out)
+    for r in y.get("reviews", []):
+        key = (r.get("author", "").lower(), r.get("text", "")[:40].lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(r)
+
+    return {
+        "rating": y.get("rating"),
+        "url": y.get("org_url") or "https://yandex.ru/maps/org/dom_soyuzov/1101563021/reviews/",
+        "reviews": merged[:LIMIT],
+    }
+
+
 @router.get("/gallery")
 def get_gallery(db: Session = Depends(get_db)):
     gallery = db.query(GalleryImage).filter(GalleryImage.is_active == True).order_by(GalleryImage.sort_order).all()
@@ -419,7 +467,29 @@ def _hall_out(h: Hall) -> dict:
         "description": {"ru": h.description_ru or "", "en": h.description_en or ""},
         "image": h.image,
         "gallery": _hall_gallery(h),
+        "scheme": getattr(h, "scheme", None),
+        "equipment": {
+            "ru": getattr(h, "equipment_ru", "") or "",
+            "en": getattr(h, "equipment_en", "") or "",
+        },
+        "equipment_list": {
+            "ru": _split_lines(getattr(h, "equipment_ru", "")),
+            "en": _split_lines(getattr(h, "equipment_en", "")),
+        },
+        "rider_only": bool(getattr(h, "rider_only", False)),
     }
+
+
+def _split_lines(raw) -> list:
+    """Оборудование хранится по строке на пункт; поддерживаем и разделитель ';'."""
+    if not raw:
+        return []
+    parts = []
+    for line in str(raw).replace(";", "\n").splitlines():
+        s = line.strip().lstrip("-•·").strip()
+        if s:
+            parts.append(s)
+    return parts
 
 
 def _gallery_out(g: GalleryImage) -> dict:

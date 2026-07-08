@@ -152,6 +152,10 @@ class HallBase(BaseModel):
     description_en: Optional[str] = None
     image: Optional[str] = None
     gallery: Optional[str] = None
+    scheme: Optional[str] = None
+    equipment_ru: Optional[str] = None
+    equipment_en: Optional[str] = None
+    rider_only: bool = False
     sort_order: int = 0
 
 
@@ -164,6 +168,32 @@ class HallUpdate(HallBase):
 
 
 class HallOut(HallBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+# Reviews (ручные отзывы; авто с Яндекса — отдельно)
+class ReviewBase(BaseModel):
+    author: str
+    text: str
+    rating: int = 5
+    date_label: Optional[str] = None
+    is_pinned: bool = False
+    is_active: bool = True
+    sort_order: int = 0
+
+
+class ReviewCreate(ReviewBase):
+    pass
+
+
+class ReviewUpdate(ReviewBase):
+    pass
+
+
+class ReviewOut(ReviewBase):
     id: int
 
     class Config:

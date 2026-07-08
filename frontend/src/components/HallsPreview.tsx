@@ -6,7 +6,7 @@ import ActionButton from './ActionButton';
 
 export default function HallsPreview() {
   const { lang, content } = useSite();
-  const halls = content?.halls ?? [];
+  const halls = (content?.halls ?? []).filter((h) => !h.rider_only);
 
   const l = (obj: { ru: string; en: string }) => obj[lang] || obj.ru;
 

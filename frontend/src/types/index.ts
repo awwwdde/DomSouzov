@@ -77,6 +77,24 @@ export interface Hall {
   description: BilingualString;
   image: string | null;
   gallery?: string[];
+  scheme?: string | null;
+  equipment?: BilingualString;
+  equipment_list?: { ru: string[]; en: string[] };
+  rider_only?: boolean;
+}
+
+export interface Review {
+  author: string;
+  text: string;
+  rating: number;
+  date_label: string;
+  source: 'manual' | 'yandex';
+}
+
+export interface ReviewsResponse {
+  rating: number | null;
+  url: string;
+  reviews: Review[];
 }
 
 export interface GalleryCategory {

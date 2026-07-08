@@ -1,18 +1,19 @@
+import { useEffect, useState } from 'react';
+import { Star, ArrowUpRight } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
-import { RevealSection } from '../components/Reveal';
+import { RevealSection, RevealList, RevealItem } from '../components/Reveal';
+import { getReviews } from '../api/client';
+import type { Review, ReviewsResponse } from '../types';
 
 const ADDRESS_QUERY = 'Москва, Большая Дмитровка, 1';
 const DEFAULT_MAP_EMBED = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(ADDRESS_QUERY)}&z=16`;
 const ROUTE_URL = `https://yandex.ru/maps/?rtext=~${encodeURIComponent(ADDRESS_QUERY)}&rtt=mt`;
-// Виджет отзывов Яндекс Карт (организация «Дом Союзов», обновляется автоматически).
-const DEFAULT_REVIEWS_EMBED = 'https://yandex.ru/maps-reviews-widget/1101563021?comments';
 
 export default function Contacts() {
   const { lang, t } = useSite();
   const mapEmbed = t('map_embed_url') || DEFAULT_MAP_EMBED;
-  const reviewsUrl = t('yandex_reviews_url') || DEFAULT_REVIEWS_EMBED;
 
   return (
     <>
@@ -36,8 +37,12 @@ export default function Contacts() {
       <RevealSection className="grid gap-10 px-5 py-16 md:grid-cols-[1fr_1fr] md:px-12">
         <div>
           <PageKicker>{lang === 'ru' ? 'Расположение' : 'Location'}</PageKicker>
-          <h2 className="font-heading text-[clamp(42px,5vw,78px)] font-bold uppercase leading-[0.88] tracking-[0.04em]">
-            {lang === 'ru' ? 'Москва · Большая Дмитровка · дом 1' : 'Moscow · Bolshaya Dmitrovka · 1'}
+          <h2 className="font-heading text-[clamp(34px,4.4vw,64px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-balance">
+            {lang === 'ru' ? (
+              <>Москва · Большая Дмитровка · <span className="whitespace-nowrap">дом&nbsp;1</span></>
+            ) : (
+              <>Moscow · Bolshaya Dmitrovka · <span className="whitespace-nowrap">bld.&nbsp;1</span></>
+            )}
           </h2>
           <dl className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-5 text-sm">
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Вход' : 'Entrance'}</dt>
@@ -85,30 +90,117 @@ export default function Contacts() {
         </div>
       </RevealSection>
 
-      {/* ОТЗЫВЫ — живой виджет Яндекс Карт (обновляется автоматически). */}
-      <RevealSection className="border-t border-line bg-paper px-5 py-16 md:px-12">
-        <PageKicker>{lang === 'ru' ? 'Отзывы' : 'Reviews'}</PageKicker>
-        <h2 className="mb-8 font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
-          {lang === 'ru' ? 'Отзывы на Яндекс Картах' : 'Reviews on Yandex Maps'}
-        </h2>
-        {reviewsUrl ? (
-          <div className="overflow-hidden rounded-sm border border-line bg-paper">
-            <iframe
-              title={lang === 'ru' ? 'Отзывы — Яндекс Карты' : 'Reviews — Yandex Maps'}
-              src={reviewsUrl}
-              className="h-[620px] w-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-        ) : (
-          <p className="max-w-2xl text-base leading-7 text-ink-soft">
-            {lang === 'ru'
-              ? 'Виджет отзывов появится здесь. Отзывы обновляются автоматически с Яндекс Карт.'
-              : 'The reviews widget will appear here. Reviews update automatically from Yandex Maps.'}
-          </p>
-        )}
-      </RevealSection>
+      {/* ОТЗЫВЫ — карточки в стиле сайта; данные авто с Яндекс Карт + ручные из CMS. */}
+      <ReviewsSection lang={lang} />
     </>
+  );
+}
+
+/* ----------------------------------------------------------------- */
+/* ReviewsSection — витрина отзывов (сетка 4×2).                      */
+/*  Данные: GET /api/reviews (ручные из админки + авто с Яндекса,     */
+/*  кэш на сервере). Стиль карточек — как блоки на «Зрителям».        */
+/* ----------------------------------------------------------------- */
+function ReviewsSection({ lang }: { lang: 'ru' | 'en' }) {
+  const [data, setData] = useState<ReviewsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    getReviews()
+      .then((d) => alive && setData(d))
+      .catch(() => alive && setData({ rating: null, url: '', reviews: [] }))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const reviews = data?.reviews ?? [];
+  const mapUrl = data?.url || 'https://yandex.ru/maps/org/dom_soyuzov/1101563021/';
+
+  return (
+    <RevealSection className="border-t border-line bg-paper px-5 py-16 md:px-12 md:py-20">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <PageKicker>{lang === 'ru' ? 'Отзывы' : 'Reviews'}</PageKicker>
+          <h2 className="font-heading text-[clamp(34px,4.5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
+            {lang === 'ru' ? 'Что говорят гости' : 'What guests say'}
+          </h2>
+        </div>
+        <a
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-ink bg-transparent px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink transition hover:bg-ink hover:text-paper"
+        >
+          {data?.rating ? (
+            <span className="inline-flex items-center gap-1">
+              <Star size={14} className="fill-accent text-accent" />
+              {data.rating.toFixed(1)}
+            </span>
+          ) : null}
+          {lang === 'ru' ? 'Все отзывы на Яндексе' : 'All reviews on Yandex'} →
+        </a>
+      </div>
+
+      {loading ? (
+        <p className="mt-10 text-sm uppercase tracking-[0.14em] text-muted">
+          {lang === 'ru' ? 'Загружаем отзывы…' : 'Loading reviews…'}
+        </p>
+      ) : reviews.length === 0 ? (
+        <p className="mt-10 max-w-2xl text-base leading-7 text-ink-soft">
+          {lang === 'ru'
+            ? 'Отзывы появятся здесь. Они подгружаются автоматически с Яндекс Карт.'
+            : 'Reviews will appear here. They are loaded automatically from Yandex Maps.'}
+        </p>
+      ) : (
+        <RevealList className="mt-10 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          {reviews.map((r, i) => (
+            <RevealItem key={`${r.author}-${i}`}>
+              <ReviewCard review={r} href={mapUrl} lang={lang} />
+            </RevealItem>
+          ))}
+        </RevealList>
+      )}
+    </RevealSection>
+  );
+}
+
+function ReviewCard({ review, href, lang }: { review: Review; href: string; lang: 'ru' | 'en' }) {
+  const rating = Math.max(0, Math.min(5, review.rating || 5));
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={lang === 'ru' ? 'Открыть отзывы на Яндекс Картах' : 'Open reviews on Yandex Maps'}
+      className="group flex h-full flex-col gap-4 bg-paper p-6 transition hover:bg-paper-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
+      <div className="flex items-center justify-between">
+        <span className="flex gap-0.5" aria-label={`${rating} / 5`}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              size={14}
+              className={i < rating ? 'fill-accent text-accent' : 'text-line'}
+              strokeWidth={1.6}
+            />
+          ))}
+        </span>
+        <ArrowUpRight
+          size={20}
+          strokeWidth={1.6}
+          className="text-line transition-all group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+        />
+      </div>
+      <p className="line-clamp-6 flex-1 text-[14px] leading-6 text-ink-soft">{review.text}</p>
+      <div className="mt-1 border-t border-line pt-3">
+        <div className="text-[13px] font-bold uppercase tracking-[0.04em] text-ink">{review.author}</div>
+        {review.date_label ? (
+          <div className="mt-0.5 text-[11px] uppercase tracking-[0.1em] text-muted">{review.date_label}</div>
+        ) : null}
+      </div>
+    </a>
   );
 }

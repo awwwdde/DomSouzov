@@ -11,6 +11,9 @@ const EMPTY = {
   description_ru: '', description_en: '',
   image: '',
   gallery: '',
+  scheme: '',
+  equipment_ru: '', equipment_en: '',
+  rider_only: false,
   sort_order: 0,
 };
 
@@ -76,6 +79,20 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   const [features, setFeatures] = useState<Feature[]>(() => parseFeatures((item as typeof EMPTY)?.features_ru || ''));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
+  const [schemeBusy, setSchemeBusy] = useState(false);
+
+  const uploadScheme = async (file: File | undefined) => {
+    if (!file) return;
+    setSchemeBusy(true);
+    try {
+      const url = await adminApi.uploadFile(file);
+      setForm((p) => ({ ...p, scheme: url }));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setSchemeBusy(false);
+    }
+  };
 
   const gallery = parseUrls(form.gallery);
   const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
@@ -221,6 +238,55 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
           </label>
         </div>
       </div>
+
+      {/* СХЕМА — изображение плана/рассадки зала. */}
+      <div className="grid gap-2">
+        <label>Схема зала (план / рассадка)</label>
+        <div className="flex flex-wrap items-center gap-3">
+          {form.scheme ? (
+            <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-line bg-white">
+              <img src={form.scheme} alt="" className="h-full w-full object-contain p-1" />
+              <button
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, scheme: '' }))}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
+                aria-label="Удалить"
+              >
+                ×
+              </button>
+            </div>
+          ) : null}
+          <label className="flex h-28 w-40 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+            {schemeBusy ? '…' : form.scheme ? '+ Заменить' : '+ Схема'}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => uploadScheme(e.target.files?.[0])} />
+          </label>
+        </div>
+      </div>
+
+      {/* ОБОРУДОВАНИЕ — тех. райдер, по одному пункту на строку. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <label>Оборудование (RU) — по строке на пункт</label>
+          <textarea value={form.equipment_ru} onChange={set('equipment_ru')} rows={6} placeholder={'Цифровой микшер Soundcraft Vi6\nЛинейный массив CODA AUDIO 300 Вт (24 шт)\n…'} />
+        </div>
+        <div className="grid gap-2">
+          <label>Equipment (EN) — one item per line</label>
+          <textarea value={form.equipment_en} onChange={set('equipment_en')} rows={6} placeholder={'Soundcraft Vi6 digital mixer\n…'} />
+        </div>
+      </div>
+
+      {/* ФЛАГ — буфет/анфилада: только в тех. райдере, не на странице «Залы». */}
+      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-paper-soft p-3">
+        <input
+          type="checkbox"
+          checked={!!form.rider_only}
+          onChange={(e) => setForm((p) => ({ ...p, rider_only: e.target.checked }))}
+          className="h-4 w-4 accent-ink"
+        />
+        <span className="text-[12px] font-semibold text-ink">
+          Только в техническом райдере (буфет, анфилада) — не показывать как отдельный зал на странице «Залы»
+        </span>
+      </label>
 
       <div className="grid max-w-32 gap-2">
         <label>Порядок</label>

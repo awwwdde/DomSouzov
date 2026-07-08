@@ -75,7 +75,8 @@ function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: str
 
 export default function Halls() {
   const { lang, content, t } = useSite();
-  const halls = content?.halls ?? [];
+  // Буфет/анфилада (rider_only) показываем только в тех. райдере на «Организаторам».
+  const halls = (content?.halls ?? []).filter((h) => !h.rider_only);
   const title = t('halls_title') || (lang === 'ru' ? 'Залы' : 'Halls');
   const lead = t('halls_lead') || (lang === 'ru'
     ? 'Два исторических зала. Коринфские колонны и пять хрустальных люстр в главном — камерная плотность в Октябрьском. Каждый зал доступен для мероприятий.'

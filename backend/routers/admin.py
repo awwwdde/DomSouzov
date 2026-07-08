@@ -23,6 +23,7 @@ from models import (
     MediaFile,
     NewsletterSubscriber,
     OrganizerRequest,
+    Review,
 )
 from schemas import (
     Token, LoginRequest,
@@ -30,6 +31,7 @@ from schemas import (
     EventCreate, EventUpdate, EventOut,
     NewsCreate, NewsUpdate, NewsOut,
     HallCreate, HallUpdate, HallOut,
+    ReviewCreate, ReviewUpdate, ReviewOut,
     GalleryCreate, GalleryUpdate, GalleryOut,
     GalleryCategoryCreate, GalleryCategoryUpdate, GalleryCategoryOut,
     PartnerCreate, PartnerUpdate, PartnerOut,
@@ -420,6 +422,43 @@ def delete_hall(hall_id: int, db: Session = Depends(get_db), _: AdminUser = Depe
     if not hall:
         raise HTTPException(404, "Not found")
     db.delete(hall)
+    db.commit()
+    return {"ok": True}
+
+
+# ---- Reviews (ручные отзывы) ----
+@router.get("/reviews", response_model=List[ReviewOut])
+def list_reviews(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    return db.query(Review).order_by(Review.is_pinned.desc(), Review.sort_order, Review.id.desc()).all()
+
+
+@router.post("/reviews", response_model=ReviewOut)
+def create_review(body: ReviewCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    review = Review(**body.model_dump())
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    return review
+
+
+@router.put("/reviews/{review_id}", response_model=ReviewOut)
+def update_review(review_id: int, body: ReviewUpdate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    review = db.query(Review).filter_by(id=review_id).first()
+    if not review:
+        raise HTTPException(404, "Not found")
+    for k, v in body.model_dump().items():
+        setattr(review, k, v)
+    db.commit()
+    db.refresh(review)
+    return review
+
+
+@router.delete("/reviews/{review_id}")
+def delete_review(review_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    review = db.query(Review).filter_by(id=review_id).first()
+    if not review:
+        raise HTTPException(404, "Not found")
+    db.delete(review)
     db.commit()
     return {"ok": True}
 

@@ -223,7 +223,7 @@ export default function NewsDetail() {
         {/* Правая колонка: текст + инфо — sticky на ПК */}
         <div className="flex flex-col gap-8 border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           {/* Текст статьи */}
-          <div className="space-y-4 text-[14px] leading-[1.7] text-ink-soft">
+          <div className="space-y-4 text-center text-[14px] leading-[1.7] text-ink-soft">
             {contentBlocks.length > 0
               ? contentBlocks.map((b, i) =>
                   b.type === 'image' ? (

@@ -271,7 +271,7 @@ export default function EventDetail() {
         <section className="border-t border-line px-5 py-14 md:px-12">
           <div className="mx-auto max-w-[820px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
-            <div className="space-y-5 text-[16px] leading-[1.7] text-ink-soft">
+            <div className="space-y-5 text-center text-[16px] leading-[1.7] text-ink-soft">
               {descBlocks.map((b, i) =>
                 b.type === 'image' ? (
                   <img

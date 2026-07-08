@@ -154,6 +154,24 @@ class Hall(Base):
     description_en = Column(Text, nullable=True)
     image = Column(String, nullable=True)            # главное фото (= первое из gallery)
     gallery = Column(Text, nullable=True)            # JSON-массив URL фото для слайдера
+    scheme = Column(String, nullable=True)           # изображение схемы/плана рассадки
+    equipment_ru = Column(Text, nullable=True)       # оборудование (тех. райдер), по строке на пункт
+    equipment_en = Column(Text, nullable=True)
+    rider_only = Column(Boolean, default=False)      # показывать только в райдере (буфет, анфилада), не на странице «Залы»
+    sort_order = Column(Integer, default=0)
+
+
+class Review(Base):
+    """Отзывы. Ручные (source='manual') редактируются в админке; авто-отзывы
+    подтягиваются с Яндекс Карт отдельным модулем и в БД не хранятся."""
+    __tablename__ = "reviews"
+    id = Column(Integer, primary_key=True)
+    author = Column(String, nullable=False)
+    text = Column(Text, nullable=False)
+    rating = Column(Integer, default=5)
+    date_label = Column(String, nullable=True)   # напр. «11 апреля» или «Май 2026»
+    is_pinned = Column(Boolean, default=False)    # закреплённые показываются первыми
+    is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
 
 

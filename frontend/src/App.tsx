@@ -38,6 +38,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
 const AdminNews = lazy(() => import('./pages/admin/AdminNews'));
 const AdminHalls = lazy(() => import('./pages/admin/AdminHalls'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
 const AdminAbout = lazy(() => import('./pages/admin/AdminAbout'));
 const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
@@ -100,6 +101,7 @@ function AppShell() {
           <Route path="events" element={<AdminEvents />} />
           <Route path="news" element={<AdminNews />} />
           <Route path="halls" element={<AdminHalls />} />
+          <Route path="reviews" element={<AdminReviews />} />
           <Route path="about" element={<AdminAbout />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="partners" element={<AdminPartners />} />

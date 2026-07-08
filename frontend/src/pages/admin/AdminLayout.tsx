@@ -2,13 +2,14 @@ import { Suspense, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getMe, adminLogout } from '../../api/client';
-import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, Inbox, LayoutDashboard, Landmark, Menu, Newspaper, Users, X } from 'lucide-react';
+import { BookOpen, CalendarDays, Cog, ExternalLink, GalleryHorizontal, Handshake, Inbox, LayoutDashboard, Landmark, Menu, MessageSquareQuote, Newspaper, Users, X } from 'lucide-react';
 
 const NAV = [
   { path: '/admin', label: 'Дашборд', icon: LayoutDashboard },
   { path: '/admin/events', label: 'Мероприятия', icon: CalendarDays },
   { path: '/admin/news', label: 'Архив мероприятий', icon: Newspaper },
   { path: '/admin/halls', label: 'Залы', icon: Landmark },
+  { path: '/admin/reviews', label: 'Отзывы', icon: MessageSquareQuote },
   { path: '/admin/about', label: 'О Доме', icon: BookOpen },
   { path: '/admin/gallery', label: 'Галерея', icon: GalleryHorizontal },
   { path: '/admin/partners', label: 'Партнёры', icon: Handshake },
