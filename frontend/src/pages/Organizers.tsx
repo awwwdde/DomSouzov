@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Users, Layers } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Users, Layers, Image as ImageIcon, Map } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
@@ -399,13 +399,13 @@ function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
       <h2 className="max-w-[18ch] font-heading text-[clamp(34px,5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
         {lang === 'ru' ? 'Залы и помещения' : 'Halls & spaces'}
       </h2>
-      <p className="mt-4 max-w-[60ch] text-[15px] leading-7 text-ink-soft">
+      <p className="mt-4 w-full text-[16px] leading-[1.75] text-ink-soft">
         {lang === 'ru'
           ? 'Схемы рассадки, вместимость и сценическое оборудование каждого пространства Дома Союзов.'
           : 'Seating plans, capacity and stage equipment for every space of the House of Unions.'}
       </p>
 
-      <div className="mt-12 grid gap-12 md:mt-16 md:gap-20">
+      <div className="mt-12 border-t border-line md:mt-16">
         {halls.map((hall, i) => (
           <HallRiderBlock key={hall.id} hall={hall} index={i} lang={lang} />
         ))}
@@ -421,111 +421,130 @@ function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang
     ? hall.equipment_list[lang]
     : hall.equipment_list?.ru ?? [];
   const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : []).filter(Boolean);
-  const photo = photos[0];
-  const scheme = hall.scheme || null;
+  const photo = photos[0] || '';
+  const scheme = hall.scheme || '';
+  const hasMedia = Boolean(photo || scheme);
+  const hasBoth = Boolean(photo && scheme);
+  const [view, setView] = useState<'photo' | 'scheme'>(photo ? 'photo' : 'scheme');
+  const flip = index % 2 === 1; // шахматный порядок: медиа слева/справа чередуется
 
   return (
-    <article className="border-t border-line pt-8 md:pt-10">
-      {/* Заголовок + вместимость */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <div className="flex items-baseline gap-4">
+    <article className="grid grid-cols-1 border-b border-line md:grid-cols-2">
+      {hasMedia ? (
+        <div
+          className={`relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[340px] ${
+            flip ? 'md:order-2' : ''
+          }`}
+        >
+          {photo ? (
+            <img
+              src={mediaUrl(photo)}
+              alt={name}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-ds"
+              style={{ opacity: view === 'photo' ? 1 : 0 }}
+              aria-hidden={view !== 'photo'}
+            />
+          ) : null}
+          {scheme ? (
+            <img
+              src={mediaUrl(scheme)}
+              alt={`${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full bg-white object-contain p-3 transition-opacity duration-500 ease-ds"
+              style={{ opacity: view === 'scheme' ? 1 : 0 }}
+              aria-hidden={view !== 'scheme'}
+            />
+          ) : null}
+
+          {/* Переключатель Фото ↔ Схема поверх фото */}
+          {hasBoth ? (
+            <div className="absolute left-3 top-3 z-10 inline-flex gap-1 rounded-full border border-paper/20 bg-ink/40 p-1 backdrop-blur-sm">
+              <MediaToggleBtn active={view === 'photo'} onClick={() => setView('photo')} icon={<ImageIcon size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Фото' : 'Photo'} />
+              <MediaToggleBtn active={view === 'scheme'} onClick={() => setView('scheme')} icon={<Map size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Схема' : 'Scheme'} />
+            </div>
+          ) : (
+            <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
+              {scheme && !photo ? (lang === 'ru' ? 'Схема рассадки' : 'Seating plan') : lang === 'ru' ? 'Фотография' : 'Photo'}
+            </span>
+          )}
+        </div>
+      ) : null}
+
+      <div
+        className={`flex flex-col justify-center bg-paper p-8 md:p-12 lg:p-14 ${
+          !hasMedia ? 'md:col-span-2' : flip ? 'md:order-1 md:border-r md:border-line' : 'md:border-l md:border-line'
+        }`}
+      >
+        <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
             N° {String(index + 1).padStart(2, '0')}
           </span>
-          <h3 className="font-heading text-[clamp(24px,3vw,44px)] font-bold uppercase leading-[1] tracking-[0.02em] text-ink">
-            {name}
-          </h3>
+          {hall.capacity ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-soft px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              <Users size={13} className="text-accent" strokeWidth={1.8} />
+              {hall.capacity}
+            </span>
+          ) : null}
         </div>
-        {hall.capacity ? (
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-soft px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
-            <Users size={14} className="text-accent" strokeWidth={1.8} />
-            {hall.capacity}
-          </span>
+        <h3 className="mt-4 font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
+          {name}
+        </h3>
+        {description ? (
+          <p className="mt-5 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{description}</p>
         ) : null}
-      </div>
 
-      {/* Фото + схема */}
-      {(photo || scheme) ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <RiderMedia
-            src={photo ? mediaUrl(photo) : ''}
-            alt={name}
-            label={lang === 'ru' ? 'Фото появится позже' : 'Photo coming soon'}
-            caption={lang === 'ru' ? 'Фотография' : 'Photo'}
-          />
-          <RiderMedia
-            src={scheme ? mediaUrl(scheme) : ''}
-            alt={`${name} — ${lang === 'ru' ? 'схема' : 'scheme'}`}
-            label={lang === 'ru' ? 'Схема появится позже' : 'Scheme coming soon'}
-            caption={lang === 'ru' ? 'Схема рассадки' : 'Seating plan'}
-            contain
-          />
+        <div className="mt-7 border-t border-line pt-5">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
+            <Layers size={15} className="text-accent" strokeWidth={1.8} />
+            {lang === 'ru' ? 'Оборудование' : 'Equipment'}
+          </div>
+          {equipment.length ? (
+            <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+              {equipment.map((item, j) => (
+                <li key={j} className="flex gap-3 text-[14px] leading-6 text-ink-soft">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 max-w-[60ch] text-[14px] leading-6 text-muted">
+              {lang === 'ru'
+                ? 'Сценическое оборудование не предусмотрено — пространство для выставок, фуршетов и презентаций.'
+                : 'No stage equipment — a space for exhibitions, receptions and presentations.'}
+            </p>
+          )}
         </div>
-      ) : null}
-
-      {/* Описание */}
-      {description ? (
-        <p className="mt-6 max-w-[70ch] text-[15px] leading-7 text-ink-soft md:text-base">{description}</p>
-      ) : null}
-
-      {/* Оборудование */}
-      <div className="mt-6 border-t border-line pt-5">
-        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
-          <Layers size={15} className="text-accent" strokeWidth={1.8} />
-          {lang === 'ru' ? 'Оборудование' : 'Equipment'}
-        </div>
-        {equipment.length ? (
-          <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
-            {equipment.map((item, j) => (
-              <li key={j} className="flex gap-3 text-[14px] leading-6 text-ink-soft">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 max-w-[60ch] text-[14px] leading-6 text-muted">
-            {lang === 'ru'
-              ? 'Сценическое оборудование не предусмотрено — пространство для выставок, фуршетов и презентаций.'
-              : 'No stage equipment — a space for exhibitions, receptions and presentations.'}
-          </p>
-        )}
       </div>
     </article>
   );
 }
 
-function RiderMedia({
-  src,
-  alt,
+function MediaToggleBtn({
+  active,
+  onClick,
+  icon,
   label,
-  caption,
-  contain,
 }: {
-  src: string;
-  alt: string;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
   label: string;
-  caption: string;
-  contain?: boolean;
 }) {
   return (
-    <figure className="flex flex-col gap-2">
-      <div className="relative aspect-[4/3] overflow-hidden border border-line bg-paper-soft">
-        {src ? (
-          <img
-            src={src}
-            alt={alt}
-            loading="lazy"
-            decoding="async"
-            className={`h-full w-full ${contain ? 'object-contain bg-white p-2' : 'object-cover'}`}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center p-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            {label}
-          </div>
-        )}
-      </div>
-      <figcaption className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{caption}</figcaption>
-    </figure>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition ${
+        active ? 'bg-paper text-ink' : 'text-paper/85 hover:text-paper'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

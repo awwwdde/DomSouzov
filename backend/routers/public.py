@@ -24,6 +24,7 @@ from models import (
     OrganizerRequest,
     MediaFile,
     Review,
+    YandexReview,
 )
 from config import settings as app_settings
 import mailer
@@ -259,11 +260,68 @@ def get_halls(db: Session = Depends(get_db)):
     return [_hall_out(h) for h in halls]
 
 
+import hashlib as _hashlib
+import time as _time
+
+# Троттлинг накопления: не чаще раза в 10 минут пишем в БД новые яндекс-отзывы.
+_last_accumulate = {"ts": 0.0}
+
+
+def _review_key(author: str, text: str) -> str:
+    raw = (author or "").strip().lower() + "|" + (text or "").strip()[:80].lower()
+    return _hashlib.sha1(raw.encode("utf-8")).hexdigest()
+
+
+def _accumulate_yandex(db: Session, reviews: list) -> None:
+    """Дописываем новые (по ext_key) яндекс-отзывы в накопитель."""
+    if not reviews:
+        return
+    now = _time.time()
+    if now - _last_accumulate["ts"] < 600:
+        return
+    _last_accumulate["ts"] = now
+    existing = {k for (k,) in db.query(YandexReview.ext_key).all()}
+    added = False
+    for r in reviews:
+        key = _review_key(r.get("author", ""), r.get("text", ""))
+        if key in existing:
+            continue
+        existing.add(key)
+        db.add(YandexReview(
+            author=r.get("author") or "Гость",
+            text=r.get("text") or "",
+            rating=int(r.get("rating") or 5),
+            date_label=r.get("date_label") or "",
+            ext_key=key,
+        ))
+        added = True
+    if added:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
+
 @router.get("/reviews")
 def get_reviews(db: Session = Depends(get_db)):
-    """Отзывы для витрины: закреплённые/ручные (админка) + авто с Яндекс Карт.
-    Итог ограничиваем 8 карточками (сетка 4×2)."""
-    LIMIT = 8
+    """Отзывы для витрины: закреплённые/ручные (админка) + накопленные с Яндекса.
+    Виджет отдаёт лишь ~5 свежих — новые дописываются в БД; на сайте показываем
+    5 самых свежих, при появлении нового он встаёт первым."""
+    LIMIT = 5
+
+    # 1) Свежие с Яндекса (кэш) + накопление в БД.
+    url_row = db.query(SiteSettings).filter_by(key="yandex_reviews_url").first()
+    yandex_url = (url_row.value_ru if url_row and url_row.value_ru else reviews_yandex.DEFAULT_WIDGET)
+    try:
+        y = reviews_yandex.get_yandex_reviews(yandex_url)
+    except Exception:
+        y = {"rating": None, "reviews": [], "org_url": ""}
+    try:
+        _accumulate_yandex(db, y.get("reviews", []))
+    except Exception:
+        db.rollback()
+
+    # 2) Ручные (первыми, закреплённые выше).
     manual = (
         db.query(Review)
         .filter(Review.is_active == True)
@@ -271,28 +329,36 @@ def get_reviews(db: Session = Depends(get_db)):
         .all()
     )
     manual_out = [
-        {
-            "author": r.author,
-            "text": r.text,
-            "rating": r.rating or 5,
-            "date_label": r.date_label or "",
-            "source": "manual",
-        }
+        {"author": r.author, "text": r.text, "rating": r.rating or 5,
+         "date_label": r.date_label or "", "source": "manual"}
         for r in manual
     ]
 
-    url_row = db.query(SiteSettings).filter_by(key="yandex_reviews_url").first()
-    yandex_url = (url_row.value_ru if url_row and url_row.value_ru else reviews_yandex.DEFAULT_WIDGET)
-    try:
-        y = reviews_yandex.get_yandex_reviews(yandex_url)
-    except Exception:
-        y = {"rating": None, "reviews": []}
-
-    # Ручные — первыми, затем авто; не дублируем по (автор+начало текста).
-    seen = {(r["author"].lower(), r["text"][:40].lower()) for r in manual_out}
-    merged = list(manual_out)
+    # 3) Накопленные яндекс-отзывы (свежие сверху), плюс любые из последнего фетча,
+    #    которых ещё нет в БД (на случай троттлинга).
+    accumulated = (
+        db.query(YandexReview)
+        .filter(YandexReview.is_hidden == False)
+        .order_by(YandexReview.id.desc())
+        .all()
+    )
+    yandex_out = [
+        {"author": r.author, "text": r.text, "rating": r.rating or 5,
+         "date_label": r.date_label or "", "source": "yandex"}
+        for r in accumulated
+    ]
     for r in y.get("reviews", []):
-        key = (r.get("author", "").lower(), r.get("text", "")[:40].lower())
+        yandex_out.append({
+            "author": r.get("author") or "Гость", "text": r.get("text") or "",
+            "rating": r.get("rating") or 5, "date_label": r.get("date_label") or "",
+            "source": "yandex",
+        })
+
+    # 4) Слияние + дедуп по (автор + начало текста).
+    seen = set()
+    merged = []
+    for r in manual_out + yandex_out:
+        key = (r["author"].strip().lower(), r["text"].strip()[:50].lower())
         if key in seen:
             continue
         seen.add(key)

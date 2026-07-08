@@ -162,8 +162,7 @@ class Hall(Base):
 
 
 class Review(Base):
-    """Отзывы. Ручные (source='manual') редактируются в админке; авто-отзывы
-    подтягиваются с Яндекс Карт отдельным модулем и в БД не хранятся."""
+    """Ручные отзывы, редактируются в админке."""
     __tablename__ = "reviews"
     id = Column(Integer, primary_key=True)
     author = Column(String, nullable=False)
@@ -173,6 +172,20 @@ class Review(Base):
     is_pinned = Column(Boolean, default=False)    # закреплённые показываются первыми
     is_active = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
+
+
+class YandexReview(Base):
+    """Накопитель отзывов с Яндекс Карт. Виджет отдаёт лишь ~5 свежих;
+    при каждом обновлении новые (по ext_key) дописываются сюда, поэтому пул
+    отзывов растёт со временем. Порядок появления = автоинкремент id."""
+    __tablename__ = "yandex_reviews"
+    id = Column(Integer, primary_key=True)
+    author = Column(String, nullable=False)
+    text = Column(Text, nullable=False)
+    rating = Column(Integer, default=5)
+    date_label = Column(String, nullable=True)
+    ext_key = Column(String, unique=True, index=True, nullable=False)  # хэш автор+текст для дедупликации
+    is_hidden = Column(Boolean, default=False)  # можно скрыть неудачный отзыв из админки
 
 
 class GalleryCategory(Base):

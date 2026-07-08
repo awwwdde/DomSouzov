@@ -152,7 +152,7 @@ export default function NewsDetail() {
           текст + инфо, «прилипающие» (sticky) при скролле. Левая медиа-колонка
           выше правой, поэтому у sticky-колонки есть место — она корректно
           фиксируется под хедером, а не уезжает за него. */}
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.15fr_minmax(0,460px)] lg:items-start lg:gap-x-14">
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1fr_minmax(0,640px)] lg:items-start lg:gap-x-14">
         {/* Левая колонка: обложка + галерея */}
         <div className="flex flex-col gap-8">
           {/* Обложка */}
@@ -223,7 +223,7 @@ export default function NewsDetail() {
         {/* Правая колонка: текст + инфо — sticky на ПК */}
         <div className="flex flex-col gap-8 border-t border-line pt-8 lg:sticky lg:top-28 lg:self-start lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           {/* Текст статьи */}
-          <div className="space-y-4 text-center text-[14px] leading-[1.7] text-ink-soft">
+          <div className="space-y-4 text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">
             {contentBlocks.length > 0
               ? contentBlocks.map((b, i) =>
                   b.type === 'image' ? (

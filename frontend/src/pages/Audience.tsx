@@ -310,7 +310,7 @@ export default function Audience() {
         <h2 className="mb-3 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
           {lang === 'ru' ? 'Полные правила посещения' : 'Full visiting rules'}
         </h2>
-        <p className="mb-10 max-w-3xl text-base leading-7 text-ink-soft">
+        <p className="mb-10 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">
           {lang === 'ru'
             ? 'Официальные правила посещения здания Дома Союзов при проведении мероприятий, выставок и экскурсий.'
             : 'Official rules for visiting the House of Unions building during events, exhibitions and excursions.'}
@@ -335,7 +335,7 @@ export default function Audience() {
                   {section.items.map((item) => (
                     <li key={item.n} className="grid gap-2 md:grid-cols-[64px_1fr] md:gap-5">
                       <span className="font-mono text-[13px] font-bold tabular-nums text-accent">{item.n}</span>
-                      <p className="text-[15px] leading-7 text-ink-soft">{item.text[lang]}</p>
+                      <p className="text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{item.text[lang]}</p>
                     </li>
                   ))}
                 </ul>

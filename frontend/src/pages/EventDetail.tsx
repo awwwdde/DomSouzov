@@ -269,9 +269,9 @@ export default function EventDetail() {
       {/* Описание программы */}
       {descBlocks.length > 0 ? (
         <section className="border-t border-line px-5 py-14 md:px-12">
-          <div className="mx-auto max-w-[820px]">
+          <div className="w-full">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
-            <div className="space-y-5 text-center text-[16px] leading-[1.7] text-ink-soft">
+            <div className="space-y-5 text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">
               {descBlocks.map((b, i) =>
                 b.type === 'image' ? (
                   <img

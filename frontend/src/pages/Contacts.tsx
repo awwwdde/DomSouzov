@@ -155,7 +155,7 @@ function ReviewsSection({ lang }: { lang: 'ru' | 'en' }) {
             : 'Reviews will appear here. They are loaded automatically from Yandex Maps.'}
         </p>
       ) : (
-        <RevealList className="mt-10 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <RevealList className="mt-10 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {reviews.map((r, i) => (
             <RevealItem key={`${r.author}-${i}`}>
               <ReviewCard review={r} href={mapUrl} lang={lang} />

@@ -252,9 +252,9 @@ function NarrativeText({
         lang={lang}
         className={[
           'text-ink text-lg leading-8 md:text-[22px] md:leading-[1.62]',
-          // На мобильной колонке выравниваем текст по обоим краям (иначе правый
-          // край «рваный»); на десктопе оставляем editorial-выключку влево.
-          'text-justify [hyphens:auto] md:text-left',
+          // Выключка по ширине на всех экранах; без переноса слов, последняя
+          // строка выравнивается влево.
+          'text-justify [hyphens:none] [text-align-last:start]',
           first
             ? 'first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-heading first-letter:text-[64px] first-letter:font-bold first-letter:leading-[0.7] first-letter:text-accent'
             : '',
@@ -472,55 +472,54 @@ function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean;
     : '';
 
   return (
-    <Section tone="ink" spacing="md" bordered>
-      <div className="relative">
-        {/* Контент; при наличии фото резервируем справа место под здание. */}
-        <div className={`grid gap-10 md:grid-cols-12 md:gap-12 ${buildingImage ? 'lg:pr-[34%]' : ''}`}>
-          <div className="md:col-span-5">
-            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-paper/55">
-              {lang === 'ru' ? 'В цифрах' : 'In figures'}
-            </span>
-            <h2 className="mt-4 font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-paper">
-              {lang === 'ru' ? 'Архитектура и масштаб' : 'Architecture and scale'}
-            </h2>
-          </div>
-          <div className="md:col-span-7">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-10 md:gap-y-14">
-              {facts.map((f, i) => (
-                <motion.div
-                  key={i}
-                  initial={reduced ? false : { opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.4 }}
-                  transition={{ duration: 0.7, delay: i * 0.08, ease: EASE }}
-                >
-                  <div className="font-heading text-[clamp(48px,6vw,104px)] font-bold uppercase leading-[0.86] tracking-[-0.01em] tabular-nums text-paper">
-                    {f.num}
-                  </div>
-                  <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/60">
-                    {f.label}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+    <Section tone="ink" spacing="md" bordered className="overflow-hidden">
+      {/* Здание — прижато к нижней кромке блока справа; текст уведён влево,
+          чтобы фото его не перекрывало. */}
+      {buildingImage ? (
+        <motion.img
+          src={buildingImage}
+          alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
+          loading="lazy"
+          decoding="async"
+          aria-hidden
+          initial={reduced ? false : { opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="pointer-events-none absolute bottom-0 right-0 z-0 hidden w-[44%] max-w-[880px] select-none object-contain object-bottom xl:block"
+        />
+      ) : null}
+
+      {/* Контент; при наличии фото резервируем справа место под здание. */}
+      <div className={`relative z-10 grid gap-10 md:grid-cols-12 md:gap-12 ${buildingImage ? 'xl:pr-[50%]' : ''}`}>
+        <div className="md:col-span-5">
+          <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-paper/55">
+            {lang === 'ru' ? 'В цифрах' : 'In figures'}
+          </span>
+          <h2 className="mt-4 font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-paper">
+            {lang === 'ru' ? 'Архитектура и масштаб' : 'Architecture and scale'}
+          </h2>
+        </div>
+        <div className="md:col-span-7">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-10 md:gap-y-14">
+            {facts.map((f, i) => (
+              <motion.div
+                key={i}
+                initial={reduced ? false : { opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.7, delay: i * 0.08, ease: EASE }}
+              >
+                <div className="font-heading text-[clamp(48px,6vw,104px)] font-bold uppercase leading-[0.86] tracking-[-0.01em] tabular-nums text-paper">
+                  {f.num}
+                </div>
+                <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/60">
+                  {f.label}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
-
-        {/* Здание — выпирает вверх за пределы тёмного блока (как на баннере). */}
-        {buildingImage ? (
-          <motion.img
-            src={buildingImage}
-            alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
-            loading="lazy"
-            decoding="async"
-            aria-hidden
-            initial={reduced ? false : { opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.9, ease: EASE }}
-            className="pointer-events-none absolute bottom-0 right-0 z-10 hidden w-auto max-w-none select-none object-contain object-bottom drop-shadow-2xl lg:block lg:h-[440px] xl:h-[540px]"
-          />
-        ) : null}
       </div>
     </Section>
   );
@@ -592,7 +591,7 @@ function TimelineStage({
                 {desc ? (
                   <p
                     lang={lang}
-                    className={['mt-3 max-w-[44ch] text-base leading-7 text-ink-soft text-justify [hyphens:auto] md:[text-align:inherit]', isLeft ? 'md:ml-auto' : ''].join(' ')}
+                    className={['mt-3 w-full text-base leading-7 text-ink-soft text-justify [hyphens:none] [text-align-last:start]', isLeft ? 'md:ml-auto' : ''].join(' ')}
                   >
                     {desc}
                   </p>

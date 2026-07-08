@@ -142,7 +142,7 @@ export default function Halls() {
                     <dd>{hall.area}</dd>
                   </div>
                 </dl>
-                <p className="mt-6 max-w-prose text-sm leading-7 text-ink-soft">{l(hall.description)}</p>
+                <p className="mt-6 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{l(hall.description)}</p>
 
                 {hall.features_list && hall.features_list.length > 0 ? (
                   <dl className="mt-8 grid gap-x-8 gap-y-4 border-t border-line pt-6 sm:grid-cols-2">
