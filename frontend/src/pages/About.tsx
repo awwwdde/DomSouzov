@@ -472,9 +472,10 @@ function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean;
     : '';
 
   return (
-    <Section tone="ink" spacing="md" bordered className="overflow-hidden">
-      {/* Здание — прижато к нижней кромке блока справа; текст уведён влево,
-          чтобы фото его не перекрывало. */}
+    <Section tone="ink" spacing="md" bordered className="relative">
+      {/* Здание — выпирает вверх за пределы тёмного блока и лежит ПОВЕРХ него
+          (z-10). Прижато к низу, бликует вправо. Показываем только на десктопе,
+          где справа есть свободное место (цифры уведены влево колонками сетки). */}
       {buildingImage ? (
         <motion.img
           src={buildingImage}
@@ -486,22 +487,25 @@ function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean;
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="pointer-events-none absolute bottom-0 right-0 z-0 hidden w-[44%] max-w-[880px] select-none object-contain object-bottom xl:block"
+          className="pointer-events-none absolute -top-24 bottom-0 right-0 z-10 hidden h-[calc(100%+6rem)] w-auto max-w-[42%] select-none object-contain object-bottom xl:block"
         />
       ) : null}
 
-      {/* Контент; при наличии фото резервируем справа место под здание. */}
-      <div className={`relative z-10 grid gap-10 md:grid-cols-12 md:gap-12 ${buildingImage ? 'xl:pr-[50%]' : ''}`}>
-        <div className="md:col-span-5">
+      {/* Контент. При наличии фото цифры и заголовок уводим влево не padding'ом
+          (он сжимал заголовок и «АРХИТЕКТУРА» налезала на числа), а колонками:
+          на xl заголовок = col-span-6, цифры = col-span-6, правые 12→24 колонки
+          остаются свободными под здание. */}
+      <div className="relative z-0 grid gap-10 md:grid-cols-12 md:gap-12">
+        <div className={buildingImage ? 'md:col-span-5 xl:col-span-4' : 'md:col-span-5'}>
           <span className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-paper/55">
             {lang === 'ru' ? 'В цифрах' : 'In figures'}
           </span>
-          <h2 className="mt-4 font-heading text-[clamp(36px,4.5vw,72px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-paper">
+          <h2 className="mt-4 font-heading text-[clamp(32px,3.6vw,64px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-paper">
             {lang === 'ru' ? 'Архитектура и масштаб' : 'Architecture and scale'}
           </h2>
         </div>
-        <div className="md:col-span-7">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-10 md:gap-y-14">
+        <div className={buildingImage ? 'md:col-span-7 xl:col-span-3' : 'md:col-span-7'}>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-12">
             {facts.map((f, i) => (
               <motion.div
                 key={i}
@@ -510,7 +514,7 @@ function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean;
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.7, delay: i * 0.08, ease: EASE }}
               >
-                <div className="font-heading text-[clamp(48px,6vw,104px)] font-bold uppercase leading-[0.86] tracking-[-0.01em] tabular-nums text-paper">
+                <div className="font-heading text-[clamp(40px,4vw,80px)] font-bold uppercase leading-[0.86] tracking-[-0.01em] tabular-nums text-paper">
                   {f.num}
                 </div>
                 <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/60">
