@@ -30,7 +30,12 @@ export default function Gallery() {
     return categories
       .map((c) => {
         const photos = items.filter((g) => g.image && g.category_id === c.id);
-        return { c, cover: c.cover_image || photos[0]?.image || '', count: photos.length };
+        return {
+          c,
+          coverVideo: c.cover_video || '',
+          cover: c.cover_image || photos[0]?.image || '',
+          count: photos.length,
+        };
       })
       .filter((b) => b.count > 0)
       .sort((a, b) => a.c.order - b.c.order);
@@ -55,13 +60,24 @@ export default function Gallery() {
         </section>
       ) : (
         <RevealList className="grid grid-cols-1 gap-4 px-5 pb-20 pt-10 sm:grid-cols-2 md:px-12 lg:grid-cols-3">
-          {blocks.map(({ c, cover, count }) => (
+          {blocks.map(({ c, cover, coverVideo, count }) => (
             <RevealItem key={c.id}>
               <Link
                 to={`/gallery/${c.slug}`}
                 className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden border border-line bg-paper-soft"
               >
-                {cover ? (
+                {coverVideo ? (
+                  <video
+                    src={mediaUrl(coverVideo)}
+                    poster={cover ? mediaUrl(cover) : undefined}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="absolute inset-0 h-full w-full object-cover transition duration-[900ms] ease-ds group-hover:scale-[1.06]"
+                  />
+                ) : cover ? (
                   <img
                     src={mediaUrl(cover)}
                     alt={l(c.name)}

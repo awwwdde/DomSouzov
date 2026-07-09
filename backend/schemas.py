@@ -235,6 +235,7 @@ class GalleryCategoryBase(BaseModel):
     name_ru: str
     name_en: str
     cover_image: Optional[str] = None
+    cover_video: Optional[str] = None
     sort_order: int = 0
 
 

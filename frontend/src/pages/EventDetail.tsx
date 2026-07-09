@@ -132,19 +132,19 @@ export default function EventDetail() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.1fr_380px] lg:items-start lg:gap-14">
-        {/* Фото — как в новости: на всю ширину, без полей */}
-        <div className="w-full overflow-hidden border border-line bg-paper-soft">
+      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.6fr_320px] lg:items-start lg:gap-12">
+        {/* Фото — занимает всё левое положение, без полей и рамки */}
+        <div className="w-full overflow-hidden">
           {event.image ? (
             <img
               src={mediaUrl(event.image)}
               alt={l(event.title)}
               loading="lazy"
               decoding="async"
-              className="max-h-[640px] w-full object-cover"
+              className="w-full object-cover"
             />
           ) : (
-            <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
+            <div className="flex aspect-[16/9] items-center justify-center bg-paper-soft p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
               {l(event.title)}
             </div>
           )}

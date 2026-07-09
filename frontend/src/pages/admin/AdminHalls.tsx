@@ -94,10 +94,15 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
     }
   };
 
+  const MAX_HALL_PHOTOS = 5;
   const gallery = parseUrls(form.gallery);
   const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
   const addImage = async (file: File | undefined) => {
     if (!file) return;
+    if (gallery.length >= MAX_HALL_PHOTOS) {
+      alert(`Можно загрузить не более ${MAX_HALL_PHOTOS} фото зала.`);
+      return;
+    }
     setGalBusy(true);
     try {
       const url = await adminApi.uploadFile(file);
@@ -214,7 +219,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       </div>
 
       <div className="grid gap-2">
-        <label>Фото зала (можно несколько — на странице листаются слайдером)</label>
+        <label>Фото зала (до 5 — на странице листаются слайдером)</label>
         <div className="flex flex-wrap gap-3">
           {gallery.map((url, i) => (
             <div key={i} className="relative h-24 w-32 overflow-hidden rounded-lg border border-line">
@@ -232,10 +237,12 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
               </button>
             </div>
           ))}
-          <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
-            {galBusy ? '…' : '+ Фото'}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
-          </label>
+          {gallery.length < MAX_HALL_PHOTOS ? (
+            <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+              {galBusy ? '…' : '+ Фото'}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
+            </label>
+          ) : null}
         </div>
       </div>
 

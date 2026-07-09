@@ -195,6 +195,7 @@ class GalleryCategory(Base):
     name_ru = Column(String, nullable=False)
     name_en = Column(String, nullable=False)
     cover_image = Column(String, nullable=True)
+    cover_video = Column(String, nullable=True)  # видео-обложка блока (приоритетнее cover_image)
     sort_order = Column(Integer, default=0)
 
 

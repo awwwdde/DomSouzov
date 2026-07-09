@@ -29,6 +29,7 @@ def migrate_sqlite() -> None:
         ("gallery", "category_id", "INTEGER"),
         ("gallery", "is_video", bool_default),
         ("gallery", "video_url", "VARCHAR"),
+        ("gallery_categories", "cover_video", "VARCHAR"),
         ("about_timeline_events", "tag_ru", "VARCHAR"),
         ("about_timeline_events", "tag_en", "VARCHAR"),
         ("admin_users", "is_super", bool_default),

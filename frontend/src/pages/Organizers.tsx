@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Users, Layers, Image as ImageIcon, Map } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
@@ -27,8 +28,20 @@ function mediaUrl(path: string | null | undefined): string {
 
 export default function Organizers() {
   const { lang, t, tStrict, content } = useSite();
+  const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
   const halls = content?.halls ?? [];
+
+  /* Переход со страницы «Залы» (?hall=<id>): плавно проматываем к нужному
+     блоку зала в тех. райдере, как только залы загрузились и отрисовались. */
+  useEffect(() => {
+    const hallId = new URLSearchParams(location.search).get('hall');
+    if (!hallId || !halls.length) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`hall-${hallId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [location.search, halls.length]);
 
   const title = tStrict('organizers_title') || (lang === 'ru' ? 'Организаторам' : 'For Organizers');
   const lead =
@@ -399,13 +412,8 @@ function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
       <h2 className="max-w-[18ch] font-heading text-[clamp(34px,5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
         {lang === 'ru' ? 'Залы и помещения' : 'Halls & spaces'}
       </h2>
-      <p className="mt-4 w-full text-[16px] leading-[1.75] text-ink-soft">
-        {lang === 'ru'
-          ? 'Схемы рассадки, вместимость и сценическое оборудование каждого пространства Дома Союзов.'
-          : 'Seating plans, capacity and stage equipment for every space of the House of Unions.'}
-      </p>
 
-      <div className="mt-12 border-t border-line md:mt-16">
+      <div className="mt-10 border-t border-line md:mt-14">
         {halls.map((hall, i) => (
           <HallRiderBlock key={hall.id} hall={hall} index={i} lang={lang} />
         ))}
@@ -414,112 +422,236 @@ function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
   );
 }
 
+/** Разбивает значение вида «1 200 мест» / «1 120 м²» на число и единицу. */
+function splitStat(value: string): { num: string; unit: string } {
+  const m = (value || '').match(/^\s*([\d\s.,]+)\s*(.*)$/);
+  if (m && m[1].trim()) return { num: m[1].trim(), unit: m[2].trim() };
+  return { num: value || '', unit: '' };
+}
+
+/** Крупная цифра + мелкая единица (мест / м²) — как на странице «Залы». */
+function HallStat({ value }: { value: string }) {
+  const { num, unit } = splitStat(value);
+  if (!num) return null;
+  return (
+    <div>
+      <div className="font-heading text-[clamp(34px,3.6vw,56px)] font-bold leading-[0.85] tracking-[0.01em] tabular-nums text-ink">
+        {num}
+      </div>
+      {unit ? <div className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{unit}</div> : null}
+    </div>
+  );
+}
+
+/** Подбирает иконку под пункт оборудования по ключевым словам. */
+function equipmentIcon(text: string): LucideIcon {
+  const s = text.toLowerCase();
+  if (/рояль|пианино|piano|steinway|bechstein|москва/.test(s)) return Piano;
+  if (/микрофон|радиомикроф|mic|shure/.test(s)) return Mic;
+  if (/микшер|пульт|mixer|soundcraft|yamaha|allen/.test(s)) return SlidersHorizontal;
+  if (/сабвуфер|subwoofer/.test(s)) return Volume2;
+  if (/монитор|monitor/.test(s)) return MonitorSpeaker;
+  if (/массив|портал|колонк|акустик|array|speaker|coda|jbl/.test(s)) return Speaker;
+  if (/конференц|conference/.test(s)) return Users;
+  return Music;
+}
+
 function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang: 'ru' | 'en' }) {
   const name = hall.name?.[lang] || hall.name?.ru || '';
-  const description = hall.description?.[lang] || hall.description?.ru || '';
   const equipment = hall.equipment_list?.[lang]?.length
     ? hall.equipment_list[lang]
     : hall.equipment_list?.ru ?? [];
-  const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : []).filter(Boolean);
-  const photo = photos[0] || '';
+  // До 5 фото зала + схема (переключатель Фото ↔ Схема).
+  const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : [])
+    .filter(Boolean)
+    .slice(0, 5);
   const scheme = hall.scheme || '';
-  const hasMedia = Boolean(photo || scheme);
-  const hasBoth = Boolean(photo && scheme);
-  const [view, setView] = useState<'photo' | 'scheme'>(photo ? 'photo' : 'scheme');
+  const hasMedia = photos.length > 0 || Boolean(scheme);
   const flip = index % 2 === 1; // шахматный порядок: медиа слева/справа чередуется
 
   return (
-    <article className="grid grid-cols-1 border-b border-line md:grid-cols-2">
-      {hasMedia ? (
-        <div
-          className={`relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[340px] ${
-            flip ? 'md:order-2' : ''
-          }`}
-        >
-          {photo ? (
-            <img
-              src={mediaUrl(photo)}
-              alt={name}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-ds"
-              style={{ opacity: view === 'photo' ? 1 : 0 }}
-              aria-hidden={view !== 'photo'}
-            />
-          ) : null}
-          {scheme ? (
-            <img
-              src={mediaUrl(scheme)}
-              alt={`${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full bg-white object-contain p-3 transition-opacity duration-500 ease-ds"
-              style={{ opacity: view === 'scheme' ? 1 : 0 }}
-              aria-hidden={view !== 'scheme'}
-            />
-          ) : null}
-
-          {/* Переключатель Фото ↔ Схема поверх фото */}
-          {hasBoth ? (
-            <div className="absolute left-3 top-3 z-10 inline-flex gap-1 rounded-full border border-paper/20 bg-ink/40 p-1 backdrop-blur-sm">
-              <MediaToggleBtn active={view === 'photo'} onClick={() => setView('photo')} icon={<ImageIcon size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Фото' : 'Photo'} />
-              <MediaToggleBtn active={view === 'scheme'} onClick={() => setView('scheme')} icon={<Map size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Схема' : 'Scheme'} />
-            </div>
-          ) : (
-            <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
-              {scheme && !photo ? (lang === 'ru' ? 'Схема рассадки' : 'Seating plan') : lang === 'ru' ? 'Фотография' : 'Photo'}
-            </span>
-          )}
-        </div>
-      ) : null}
+    <article id={`hall-${hall.id}`} className="grid scroll-mt-28 grid-cols-1 border-b border-line md:grid-cols-2">
+      {hasMedia ? <HallRiderMedia photos={photos} scheme={scheme} name={name} lang={lang} flip={flip} /> : null}
 
       <div
         className={`flex flex-col justify-center bg-paper p-8 md:p-12 lg:p-14 ${
           !hasMedia ? 'md:col-span-2' : flip ? 'md:order-1 md:border-r md:border-line' : 'md:border-l md:border-line'
         }`}
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
-            N° {String(index + 1).padStart(2, '0')}
-          </span>
-          {hall.capacity ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-soft px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
-              <Users size={13} className="text-accent" strokeWidth={1.8} />
-              {hall.capacity}
-            </span>
-          ) : null}
-        </div>
+        <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
+          N° {String(index + 1).padStart(2, '0')}
+        </span>
         <h3 className="mt-4 font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
           {name}
         </h3>
-        {description ? (
-          <p className="mt-5 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{description}</p>
+
+        {/* Крупная типографика: только цифры (мест / м²). */}
+        {hall.capacity || hall.area ? (
+          <div className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
+            <HallStat value={hall.capacity} />
+            <HallStat value={hall.area} />
+          </div>
         ) : null}
 
-        <div className="mt-7 border-t border-line pt-5">
+        <div className="mt-7 border-t border-line pt-6">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
             <Layers size={15} className="text-accent" strokeWidth={1.8} />
             {lang === 'ru' ? 'Оборудование' : 'Equipment'}
           </div>
           {equipment.length ? (
-            <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
-              {equipment.map((item, j) => (
-                <li key={j} className="flex gap-3 text-[14px] leading-6 text-ink-soft">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            /* Крупные блоки в стиле раздела «Зрителям». */
+            <div className="mt-5 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
+              {equipment.map((item, j) => {
+                const Icon = equipmentIcon(item);
+                return (
+                  <div key={j} className="group flex h-full flex-col gap-4 bg-paper p-6 transition hover:bg-paper-soft md:p-7">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
+                      <Icon size={22} strokeWidth={1.6} />
+                    </span>
+                    <p className="text-[16px] font-medium leading-[1.5] text-ink">{item}</p>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <p className="mt-3 max-w-[60ch] text-[14px] leading-6 text-muted">
-              {lang === 'ru'
-                ? 'Сценическое оборудование не предусмотрено — пространство для выставок, фуршетов и презентаций.'
-                : 'No stage equipment — a space for exhibitions, receptions and presentations.'}
-            </p>
+            <NoEquipment lang={lang} />
           )}
         </div>
       </div>
     </article>
+  );
+}
+
+/* Помещения без сцен. оборудования (буфет, анфилада): пояснение + крупные
+   блоки-назначения в стиле раздела «Зрителям». */
+function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
+  const uses = lang === 'ru'
+    ? [
+        { icon: UtensilsCrossed, label: 'Фуршеты' },
+        { icon: Coffee, label: 'Кофе-брейки' },
+        { icon: Wine, label: 'Дегустации' },
+      ]
+    : [
+        { icon: UtensilsCrossed, label: 'Receptions' },
+        { icon: Coffee, label: 'Coffee breaks' },
+        { icon: Wine, label: 'Tastings' },
+      ];
+  return (
+    <>
+      <p className="mt-3 text-[15px] leading-[1.6] text-muted">
+        {lang === 'ru'
+          ? 'Сценическое оборудование не предусмотрено — пространство для:'
+          : 'No stage equipment — a space for:'}
+      </p>
+      <div className="mt-5 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-3">
+        {uses.map(({ icon: Icon, label }, i) => (
+          <div key={i} className="group flex h-full flex-col gap-4 bg-paper p-6 transition hover:bg-paper-soft md:p-7">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
+              <Icon size={22} strokeWidth={1.6} />
+            </span>
+            <h4 className="font-heading text-[clamp(17px,1.4vw,21px)] font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink">
+              {label}
+            </h4>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* Медиа блока зала: слайдер до 5 фото + схема, переключатель как на «Залы». */
+function HallRiderMedia({
+  photos,
+  scheme,
+  name,
+  lang,
+  flip,
+}: {
+  photos: string[];
+  scheme: string;
+  name: string;
+  lang: 'ru' | 'en';
+  flip: boolean;
+}) {
+  const hasPhotos = photos.length > 0;
+  const hasBoth = hasPhotos && Boolean(scheme);
+  const [view, setView] = useState<'photo' | 'scheme'>(hasPhotos ? 'photo' : 'scheme');
+  const [idx, setIdx] = useState(0);
+  const go = (dir: 1 | -1) => setIdx((i) => (i + dir + photos.length) % photos.length);
+
+  return (
+    <div
+      className={`relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[360px] ${
+        flip ? 'md:order-2' : ''
+      }`}
+    >
+      {photos.map((src, i) => (
+        <img
+          key={src + i}
+          src={mediaUrl(src)}
+          alt={view === 'photo' && i === idx ? name : ''}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-ds"
+          style={{ opacity: view === 'photo' && i === idx ? 1 : 0 }}
+          aria-hidden={!(view === 'photo' && i === idx)}
+        />
+      ))}
+      {scheme ? (
+        <img
+          src={mediaUrl(scheme)}
+          alt={`${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full bg-white object-contain p-3 transition-opacity duration-700 ease-ds"
+          style={{ opacity: view === 'scheme' ? 1 : 0 }}
+          aria-hidden={view !== 'scheme'}
+        />
+      ) : null}
+
+      {/* Переключатель Фото ↔ Схема */}
+      {hasBoth ? (
+        <div className="absolute left-3 top-3 z-10 inline-flex gap-1 rounded-full border border-paper/20 bg-ink/40 p-1 backdrop-blur-sm">
+          <MediaToggleBtn active={view === 'photo'} onClick={() => setView('photo')} icon={<ImageIcon size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Фото' : 'Photo'} />
+          <MediaToggleBtn active={view === 'scheme'} onClick={() => setView('scheme')} icon={<Map size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Схема' : 'Scheme'} />
+        </div>
+      ) : (
+        <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
+          {scheme && !hasPhotos ? (lang === 'ru' ? 'Схема рассадки' : 'Seating plan') : lang === 'ru' ? 'Фотография' : 'Photo'}
+        </span>
+      )}
+
+      {/* Стрелки и точки — только в режиме фото при нескольких кадрах */}
+      {view === 'photo' && photos.length > 1 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            aria-label={lang === 'ru' ? 'Предыдущее фото' : 'Previous photo'}
+            className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45"
+          >
+            <span aria-hidden>←</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            aria-label={lang === 'ru' ? 'Следующее фото' : 'Next photo'}
+            className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45"
+          >
+            <span aria-hidden>→</span>
+          </button>
+          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+            {photos.map((_, i) => (
+              <span
+                key={i}
+                aria-hidden
+                className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-5 bg-paper' : 'w-1.5 bg-paper/50'}`}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
   );
 }
 

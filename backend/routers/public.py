@@ -577,6 +577,7 @@ def _gallery_cat_out(c: GalleryCategory) -> dict:
         "slug": c.slug,
         "name": {"ru": c.name_ru, "en": c.name_en},
         "cover_image": c.cover_image,
+        "cover_video": getattr(c, "cover_video", None),
         "order": c.sort_order,
     }
 

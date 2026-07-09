@@ -153,26 +153,10 @@ export default function NewsDetail() {
           выше правой, поэтому у sticky-колонки есть место — она корректно
           фиксируется под хедером, а не уезжает за него. */}
       <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1fr_minmax(0,640px)] lg:items-start lg:gap-x-14">
-        {/* Левая колонка: обложка + галерея */}
+        {/* Левая колонка: серия фото/видео (обложку отдельно не показываем —
+            материал начинается с первого фото из загруженной серии). При
+            отсутствии галереи используем обложку как единственное медиа. */}
         <div className="flex flex-col gap-8">
-          {/* Обложка */}
-          <div className="w-full overflow-hidden border border-line bg-paper-soft">
-            {article.image ? (
-              <img
-                src={mediaUrl(article.image)}
-                alt={l(article.title)}
-                loading="lazy"
-                decoding="async"
-                className="w-full object-cover"
-              />
-            ) : (
-              <div className="flex aspect-[4/3] items-center justify-center p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
-                {l(article.title)}
-              </div>
-            )}
-          </div>
-
-          {/* Галерея доп. медиа (фото и видео, опционально) */}
           {gallery.length > 0 ? (
             <div className="flex flex-col gap-4">
               {gallery.map((m, gi) =>
@@ -216,6 +200,16 @@ export default function NewsDetail() {
                   </motion.button>
                 )
               )}
+            </div>
+          ) : article.image ? (
+            <div className="w-full overflow-hidden border border-line bg-paper-soft">
+              <img
+                src={mediaUrl(article.image)}
+                alt={l(article.title)}
+                loading="lazy"
+                decoding="async"
+                className="w-full object-cover"
+              />
             </div>
           ) : null}
         </div>

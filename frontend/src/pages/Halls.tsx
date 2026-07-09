@@ -73,6 +73,29 @@ function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: str
   );
 }
 
+/** Разбивает значение вида «1 200 мест» / «1 120 м²» на число и единицу. */
+function splitStat(value: string): { num: string; unit: string } {
+  const m = (value || '').match(/^\s*([\d\s.,]+)\s*(.*)$/);
+  if (m && m[1].trim()) return { num: m[1].trim(), unit: m[2].trim() };
+  return { num: value || '', unit: '' };
+}
+
+/** Крупная цифра + мелкая единица (стиль главной: большое число, подпись снизу). */
+function HallStat({ value }: { value: string }) {
+  const { num, unit } = splitStat(value);
+  if (!num) return null;
+  return (
+    <div>
+      <div className="font-heading text-[clamp(44px,5.5vw,80px)] font-bold leading-[0.85] tracking-[0.01em] tabular-nums text-ink">
+        {num}
+      </div>
+      {unit ? (
+        <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted">{unit}</div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function Halls() {
   const { lang, content, t } = useSite();
   // Буфет/анфилада (rider_only) показываем только в тех. райдере на «Организаторам».
@@ -128,21 +151,12 @@ export default function Halls() {
                 <h2 className="font-heading text-[clamp(36px,5vw,84px)] font-bold uppercase leading-[0.92] tracking-[0.03em] text-ink">
                   {l(hall.name)}
                 </h2>
-                <dl className="mt-8 space-y-2 text-sm text-ink-soft">
-                  <div className="flex gap-2">
-                    <dt className="min-w-[10rem] text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-                      {lang === 'ru' ? 'Вместимость' : 'Capacity'}
-                    </dt>
-                    <dd>{hall.capacity}</dd>
-                  </div>
-                  <div className="flex gap-2">
-                    <dt className="min-w-[10rem] text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-                      {lang === 'ru' ? 'Площадь' : 'Area'}
-                    </dt>
-                    <dd>{hall.area}</dd>
-                  </div>
-                </dl>
-                <p className="mt-6 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{l(hall.description)}</p>
+                {/* Крупная типографика: только цифры (мест / м²), без слов «вместимость»/«площадь». */}
+                <div className="mt-8 flex flex-wrap gap-x-12 gap-y-6">
+                  <HallStat value={hall.capacity} />
+                  <HallStat value={hall.area} />
+                </div>
+                <p className="mt-8 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{l(hall.description)}</p>
 
                 {hall.features_list && hall.features_list.length > 0 ? (
                   <dl className="mt-8 grid gap-x-8 gap-y-4 border-t border-line pt-6 sm:grid-cols-2">
@@ -163,7 +177,7 @@ export default function Halls() {
                 ) : null}
                 <div className="mt-10">
                   <Link
-                    to="/organizers"
+                    to={`/organizers?hall=${hall.id}`}
                     className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-ink transition hover:underline hover:underline-offset-4"
                   >
                     {lang === 'ru' ? 'Подробнее о зале' : 'More about the hall'}

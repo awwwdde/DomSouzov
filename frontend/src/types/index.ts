@@ -102,6 +102,7 @@ export interface GalleryCategory {
   slug: string;
   name: BilingualString;
   cover_image: string | null;
+  cover_video?: string | null;
   order: number;
 }
 

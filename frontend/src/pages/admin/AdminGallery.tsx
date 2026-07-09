@@ -8,6 +8,7 @@ type Category = {
   name_ru: string;
   name_en: string;
   cover_image?: string | null;
+  cover_video?: string | null;
   sort_order: number;
 };
 
@@ -29,7 +30,9 @@ export default function AdminGallery() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [coverBusy, setCoverBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -110,8 +113,33 @@ export default function AdminGallery() {
 
   const setCover = async (p: Photo) => {
     if (!active) return;
-    await adminApi.updateGalleryCategory(active.id, { ...active, cover_image: p.image });
-    setCats((prev) => prev.map((c) => (c.id === active.id ? { ...c, cover_image: p.image } : c)));
+    // Ставим фото обложкой и снимаем видео-обложку (приоритет у видео на фронте).
+    await adminApi.updateGalleryCategory(active.id, { ...active, cover_image: p.image, cover_video: null });
+    setCats((prev) => prev.map((c) => (c.id === active.id ? { ...c, cover_image: p.image, cover_video: null } : c)));
+  };
+
+  /** Отдельная загрузка обложки блока: картинка или видео. */
+  const uploadCover = async (file: File | null | undefined) => {
+    if (!file || !active) return;
+    setCoverBusy(true);
+    try {
+      const url = await adminApi.uploadFile(file);
+      const isVideo = file.type.startsWith('video/');
+      const patch = isVideo ? { cover_video: url } : { cover_image: url, cover_video: null };
+      await adminApi.updateGalleryCategory(active.id, { ...active, ...patch });
+      setCats((prev) => prev.map((c) => (c.id === active.id ? { ...c, ...patch } : c)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setCoverBusy(false);
+      if (coverRef.current) coverRef.current.value = '';
+    }
+  };
+
+  const clearCoverVideo = async () => {
+    if (!active) return;
+    await adminApi.updateGalleryCategory(active.id, { ...active, cover_video: null });
+    setCats((prev) => prev.map((c) => (c.id === active.id ? { ...c, cover_video: null } : c)));
   };
 
   const saveCaption = async (p: Photo, value: string) => {
@@ -202,6 +230,39 @@ export default function AdminGallery() {
               {uploading ? 'Загрузка…' : 'Загрузить фото'}
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadPhotos(e.target.files)} />
             </label>
+          </div>
+
+          {/* Обложка блока — отдельное поле (картинка или видео). Видео приоритетнее. */}
+          <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-paper p-4">
+            <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl border border-line bg-paper-soft">
+              {active.cover_video ? (
+                <video src={active.cover_video} muted autoPlay loop playsInline className="h-full w-full object-cover" />
+              ) : active.cover_image ? (
+                <img src={active.cover_image} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-muted"><Images size={22} /></div>
+              )}
+            </div>
+            <div className="grid gap-1.5">
+              <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+                Обложка блока {active.cover_video ? '· видео' : active.cover_image ? '· фото' : '· не задана'}
+              </div>
+              <p className="max-w-md text-xs text-ink-soft">
+                Загрузите картинку или видео для обложки. Видео проигрывается на превью блока в галерее. Также можно выбрать любое фото ниже «звёздочкой».
+              </p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border border-ink bg-ink px-4 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+                  {coverBusy ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                  {coverBusy ? 'Загрузка…' : 'Загрузить обложку'}
+                  <input ref={coverRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => uploadCover(e.target.files?.[0])} />
+                </label>
+                {active.cover_video ? (
+                  <button type="button" onClick={clearCoverVideo} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[11px] font-bold uppercase tracking-[0.1em] text-ink hover:border-error hover:text-error">
+                    <Trash2 size={13} /> Убрать видео
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
 
           {activePhotos.length === 0 ? (
