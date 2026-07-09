@@ -7,6 +7,7 @@ import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
+import HallStats from '../components/HallStats';
 import { submitOrganizerRequest } from '../api/client';
 import type { Hall } from '../types';
 
@@ -422,27 +423,6 @@ function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
   );
 }
 
-/** Разбивает значение вида «1 200 мест» / «1 120 м²» на число и единицу. */
-function splitStat(value: string): { num: string; unit: string } {
-  const m = (value || '').match(/^\s*([\d\s.,]+)\s*(.*)$/);
-  if (m && m[1].trim()) return { num: m[1].trim(), unit: m[2].trim() };
-  return { num: value || '', unit: '' };
-}
-
-/** Крупная цифра + мелкая единица (мест / м²) — как на странице «Залы». */
-function HallStat({ value }: { value: string }) {
-  const { num, unit } = splitStat(value);
-  if (!num) return null;
-  return (
-    <div>
-      <div className="font-heading text-[clamp(34px,3.6vw,56px)] font-bold leading-[0.85] tracking-[0.01em] tabular-nums text-ink">
-        {num}
-      </div>
-      {unit ? <div className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{unit}</div> : null}
-    </div>
-  );
-}
-
 /** Подбирает иконку под пункт оборудования по ключевым словам. */
 function equipmentIcon(text: string): LucideIcon {
   const s = text.toLowerCase();
@@ -456,6 +436,38 @@ function equipmentIcon(text: string): LucideIcon {
   return Music;
 }
 
+/** Число колонок под количество блоков: 3→3, 8→4 (2 ряда), 6→3 и т.д.
+ *  Стараемся заполнять ряды нацело, чтобы не оставалось пустых ячеек. */
+function colsFor(n: number): number {
+  if (n <= 4) return Math.max(n, 1); // 1→1, 2→2, 3→3, 4→4
+  let best = 4;
+  let bestRem = Infinity;
+  for (const c of [4, 3, 2]) {
+    const rem = (c - (n % c)) % c; // сколько пустых ячеек в последнем ряду
+    if (rem < bestRem || (rem === bestRem && c > best)) {
+      bestRem = rem;
+      best = c;
+    }
+  }
+  return best;
+}
+
+/** Адаптивные колонки: на десктопе — под количество (colsFor), на узких — меньше.
+ *  Строки статичные, чтобы Tailwind их собрал. Незаполненный ряд остаётся
+ *  пустым (без «цветной» ячейки) — карточки сами рисуют border-r/border-b. */
+function gridColsClass(count: number): string {
+  switch (colsFor(count)) {
+    case 1:
+      return 'grid-cols-1';
+    case 2:
+      return 'grid-cols-1 sm:grid-cols-2';
+    case 3:
+      return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
+    default:
+      return 'grid-cols-2 md:grid-cols-4';
+  }
+}
+
 function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang: 'ru' | 'en' }) {
   const name = hall.name?.[lang] || hall.name?.ru || '';
   const equipment = hall.equipment_list?.[lang]?.length
@@ -467,17 +479,14 @@ function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang
     .slice(0, 5);
   const scheme = hall.scheme || '';
   const hasMedia = photos.length > 0 || Boolean(scheme);
-  const flip = index % 2 === 1; // шахматный порядок: медиа слева/справа чередуется
 
   return (
-    <article id={`hall-${hall.id}`} className="grid scroll-mt-28 grid-cols-1 border-b border-line md:grid-cols-2">
-      {hasMedia ? <HallRiderMedia photos={photos} scheme={scheme} name={name} lang={lang} flip={flip} /> : null}
+    <article id={`hall-${hall.id}`} className="scroll-mt-28 border-b border-line py-10 md:py-14">
+      {/* Фото сверху во всю ширину */}
+      {hasMedia ? <HallRiderMedia photos={photos} scheme={scheme} name={name} lang={lang} /> : null}
 
-      <div
-        className={`flex flex-col justify-center bg-paper p-8 md:p-12 lg:p-14 ${
-          !hasMedia ? 'md:col-span-2' : flip ? 'md:order-1 md:border-r md:border-line' : 'md:border-l md:border-line'
-        }`}
-      >
+      {/* Под фото — название, цифры и блоки */}
+      <div className={hasMedia ? 'mt-8 md:mt-10' : ''}>
         <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
           N° {String(index + 1).padStart(2, '0')}
         </span>
@@ -486,25 +495,20 @@ function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang
         </h3>
 
         {/* Крупная типографика: только цифры (мест / м²). */}
-        {hall.capacity || hall.area ? (
-          <div className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
-            <HallStat value={hall.capacity} />
-            <HallStat value={hall.area} />
-          </div>
-        ) : null}
+        <HallStats capacity={hall.capacity} area={hall.area} className="mt-6" />
 
-        <div className="mt-7 border-t border-line pt-6">
+        <div className="mt-8 border-t border-line pt-6">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
             <Layers size={15} className="text-accent" strokeWidth={1.8} />
             {lang === 'ru' ? 'Оборудование' : 'Equipment'}
           </div>
           {equipment.length ? (
-            /* Крупные блоки в стиле раздела «Зрителям». */
-            <div className="mt-5 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
+            /* Блоки во всю ширину, число колонок — под количество. */
+            <div className={`mt-5 grid border-l border-t border-line ${gridColsClass(equipment.length)}`}>
               {equipment.map((item, j) => {
                 const Icon = equipmentIcon(item);
                 return (
-                  <div key={j} className="group flex h-full flex-col gap-4 bg-paper p-6 transition hover:bg-paper-soft md:p-7">
+                  <div key={j} className="group flex h-full flex-col gap-4 border-b border-r border-line bg-paper p-6 transition hover:bg-paper-soft md:p-7">
                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
                       <Icon size={22} strokeWidth={1.6} />
                     </span>
@@ -543,9 +547,9 @@ function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
           ? 'Сценическое оборудование не предусмотрено — пространство для:'
           : 'No stage equipment — a space for:'}
       </p>
-      <div className="mt-5 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-3">
+      <div className={`mt-5 grid border-l border-t border-line ${gridColsClass(uses.length)}`}>
         {uses.map(({ icon: Icon, label }, i) => (
-          <div key={i} className="group flex h-full flex-col gap-4 bg-paper p-6 transition hover:bg-paper-soft md:p-7">
+          <div key={i} className="group flex h-full flex-col gap-4 border-b border-r border-line bg-paper p-6 transition hover:bg-paper-soft md:p-7">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
               <Icon size={22} strokeWidth={1.6} />
             </span>
@@ -565,13 +569,11 @@ function HallRiderMedia({
   scheme,
   name,
   lang,
-  flip,
 }: {
   photos: string[];
   scheme: string;
   name: string;
   lang: 'ru' | 'en';
-  flip: boolean;
 }) {
   const hasPhotos = photos.length > 0;
   const hasBoth = hasPhotos && Boolean(scheme);
@@ -580,11 +582,7 @@ function HallRiderMedia({
   const go = (dir: 1 | -1) => setIdx((i) => (i + dir + photos.length) % photos.length);
 
   return (
-    <div
-      className={`relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[360px] ${
-        flip ? 'md:order-2' : ''
-      }`}
-    >
+    <div className="relative aspect-[16/10] max-h-[70vh] w-full overflow-hidden bg-paper-soft md:aspect-[16/9]">
       {photos.map((src, i) => (
         <img
           key={src + i}

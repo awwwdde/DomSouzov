@@ -5,6 +5,7 @@ import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import ActionButton from '../components/ActionButton';
+import HallStats from '../components/HallStats';
 import { useReducedMotionActive } from '../lib/motion';
 
 /* Авто-слайдер фото зала: перелистывает кадры каждые 6 секунд с плавным
@@ -73,29 +74,6 @@ function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: str
   );
 }
 
-/** Разбивает значение вида «1 200 мест» / «1 120 м²» на число и единицу. */
-function splitStat(value: string): { num: string; unit: string } {
-  const m = (value || '').match(/^\s*([\d\s.,]+)\s*(.*)$/);
-  if (m && m[1].trim()) return { num: m[1].trim(), unit: m[2].trim() };
-  return { num: value || '', unit: '' };
-}
-
-/** Крупная цифра + мелкая единица (стиль главной: большое число, подпись снизу). */
-function HallStat({ value }: { value: string }) {
-  const { num, unit } = splitStat(value);
-  if (!num) return null;
-  return (
-    <div>
-      <div className="font-heading text-[clamp(44px,5.5vw,80px)] font-bold leading-[0.85] tracking-[0.01em] tabular-nums text-ink">
-        {num}
-      </div>
-      {unit ? (
-        <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted">{unit}</div>
-      ) : null}
-    </div>
-  );
-}
-
 export default function Halls() {
   const { lang, content, t } = useSite();
   // Буфет/анфилада (rider_only) показываем только в тех. райдере на «Организаторам».
@@ -152,10 +130,7 @@ export default function Halls() {
                   {l(hall.name)}
                 </h2>
                 {/* Крупная типографика: только цифры (мест / м²), без слов «вместимость»/«площадь». */}
-                <div className="mt-8 flex flex-wrap gap-x-12 gap-y-6">
-                  <HallStat value={hall.capacity} />
-                  <HallStat value={hall.area} />
-                </div>
+                <HallStats capacity={hall.capacity} area={hall.area} className="mt-8" />
                 <p className="mt-8 w-full text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">{l(hall.description)}</p>
 
                 {hall.features_list && hall.features_list.length > 0 ? (
