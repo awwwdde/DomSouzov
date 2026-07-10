@@ -84,14 +84,14 @@ export default function AdminUsers() {
       transition={{ duration: 0.35 }}
     >
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">ДОСТУП · УЧЁТНЫЕ ЗАПИСИ</div>
-        <h1 className="mt-2 font-heading text-[clamp(48px,7vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.06em]">Администраторы</h1>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">ДОСТУП · УЧЁТНЫЕ ЗАПИСИ</div>
+        <h1 className="mt-2 font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.86] tracking-[-0.06em]">Администраторы</h1>
       </div>
 
       {/* Создание нового админа */}
       <form
         onSubmit={create}
-        className="grid gap-4 rounded-3xl border border-line bg-white p-5 md:grid-cols-[1fr_1fr_auto] md:items-end [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted"
+        className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-[1fr_1fr_auto] md:items-end [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-zinc-200 [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input:focus]:border-accent [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-zinc-500"
       >
         <div className="grid gap-2">
           <label>Email</label>
@@ -104,7 +104,7 @@ export default function AdminUsers() {
         <button
           type="submit"
           disabled={creating}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink bg-ink px-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-accent bg-accent px-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-60"
         >
           <Plus size={14} />
           {creating ? 'Создание…' : 'Создать админа'}
@@ -116,7 +116,7 @@ export default function AdminUsers() {
       {loading ? (
         <div className="text-sm text-muted">Загрузка…</div>
       ) : (
-        <div className="overflow-x-auto rounded-3xl border border-line bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
           <table className="w-full min-w-[560px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-[0.14em] text-muted">

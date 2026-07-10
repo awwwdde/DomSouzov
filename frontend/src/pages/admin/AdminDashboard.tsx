@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
+  CalendarDays, Newspaper, Landmark, GalleryHorizontal, Plus, Image as ImageIcon,
+  Cog, ArrowUpRight,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { adminApi } from '../../api/client';
 
 export default function AdminDashboard() {
@@ -17,72 +22,92 @@ export default function AdminDashboard() {
     }).catch(() => {});
   }, []);
 
-  const stats = [
-    { label: 'Мероприятия', num: counts.events, to: '/admin/events' },
-    { label: 'Архив мероприятий', num: counts.news, to: '/admin/news' },
-    { label: 'Залы', num: counts.halls, to: '/admin/halls' },
-    { label: 'Галерея', num: counts.gallery, to: '/admin/gallery' },
+  const stats: { label: string; num: number; to: string; icon: LucideIcon }[] = [
+    { label: 'Мероприятия', num: counts.events, to: '/admin/events', icon: CalendarDays },
+    { label: 'Архив мероприятий', num: counts.news, to: '/admin/news', icon: Newspaper },
+    { label: 'Залы', num: counts.halls, to: '/admin/halls', icon: Landmark },
+    { label: 'Галерея', num: counts.gallery, to: '/admin/gallery', icon: GalleryHorizontal },
   ];
 
-  const quickLinks = [
-    { label: '+ Новое мероприятие', to: '/admin/events' },
-    { label: '+ Новая статья', to: '/admin/news' },
-    { label: '+ Загрузить фото', to: '/admin/gallery' },
-    { label: 'Настройки сайта', to: '/admin/settings' },
+  const quickLinks: { label: string; to: string; icon: LucideIcon }[] = [
+    { label: 'Новое мероприятие', to: '/admin/events', icon: Plus },
+    { label: 'Новая статья', to: '/admin/news', icon: Newspaper },
+    { label: 'Загрузить фото', to: '/admin/gallery', icon: ImageIcon },
+    { label: 'Настройки сайта', to: '/admin/settings', icon: Cog },
   ];
 
   return (
-    <div className="grid gap-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">CMS · CONTROL PANEL</div>
-          <h1 className="mt-2 font-heading text-[clamp(52px,7vw,104px)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]">Дашборд</h1>
-        </div>
+    <div className="grid gap-7">
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">Панель управления</div>
+        <h1 className="mt-1.5 font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.95] tracking-[-0.02em] text-zinc-900">
+          Дашборд
+        </h1>
+        <p className="mt-2 text-sm text-zinc-500">Обзор контента сайта Дома Союзов.</p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        {stats.map((s, index) => (
-          <motion.div
-            key={s.to}
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.35, delay: index * 0.05 }}
-          >
-            <Link to={s.to} className="block">
-              <div className="grid min-h-40 content-between rounded-3xl border border-line bg-white p-5 transition hover:-translate-y-1 hover:border-ink/25">
-              <div className="font-heading text-7xl font-semibold leading-none">{s.num}</div>
-              <div className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{s.label}</div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-3xl border border-line bg-white p-5">
-          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            БЫСТРЫЕ ДЕЙСТВИЯ
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {quickLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="rounded-full border border-line bg-paper px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:border-ink/30 hover:bg-white">
-                {link.label}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((s, index) => {
+          const Icon = s.icon;
+          return (
+            <motion.div
+              key={s.to}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+            >
+              <Link
+                to={s.to}
+                className="group flex flex-col justify-between gap-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:border-accent/40 hover:shadow-[0_12px_30px_-16px_rgba(31,95,78,0.4)]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent/10 text-accent">
+                    <Icon size={19} strokeWidth={1.9} />
+                  </div>
+                  <ArrowUpRight size={18} className="text-zinc-300 transition group-hover:text-accent" />
+                </div>
+                <div>
+                  <div className="font-heading text-5xl font-semibold leading-none tracking-[-0.02em] text-zinc-900">
+                    {s.num}
+                  </div>
+                  <div className="mt-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
+                    {s.label}
+                  </div>
+                </div>
               </Link>
-            ))}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400">Быстрые действия</div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {quickLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.to + link.label}
+                  to={link.to}
+                  className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-[13px] font-semibold text-zinc-700 transition hover:border-accent/40 hover:bg-white hover:text-accent"
+                >
+                  <Icon size={16} strokeWidth={2} />
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-line bg-white p-5">
-          <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
-            СТРУКТУРА CMS
-          </div>
-          <ul className="space-y-2 text-sm leading-6 text-ink-soft">
-            <li>— <strong>Мероприятия</strong>: концерты, события, даты, цены</li>
-            <li>— <strong>Архив мероприятий</strong>: новости, статьи, интервью</li>
-            <li>— <strong>Залы</strong>: Колонный, Октябрьский</li>
-            <li>— <strong>Галерея</strong>: фотографии и медиа</li>
-            <li>— <strong>Настройки</strong>: тексты, адрес, контакты</li>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400">Структура CMS</div>
+          <ul className="mt-4 space-y-2.5 text-sm leading-6 text-zinc-600">
+            <li className="flex gap-2"><span className="text-accent">•</span> <span><strong className="font-semibold text-zinc-900">Мероприятия</strong> — концерты, события, даты, цены</span></li>
+            <li className="flex gap-2"><span className="text-accent">•</span> <span><strong className="font-semibold text-zinc-900">Архив мероприятий</strong> — новости, статьи, интервью</span></li>
+            <li className="flex gap-2"><span className="text-accent">•</span> <span><strong className="font-semibold text-zinc-900">Залы</strong> — Колонный, Октябрьский и др.</span></li>
+            <li className="flex gap-2"><span className="text-accent">•</span> <span><strong className="font-semibold text-zinc-900">Галерея</strong> — фотографии и медиа</span></li>
+            <li className="flex gap-2"><span className="text-accent">•</span> <span><strong className="font-semibold text-zinc-900">Настройки</strong> — тексты, адрес, контакты</span></li>
           </ul>
         </div>
       </div>

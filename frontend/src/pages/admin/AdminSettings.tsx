@@ -522,7 +522,7 @@ export default function AdminSettings() {
         transition={{ duration: 0.35 }}
       >
         <header>
-          <h1 className="font-heading text-[clamp(40px,6vw,80px)] font-semibold uppercase leading-[0.9] tracking-[-0.04em]">
+          <h1 className="font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.9] tracking-[-0.04em]">
             Настройки
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
@@ -546,7 +546,7 @@ export default function AdminSettings() {
                     onClick={() => setActivePage(p.id)}
                     whileHover={{ y: -3 }}
                     transition={{ duration: 0.18 }}
-                    className="group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-3xl border border-line bg-white p-5 text-left transition hover:border-ink hover:shadow-lg sm:p-6"
+                    className="group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 text-left transition hover:border-ink hover:shadow-lg sm:p-6"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-ink text-white transition group-hover:bg-accent sm:h-11 sm:w-11">
@@ -622,7 +622,7 @@ export default function AdminSettings() {
       {/* Секции страницы */}
       <div className="grid gap-5">
         {page.sections.map((section) => (
-          <section key={section.title} className="rounded-3xl border border-line bg-white p-6">
+          <section key={section.title} className="rounded-2xl border border-zinc-200 bg-white p-6">
             <h2 className="font-heading text-lg font-bold uppercase tracking-[0.04em] text-ink">
               {section.title}
             </h2>
@@ -954,7 +954,7 @@ function ListEditor({
         items.map((item, idx) => (
           <div key={idx} className="rounded-2xl border border-line bg-paper-soft p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
                 Элемент {idx + 1}
               </span>
               <div className="flex items-center gap-1">
@@ -1199,7 +1199,7 @@ function IconPickerField({
                   }}
                   className={[
                     'grid aspect-square place-items-center rounded-lg border transition',
-                    active ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:border-ink',
+                    active ? 'border-accent bg-accent text-white' : 'border-zinc-200 bg-white text-zinc-600 hover:border-accent/40',
                   ].join(' ')}
                 >
                   <Icon size={18} strokeWidth={1.7} />
@@ -1233,7 +1233,7 @@ function SaveButton({
       onClick={onClick}
       disabled={saving}
       className={[
-        'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition disabled:opacity-60',
+        'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-accent bg-accent px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition disabled:opacity-60',
         shadow ? 'shadow-xl' : '',
       ].join(' ')}
     >

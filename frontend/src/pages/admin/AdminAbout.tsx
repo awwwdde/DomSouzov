@@ -115,10 +115,10 @@ function PhotosManager() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">О ДОМЕ · СЕКЦИЯ ФОТО</div>
-          <h1 className="mt-2 font-heading text-[clamp(48px,7vw,96px)] font-semibold uppercase leading-[0.86] tracking-[-0.06em]">Дом в кадрах</h1>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">О ДОМЕ · СЕКЦИЯ ФОТО</div>
+          <h1 className="mt-2 font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.86] tracking-[-0.06em]">Дом в кадрах</h1>
         </div>
-        <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
+        <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-accent bg-accent px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
           <Plus size={14} />
           {busy ? 'Загрузка…' : 'Добавить фото'}
           <input type="file" accept="image/*" className="hidden" onChange={(e) => addPhoto(e.target.files?.[0])} />
@@ -137,7 +137,7 @@ function PhotosManager() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {photos.map((p) => (
-            <div key={p.id} className="grid gap-3 rounded-3xl border border-line bg-white p-4">
+            <div key={p.id} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-paper-soft">
                 {p.image ? (
                   <img src={p.image} alt={p.caption_ru} className="h-full w-full object-cover" />
@@ -173,7 +173,7 @@ function PhotosManager() {
                   type="button"
                   onClick={() => savePhoto(p)}
                   disabled={savingId === p.id}
-                  className="rounded-full border border-ink bg-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white disabled:opacity-60"
+                  className="rounded-full border border-accent bg-accent px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white disabled:opacity-60"
                 >
                   {savingId === p.id ? '…' : 'Сохранить'}
                 </button>
@@ -279,10 +279,10 @@ function TimelineManager() {
     <motion.div className="grid gap-6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">О ДОМЕ · ХРОНОЛОГИЯ</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">О ДОМЕ · ХРОНОЛОГИЯ</div>
           <h2 className="mt-2 font-heading text-[clamp(36px,5vw,72px)] font-semibold uppercase leading-[0.86] tracking-[-0.05em]">Хронология</h2>
         </div>
-        <button type="button" onClick={addDraft} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-ink bg-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
+        <button type="button" onClick={addDraft} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-accent bg-accent px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
           <Plus size={14} /> Добавить событие
         </button>
       </div>
@@ -300,7 +300,7 @@ function TimelineManager() {
           {items.map((it, idx) => (
             <div
               key={it.id || `new-${idx}`}
-              className="grid gap-3 rounded-3xl border border-line bg-white p-4 [&_input]:min-h-10 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-ink [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-ink"
+              className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 [&_input]:min-h-10 [&_input]:rounded-xl [&_input]:border [&_input]:border-zinc-200 [&_input]:bg-white [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-accent [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-zinc-200 [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-accent"
             >
               <div className="grid gap-3 md:grid-cols-3">
                 <input value={it.year} onChange={(e) => patch(idx, 'year', e.target.value)} placeholder="Дата (напр. 1784)" />
@@ -327,7 +327,7 @@ function TimelineManager() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => save(idx)} disabled={savingId !== null} className="rounded-full border border-ink bg-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white disabled:opacity-60">
+                <button type="button" onClick={() => save(idx)} disabled={savingId !== null} className="rounded-full border border-accent bg-accent px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white disabled:opacity-60">
                   {savingId === (it.id || 'new') ? '…' : 'Сохранить'}
                 </button>
                 <button type="button" onClick={() => remove(idx)} className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-red-700">

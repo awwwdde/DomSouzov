@@ -88,8 +88,8 @@ export default function AdminRequests() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">ОРГАНИЗАТОРАМ · ФОРМА</div>
-          <h1 className="mt-2 font-heading text-[clamp(40px,6vw,80px)] font-semibold uppercase leading-[0.9] tracking-[-0.04em]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">ОРГАНИЗАТОРАМ · ФОРМА</div>
+          <h1 className="mt-2 font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.9] tracking-[-0.04em]">
             Заявки
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
@@ -120,11 +120,11 @@ export default function AdminRequests() {
           {items.map((it) => (
             <div
               key={it.id}
-              className="grid gap-3 rounded-3xl border border-line bg-white p-5 [&_input]:min-h-10 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-ink [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-ink"
+              className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 [&_input]:min-h-10 [&_input]:rounded-xl [&_input]:border [&_input]:border-zinc-200 [&_input]:bg-white [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-accent [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-zinc-200 [&_textarea]:bg-white [&_textarea]:p-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-accent"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Заявка #{it.id}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">Заявка #{it.id}</span>
                   <span className="text-xs text-muted">{fmtDate(it.created_at)}</span>
                 </div>
                 <span
@@ -191,7 +191,7 @@ export default function AdminRequests() {
                   type="button"
                   onClick={() => save(it)}
                   disabled={savingId === it.id}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-full border border-ink bg-ink px-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition disabled:opacity-60"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-full border border-accent bg-accent px-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-white transition disabled:opacity-60"
                 >
                   {savingId === it.id ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                   Сохранить

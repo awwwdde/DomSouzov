@@ -160,7 +160,7 @@ export default function AdminGallery() {
     <div className="grid gap-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-heading text-[clamp(32px,5vw,64px)] font-semibold uppercase leading-[0.9] tracking-[-0.03em]">
+          <h1 className="font-heading text-[clamp(30px,4vw,44px)] font-semibold uppercase leading-[0.9] tracking-[-0.03em]">
             Галерея
           </h1>
           <p className="mt-2 text-sm text-ink-soft">Блоки-темы и фотографии внутри них.</p>
@@ -168,7 +168,7 @@ export default function AdminGallery() {
         <button
           type="button"
           onClick={addBlock}
-          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-ink bg-ink px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-white"
+          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-accent bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-white"
         >
           <Plus size={15} /> Новый блок
         </button>
@@ -214,7 +214,7 @@ export default function AdminGallery() {
 
       {/* Фото выбранного блока */}
       {active ? (
-        <section className="rounded-3xl border border-line bg-white p-6">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <h2 className="font-heading text-2xl font-bold uppercase tracking-[0.02em]">{active.name_ru}</h2>
@@ -225,7 +225,7 @@ export default function AdminGallery() {
                 <Trash2 size={13} />
               </button>
             </div>
-            <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-ink bg-ink px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+            <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-accent bg-accent px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
               {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
               {uploading ? 'Загрузка…' : 'Загрузить фото'}
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadPhotos(e.target.files)} />
@@ -251,7 +251,7 @@ export default function AdminGallery() {
                 Загрузите картинку или видео для обложки. Видео проигрывается на превью блока в галерее. Также можно выбрать любое фото ниже «звёздочкой».
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
-                <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border border-ink bg-ink px-4 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+                <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border border-accent bg-accent px-4 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
                   {coverBusy ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
                   {coverBusy ? 'Загрузка…' : 'Загрузить обложку'}
                   <input ref={coverRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => uploadCover(e.target.files?.[0])} />

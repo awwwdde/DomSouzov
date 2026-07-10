@@ -70,7 +70,7 @@ function PartnerForm({ item, onSave, onCancel }: { item: unknown; onSave: () => 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-line [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input:focus]:border-ink [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-muted">
+    <form onSubmit={handleSubmit} className="grid gap-5 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-zinc-200 [&_input]:bg-white [&_input]:px-3 [&_input]:outline-none [&_input:focus]:border-accent [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-[0.14em] [&_label]:text-zinc-500">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <label>Название (RU)</label>
@@ -96,7 +96,7 @@ function PartnerForm({ item, onSave, onCancel }: { item: unknown; onSave: () => 
         Активен на сайте
       </label>
       <div className="flex flex-wrap gap-3">
-        <button type="submit" disabled={saving} className="rounded-full bg-ink px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white">
+        <button type="submit" disabled={saving} className="rounded-full bg-accent px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white">
           {saving ? '…' : 'Сохранить'}
         </button>
         <button type="button" onClick={onCancel} className="rounded-full border border-line px-6 py-3 text-xs font-bold uppercase tracking-[0.12em]">
