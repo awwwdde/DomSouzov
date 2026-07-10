@@ -561,10 +561,12 @@ function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
   );
 }
 
-/* Медиа блока зала: единый слайдер. Сначала схема рассадки, затем фотографии —
-   переключаются стрелками/точками. Активный кадр держим в потоке (задаёт
-   реальный размер контейнера без обрезки и пустых полей), остальные лежат
-   абсолютом поверх и плавно проявляются. */
+/* Медиа блока зала: единый слайдер во всю ширину блока (совпадает по ширине
+   с блоком информации ниже). Сначала схема рассадки, затем фотографии.
+   Размер блока фиксированный. Фото показываем целиком (object-contain, без
+   обрезки), а пустое место по краям заполняем размытой копией того же кадра —
+   так нет ни белых полей, ни кропа при разных пропорциях фотографий.
+   Схему показываем на белом фоне (это план, а не фото). */
 function HallRiderMedia({
   photos,
   scheme,
@@ -587,32 +589,48 @@ function HallRiderMedia({
   const current = slides[idx];
 
   return (
-    <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-paper-soft">
+    <div className="relative h-[clamp(320px,48vh,540px)] w-full overflow-hidden bg-paper-soft">
       {slides.map((slide, i) => {
         const active = i === idx;
         const isScheme = slide.type === 'scheme';
-        const flow = isScheme
-          ? 'relative block h-auto max-h-[62vh] w-auto max-w-full bg-white p-3'
-          : 'relative block h-auto max-h-[62vh] w-auto max-w-full';
-        const overlay = isScheme
-          ? 'pointer-events-none absolute inset-0 h-full w-full bg-white object-contain p-3 opacity-0 transition-opacity duration-700 ease-ds'
-          : 'pointer-events-none absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-700 ease-ds';
         return (
-          <img
+          <div
             key={slide.src + i}
-            src={mediaUrl(slide.src)}
-            alt={
-              !active
-                ? ''
-                : isScheme
-                  ? `${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`
-                  : name
-            }
-            loading="lazy"
-            decoding="async"
-            className={active ? flow : overlay}
+            className="absolute inset-0 transition-opacity duration-700 ease-ds"
+            style={{ opacity: active ? 1 : 0 }}
             aria-hidden={!active}
-          />
+          >
+            {isScheme ? (
+              <img
+                src={mediaUrl(slide.src)}
+                alt={active ? `${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}` : ''}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full bg-white object-contain p-3"
+              />
+            ) : (
+              <>
+                {/* Размытая заливка фона — вместо белых полей */}
+                <img
+                  src={mediaUrl(slide.src)}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full scale-105 object-cover blur-lg"
+                />
+                <span aria-hidden className="absolute inset-0 bg-ink/10" />
+                {/* Само фото — целиком, без обрезки */}
+                <img
+                  src={mediaUrl(slide.src)}
+                  alt={active ? name : ''}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
+              </>
+            )}
+          </div>
         );
       })}
 
