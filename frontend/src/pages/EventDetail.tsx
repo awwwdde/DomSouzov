@@ -269,7 +269,7 @@ export default function EventDetail() {
       {/* Описание программы — читаемая колонка, изображения аккуратно вписаны */}
       {descBlocks.length > 0 ? (
         <section className="border-t border-line px-5 py-14 md:px-12 md:py-20">
-          <div className="mx-auto max-w-[760px]">
+          <div className="mx-auto max-w-[1600px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
             <div className="mt-8 space-y-6 text-[17px] leading-[1.8] text-ink-soft">
               {descBlocks.map((b, i) =>

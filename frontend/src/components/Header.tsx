@@ -72,7 +72,7 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-[200] border-b border-line bg-paper-soft">
         {/* --- Единственный ряд: логотип + утилиты --- */}
-        <div className="flex h-[80px] w-full items-center justify-between gap-3 px-5 md:h-[104px] md:px-8">
+        <div className="flex h-[64px] w-full items-center justify-between gap-3 px-5 md:h-[84px] md:px-8">
           <Link
             to="/"
             className="flex items-center gap-3 leading-none md:gap-4"
@@ -81,9 +81,9 @@ export default function Header() {
             <img
               src="/logo-house.svg"
               alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
-              className="h-14 w-auto md:h-20"
+              className="h-11 w-auto md:h-14"
             />
-            <span className="whitespace-nowrap font-heading text-2xl font-bold uppercase leading-none tracking-[0.02em] text-ink md:text-5xl lg:text-6xl xl:text-7xl">
+            <span className="whitespace-nowrap font-heading text-xl font-bold uppercase leading-none tracking-[0.02em] text-ink md:text-3xl lg:text-4xl">
               {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
             </span>
           </Link>
