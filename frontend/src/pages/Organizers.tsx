@@ -415,8 +415,8 @@ function HallsRider({ halls, lang }: { halls: Hall[]; lang: 'ru' | 'en' }) {
       </h2>
 
       <div className="mt-10 border-t border-line md:mt-14">
-        {halls.map((hall, i) => (
-          <HallRiderBlock key={hall.id} hall={hall} index={i} lang={lang} />
+        {halls.map((hall) => (
+          <HallRiderBlock key={hall.id} hall={hall} lang={lang} />
         ))}
       </div>
     </RevealSection>
@@ -468,7 +468,7 @@ function gridColsClass(count: number): string {
   }
 }
 
-function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang: 'ru' | 'en' }) {
+function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
   const name = hall.name?.[lang] || hall.name?.ru || '';
   const equipment = hall.equipment_list?.[lang]?.length
     ? hall.equipment_list[lang]
@@ -485,17 +485,15 @@ function HallRiderBlock({ hall, index, lang }: { hall: Hall; index: number; lang
       {/* Фото сверху во всю ширину */}
       {hasMedia ? <HallRiderMedia photos={photos} scheme={scheme} name={name} lang={lang} /> : null}
 
-      {/* Под фото — название, цифры и блоки */}
+      {/* Под фото — название слева, цифры справа в один ряд */}
       <div className={hasMedia ? 'mt-8 md:mt-10' : ''}>
-        <span className="font-mono text-[12px] font-semibold tracking-[0.12em] text-accent">
-          N° {String(index + 1).padStart(2, '0')}
-        </span>
-        <h3 className="mt-4 font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
-          {name}
-        </h3>
-
-        {/* Крупная типографика: только цифры (мест / м²). */}
-        <HallStats capacity={hall.capacity} area={hall.area} className="mt-6" />
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
+          <h3 className="font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
+            {name}
+          </h3>
+          {/* Крупная типографика: только цифры (мест / м²). */}
+          <HallStats capacity={hall.capacity} area={hall.area} className="shrink-0 md:justify-end" />
+        </div>
 
         <div className="mt-8 border-t border-line pt-6">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
@@ -582,7 +580,7 @@ function HallRiderMedia({
   const go = (dir: 1 | -1) => setIdx((i) => (i + dir + photos.length) % photos.length);
 
   return (
-    <div className="relative aspect-[16/10] max-h-[70vh] w-full overflow-hidden bg-paper-soft md:aspect-[16/9]">
+    <div className="relative aspect-[16/10] max-h-[60vh] w-full overflow-hidden bg-paper-soft md:aspect-[16/9]">
       {photos.map((src, i) => (
         <img
           key={src + i}
@@ -590,7 +588,7 @@ function HallRiderMedia({
           alt={view === 'photo' && i === idx ? name : ''}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-ds"
+          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-ds"
           style={{ opacity: view === 'photo' && i === idx ? 1 : 0 }}
           aria-hidden={!(view === 'photo' && i === idx)}
         />
@@ -613,11 +611,11 @@ function HallRiderMedia({
           <MediaToggleBtn active={view === 'photo'} onClick={() => setView('photo')} icon={<ImageIcon size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Фото' : 'Photo'} />
           <MediaToggleBtn active={view === 'scheme'} onClick={() => setView('scheme')} icon={<Map size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Схема' : 'Scheme'} />
         </div>
-      ) : (
+      ) : scheme && !hasPhotos ? (
         <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
-          {scheme && !hasPhotos ? (lang === 'ru' ? 'Схема рассадки' : 'Seating plan') : lang === 'ru' ? 'Фотография' : 'Photo'}
+          {lang === 'ru' ? 'Схема рассадки' : 'Seating plan'}
         </span>
-      )}
+      ) : null}
 
       {/* Стрелки и точки — только в режиме фото при нескольких кадрах */}
       {view === 'photo' && photos.length > 1 ? (
