@@ -132,16 +132,16 @@ export default function EventDetail() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.6fr_320px] lg:items-start lg:gap-12">
-        {/* Фото — занимает всё левое положение, без полей и рамки */}
-        <div className="w-full overflow-hidden">
+      <section className="mx-auto grid w-full max-w-[1600px] gap-10 px-5 py-12 md:px-12 lg:grid-cols-[1.6fr_320px] lg:items-start lg:gap-12">
+        {/* Фото — во всю ширину колонки, пропорционально, без обрезки */}
+        <div className="w-full">
           {event.image ? (
             <img
               src={mediaUrl(event.image)}
               alt={l(event.title)}
               loading="lazy"
               decoding="async"
-              className="w-full object-cover"
+              className="h-auto w-full"
             />
           ) : (
             <div className="flex aspect-[16/9] items-center justify-center bg-paper-soft p-6 text-center font-heading text-2xl font-bold uppercase tracking-[0.04em] text-muted">
@@ -266,22 +266,26 @@ export default function EventDetail() {
         </aside>
       </section>
 
-      {/* Описание программы */}
+      {/* Описание программы — читаемая колонка, изображения аккуратно вписаны */}
       {descBlocks.length > 0 ? (
-        <section className="border-t border-line px-5 py-14 md:px-12">
-          <div className="w-full">
+        <section className="border-t border-line px-5 py-14 md:px-12 md:py-20">
+          <div className="mx-auto max-w-[760px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
-            <div className="space-y-5 text-justify text-[16px] leading-[1.75] text-ink-soft [text-align-last:start]">
+            <div className="mt-8 space-y-6 text-[17px] leading-[1.8] text-ink-soft">
               {descBlocks.map((b, i) =>
                 b.type === 'image' ? (
-                  <img
-                    key={i}
-                    src={mediaUrl(b.url)}
-                    alt={b.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-auto w-full"
-                  />
+                  <figure key={i} className="my-9">
+                    <img
+                      src={mediaUrl(b.url)}
+                      alt={b.alt}
+                      loading="lazy"
+                      decoding="async"
+                      className="mx-auto h-auto w-full max-w-[560px] rounded-lg"
+                    />
+                    {b.alt ? (
+                      <figcaption className="mt-3 text-center text-[13px] text-muted">{b.alt}</figcaption>
+                    ) : null}
+                  </figure>
                 ) : (
                   <p key={i}>{b.value}</p>
                 )
