@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
@@ -561,7 +561,10 @@ function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
   );
 }
 
-/* Медиа блока зала: слайдер до 5 фото + схема, переключатель как на «Залы». */
+/* Медиа блока зала: единый слайдер. Сначала схема рассадки, затем фотографии —
+   переключаются стрелками/точками. Активный кадр держим в потоке (задаёт
+   реальный размер контейнера без обрезки и пустых полей), остальные лежат
+   абсолютом поверх и плавно проявляются. */
 function HallRiderMedia({
   photos,
   scheme,
@@ -573,57 +576,60 @@ function HallRiderMedia({
   name: string;
   lang: 'ru' | 'en';
 }) {
-  const hasPhotos = photos.length > 0;
-  const hasBoth = hasPhotos && Boolean(scheme);
-  const [view, setView] = useState<'photo' | 'scheme'>(hasPhotos ? 'photo' : 'scheme');
+  const slides: { src: string; type: 'scheme' | 'photo' }[] = [
+    ...(scheme ? [{ src: scheme, type: 'scheme' as const }] : []),
+    ...photos.map((src) => ({ src, type: 'photo' as const })),
+  ];
   const [idx, setIdx] = useState(0);
-  const go = (dir: 1 | -1) => setIdx((i) => (i + dir + photos.length) % photos.length);
+  const go = (dir: 1 | -1) => setIdx((i) => (i + dir + slides.length) % slides.length);
+
+  if (!slides.length) return null;
+  const current = slides[idx];
 
   return (
-    <div className="relative aspect-[16/10] max-h-[60vh] w-full overflow-hidden bg-paper-soft md:aspect-[16/9]">
-      {photos.map((src, i) => (
-        <img
-          key={src + i}
-          src={mediaUrl(src)}
-          alt={view === 'photo' && i === idx ? name : ''}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-ds"
-          style={{ opacity: view === 'photo' && i === idx ? 1 : 0 }}
-          aria-hidden={!(view === 'photo' && i === idx)}
-        />
-      ))}
-      {scheme ? (
-        <img
-          src={mediaUrl(scheme)}
-          alt={`${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 h-full w-full bg-white object-contain p-3 transition-opacity duration-700 ease-ds"
-          style={{ opacity: view === 'scheme' ? 1 : 0 }}
-          aria-hidden={view !== 'scheme'}
-        />
-      ) : null}
+    <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-paper-soft">
+      {slides.map((slide, i) => {
+        const active = i === idx;
+        const isScheme = slide.type === 'scheme';
+        const flow = isScheme
+          ? 'relative block h-auto max-h-[62vh] w-auto max-w-full bg-white p-3'
+          : 'relative block h-auto max-h-[62vh] w-auto max-w-full';
+        const overlay = isScheme
+          ? 'pointer-events-none absolute inset-0 h-full w-full bg-white object-contain p-3 opacity-0 transition-opacity duration-700 ease-ds'
+          : 'pointer-events-none absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-700 ease-ds';
+        return (
+          <img
+            key={slide.src + i}
+            src={mediaUrl(slide.src)}
+            alt={
+              !active
+                ? ''
+                : isScheme
+                  ? `${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`
+                  : name
+            }
+            loading="lazy"
+            decoding="async"
+            className={active ? flow : overlay}
+            aria-hidden={!active}
+          />
+        );
+      })}
 
-      {/* Переключатель Фото ↔ Схема */}
-      {hasBoth ? (
-        <div className="absolute left-3 top-3 z-10 inline-flex gap-1 rounded-full border border-paper/20 bg-ink/40 p-1 backdrop-blur-sm">
-          <MediaToggleBtn active={view === 'photo'} onClick={() => setView('photo')} icon={<ImageIcon size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Фото' : 'Photo'} />
-          <MediaToggleBtn active={view === 'scheme'} onClick={() => setView('scheme')} icon={<Map size={13} strokeWidth={2} />} label={lang === 'ru' ? 'Схема' : 'Scheme'} />
-        </div>
-      ) : scheme && !hasPhotos ? (
+      {/* Подпись схемы — только когда открыт кадр со схемой */}
+      {current.type === 'scheme' ? (
         <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
           {lang === 'ru' ? 'Схема рассадки' : 'Seating plan'}
         </span>
       ) : null}
 
-      {/* Стрелки и точки — только в режиме фото при нескольких кадрах */}
-      {view === 'photo' && photos.length > 1 ? (
+      {/* Стрелки и точки — при нескольких кадрах */}
+      {slides.length > 1 ? (
         <>
           <button
             type="button"
             onClick={() => go(-1)}
-            aria-label={lang === 'ru' ? 'Предыдущее фото' : 'Previous photo'}
+            aria-label={lang === 'ru' ? 'Предыдущий кадр' : 'Previous slide'}
             className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45"
           >
             <span aria-hidden>←</span>
@@ -631,48 +637,24 @@ function HallRiderMedia({
           <button
             type="button"
             onClick={() => go(1)}
-            aria-label={lang === 'ru' ? 'Следующее фото' : 'Next photo'}
+            aria-label={lang === 'ru' ? 'Следующий кадр' : 'Next slide'}
             className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/20 text-2xl leading-none text-paper backdrop-blur-sm transition hover:bg-ink/45"
           >
             <span aria-hidden>→</span>
           </button>
           <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-            {photos.map((_, i) => (
-              <span
+            {slides.map((_, i) => (
+              <button
                 key={i}
-                aria-hidden
-                className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-5 bg-paper' : 'w-1.5 bg-paper/50'}`}
+                type="button"
+                onClick={() => setIdx(i)}
+                aria-label={lang === 'ru' ? `Кадр ${i + 1}` : `Slide ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-5 bg-paper' : 'w-1.5 bg-paper/50 hover:bg-paper/80'}`}
               />
             ))}
           </div>
         </>
       ) : null}
     </div>
-  );
-}
-
-function MediaToggleBtn({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition ${
-        active ? 'bg-paper text-ink' : 'text-paper/85 hover:text-paper'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }
