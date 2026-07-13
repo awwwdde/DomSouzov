@@ -521,6 +521,24 @@ def _hall_gallery(h: Hall) -> list:
     return out
 
 
+def _hall_schemes(h: Hall) -> list:
+    """Схемы зала для слайдера: JSON-массив URL из поля schemes.
+    Подстраховка: если массива нет, но есть легаси-поле scheme — отдаём его."""
+    import json
+    raw = getattr(h, "schemes", None)
+    out = []
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                out = [str(u) for u in parsed if u]
+        except Exception:
+            out = []
+    if not out and getattr(h, "scheme", None):
+        out = [h.scheme]
+    return out
+
+
 def _hall_out(h: Hall) -> dict:
     return {
         "id": h.id,
@@ -534,6 +552,7 @@ def _hall_out(h: Hall) -> dict:
         "image": h.image,
         "gallery": _hall_gallery(h),
         "scheme": getattr(h, "scheme", None),
+        "schemes": _hall_schemes(h),
         "equipment": {
             "ru": getattr(h, "equipment_ru", "") or "",
             "en": getattr(h, "equipment_en", "") or "",

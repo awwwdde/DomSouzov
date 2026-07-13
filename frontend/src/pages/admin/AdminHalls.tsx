@@ -12,6 +12,7 @@ const EMPTY = {
   image: '',
   gallery: '',
   scheme: '',
+  schemes: '',
   equipment_ru: '', equipment_en: '',
   rider_only: false,
   sort_order: 0,
@@ -81,18 +82,32 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   const [galBusy, setGalBusy] = useState(false);
   const [schemeBusy, setSchemeBusy] = useState(false);
 
-  const uploadScheme = async (file: File | undefined) => {
+  // Схемы зала: несколько вариаций (JSON-массив в поле schemes). Для обратной
+  // совместимости fallback на легаси-поле scheme; при сохранении scheme = первая.
+  const MAX_HALL_SCHEMES = 5;
+  const schemes = (() => {
+    const fromField = parseUrls(form.schemes || '');
+    return fromField.length ? fromField : form.scheme ? [form.scheme] : [];
+  })();
+  const setSchemes = (arr: string[]) =>
+    setForm((p) => ({ ...p, schemes: JSON.stringify(arr), scheme: arr[0] || '' }));
+  const addScheme = async (file: File | undefined) => {
     if (!file) return;
+    if (schemes.length >= MAX_HALL_SCHEMES) {
+      alert(`Можно загрузить не более ${MAX_HALL_SCHEMES} схем.`);
+      return;
+    }
     setSchemeBusy(true);
     try {
       const url = await adminApi.uploadFile(file);
-      setForm((p) => ({ ...p, scheme: url }));
+      setSchemes([...schemes, url]);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Ошибка загрузки');
     } finally {
       setSchemeBusy(false);
     }
   };
+  const removeScheme = (i: number) => setSchemes(schemes.filter((_, j) => j !== i));
 
   const MAX_HALL_PHOTOS = 5;
   const gallery = parseUrls(form.gallery);
@@ -131,7 +146,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       // Особенности пишем JSON-массивом в features_ru; features_en больше не используем.
       const clean = features.filter((f) => f.title_ru || f.title_en || f.text_ru || f.text_en);
       // Главное фото = первое из галереи (для превью/SEO).
-      const payload = { ...form, features_ru: JSON.stringify(clean), features_en: '', image: gallery[0] || '' };
+      const payload = { ...form, features_ru: JSON.stringify(clean), features_en: '', image: gallery[0] || '', schemes: JSON.stringify(schemes), scheme: schemes[0] || '' };
       if (form.id) await adminApi.updateHall(form.id, payload);
       else await adminApi.createHall(payload);
       onSave();
@@ -246,27 +261,29 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
         </div>
       </div>
 
-      {/* СХЕМА — изображение плана/рассадки зала. */}
+      {/* СХЕМЫ — планы/рассадки зала: можно несколько вариаций (листаются слайдером). */}
       <div className="grid gap-2">
-        <label>Схема зала (план / рассадка)</label>
-        <div className="flex flex-wrap items-center gap-3">
-          {form.scheme ? (
-            <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-line bg-white">
-              <img src={form.scheme} alt="" className="h-full w-full object-contain p-1" />
+        <label>Схемы зала (план / рассадка — до 5, на странице листаются слайдером)</label>
+        <div className="flex flex-wrap gap-3">
+          {schemes.map((url, i) => (
+            <div key={i} className="relative h-28 w-40 overflow-hidden rounded-lg border border-line bg-white">
+              <img src={url} alt="" className="h-full w-full object-contain p-1" />
               <button
                 type="button"
-                onClick={() => setForm((p) => ({ ...p, scheme: '' }))}
+                onClick={() => removeScheme(i)}
                 className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
                 aria-label="Удалить"
               >
                 ×
               </button>
             </div>
+          ))}
+          {schemes.length < MAX_HALL_SCHEMES ? (
+            <label className="flex h-28 w-40 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+              {schemeBusy ? '…' : '+ Схема'}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => addScheme(e.target.files?.[0])} />
+            </label>
           ) : null}
-          <label className="flex h-28 w-40 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
-            {schemeBusy ? '…' : form.scheme ? '+ Заменить' : '+ Схема'}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => uploadScheme(e.target.files?.[0])} />
-          </label>
         </div>
       </div>
 

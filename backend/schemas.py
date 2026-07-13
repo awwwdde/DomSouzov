@@ -153,6 +153,7 @@ class HallBase(BaseModel):
     image: Optional[str] = None
     gallery: Optional[str] = None
     scheme: Optional[str] = None
+    schemes: Optional[str] = None
     equipment_ru: Optional[str] = None
     equipment_en: Optional[str] = None
     rider_only: bool = False

@@ -78,6 +78,7 @@ export interface Hall {
   image: string | null;
   gallery?: string[];
   scheme?: string | null;
+  schemes?: string[];
   equipment?: BilingualString;
   equipment_list?: { ru: string[]; en: string[] };
   rider_only?: boolean;

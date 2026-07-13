@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
@@ -473,29 +473,52 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
   const equipment = hall.equipment_list?.[lang]?.length
     ? hall.equipment_list[lang]
     : hall.equipment_list?.ru ?? [];
-  // До 5 фото зала + схема (переключатель Фото ↔ Схема).
+  // Фото зала (до 5) и схемы рассадки (может быть несколько вариаций).
   const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : [])
     .filter(Boolean)
     .slice(0, 5);
-  const scheme = hall.scheme || '';
-  const hasMedia = photos.length > 0 || Boolean(scheme);
+  const schemes = (hall.schemes && hall.schemes.length ? hall.schemes : hall.scheme ? [hall.scheme] : [])
+    .filter(Boolean);
+
+  // Два одинаковых блока в ряд: схема | фото. Показываем только непустые.
+  const blocks: { key: 'scheme' | 'photo'; items: string[] }[] = [];
+  if (schemes.length) blocks.push({ key: 'scheme', items: schemes });
+  if (photos.length) blocks.push({ key: 'photo', items: photos });
 
   return (
     <article id={`hall-${hall.id}`} className="scroll-mt-28 border-b border-line py-10 md:py-14">
-      {/* Фото сверху во всю ширину */}
-      {hasMedia ? <HallRiderMedia photos={photos} scheme={scheme} name={name} lang={lang} /> : null}
+      {/* Заголовок зала над медиа: название слева, цифры справа в один ряд */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
+        <h3 className="font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
+          {name}
+        </h3>
+        {/* Крупная типографика: только цифры (мест / м²). */}
+        <HallStats capacity={hall.capacity} area={hall.area} className="shrink-0 md:justify-end" />
+      </div>
 
-      {/* Под фото — название слева, цифры справа в один ряд */}
-      <div className={hasMedia ? 'mt-8 md:mt-10' : ''}>
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
-          <h3 className="font-heading text-[clamp(28px,3.4vw,52px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
-            {name}
-          </h3>
-          {/* Крупная типографика: только цифры (мест / м²). */}
-          <HallStats capacity={hall.capacity} area={hall.area} className="shrink-0 md:justify-end" />
+      {/* Два блока в ряд: схема и фото, каждый со своим слайдером. */}
+      {blocks.length ? (
+        <div className={`mt-8 grid gap-5 md:mt-10 md:gap-6 ${blocks.length > 1 ? 'md:grid-cols-2' : ''}`}>
+          {blocks.map((b) => (
+            <div key={b.key}>
+              <div className="mb-2.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
+                {b.key === 'scheme' ? (
+                  <Map size={14} className="text-accent" strokeWidth={1.9} />
+                ) : (
+                  <ImageIcon size={14} className="text-accent" strokeWidth={1.9} />
+                )}
+                {b.key === 'scheme'
+                  ? lang === 'ru' ? 'Схема рассадки' : 'Seating plan'
+                  : lang === 'ru' ? 'Фотографии' : 'Photos'}
+              </div>
+              <MediaSlider items={b.items} variant={b.key} name={name} lang={lang} />
+            </div>
+          ))}
         </div>
+      ) : null}
 
-        <div className="mt-8 border-t border-line pt-6">
+      {/* Оборудование */}
+      <div className="mt-8 border-t border-line pt-6">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink">
             <Layers size={15} className="text-accent" strokeWidth={1.8} />
             {lang === 'ru' ? 'Оборудование' : 'Equipment'}
@@ -518,7 +541,6 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
           ) : (
             <NoEquipment lang={lang} />
           )}
-        </div>
       </div>
     </article>
   );
@@ -561,88 +583,58 @@ function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
   );
 }
 
-/* Медиа блока зала: единый слайдер во всю ширину блока (совпадает по ширине
-   с блоком информации ниже). Сначала схема рассадки, затем фотографии.
-   Размер блока фиксированный. Фото показываем целиком (object-contain, без
-   обрезки), а пустое место по краям заполняем размытой копией того же кадра —
-   так нет ни белых полей, ни кропа при разных пропорциях фотографий.
-   Схему показываем на белом фоне (это план, а не фото). */
-function HallRiderMedia({
-  photos,
-  scheme,
+/* Универсальный слайдер медиа для блока зала: массив кадров одного типа.
+   Фиксированная высота (оба блока в ряду одинаковые). Фото показываем целиком
+   (object-contain) на размытой заливке — без белых полей и без обрезки. Схему
+   показываем на белом фоне (это план, а не фото). Стрелки и точки — при
+   нескольких кадрах (доп. фото или вариации схемы). */
+function MediaSlider({
+  items,
+  variant,
   name,
   lang,
 }: {
-  photos: string[];
-  scheme: string;
+  items: string[];
+  variant: 'scheme' | 'photo';
   name: string;
   lang: 'ru' | 'en';
 }) {
-  const slides: { src: string; type: 'scheme' | 'photo' }[] = [
-    ...(scheme ? [{ src: scheme, type: 'scheme' as const }] : []),
-    ...photos.map((src) => ({ src, type: 'photo' as const })),
-  ];
   const [idx, setIdx] = useState(0);
-  const go = (dir: 1 | -1) => setIdx((i) => (i + dir + slides.length) % slides.length);
+  const go = (dir: 1 | -1) => setIdx((i) => (i + dir + items.length) % items.length);
 
-  if (!slides.length) return null;
-  const current = slides[idx];
+  if (!items.length) return null;
+  const isScheme = variant === 'scheme';
 
   return (
-    <div className="relative h-[clamp(320px,48vh,540px)] w-full overflow-hidden bg-paper-soft">
-      {slides.map((slide, i) => {
+    <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden bg-paper-soft md:min-h-[360px]">
+      {items.map((src, i) => {
         const active = i === idx;
-        const isScheme = slide.type === 'scheme';
         return (
           <div
-            key={slide.src + i}
+            key={src + i}
             className="absolute inset-0 transition-opacity duration-700 ease-ds"
             style={{ opacity: active ? 1 : 0 }}
             aria-hidden={!active}
           >
-            {isScheme ? (
-              <img
-                src={mediaUrl(slide.src)}
-                alt={active ? `${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}` : ''}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full bg-white object-contain p-3"
-              />
-            ) : (
-              <>
-                {/* Размытая заливка фона — вместо белых полей */}
-                <img
-                  src={mediaUrl(slide.src)}
-                  alt=""
-                  aria-hidden
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full scale-105 object-cover blur-lg"
-                />
-                <span aria-hidden className="absolute inset-0 bg-ink/10" />
-                {/* Само фото — целиком, без обрезки */}
-                <img
-                  src={mediaUrl(slide.src)}
-                  alt={active ? name : ''}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-contain"
-                />
-              </>
-            )}
+            <img
+              src={mediaUrl(src)}
+              alt={
+                !active
+                  ? ''
+                  : isScheme
+                    ? `${name} — ${lang === 'ru' ? 'схема рассадки' : 'seating plan'}`
+                    : name
+              }
+              loading="lazy"
+              decoding="async"
+              className={`absolute inset-0 h-full w-full ${isScheme ? 'bg-white object-contain p-3' : 'object-cover'}`}
+            />
           </div>
         );
       })}
 
-      {/* Подпись схемы — только когда открыт кадр со схемой */}
-      {current.type === 'scheme' ? (
-        <span className="absolute left-3 top-3 z-10 rounded-full bg-ink/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-paper backdrop-blur-sm">
-          {lang === 'ru' ? 'Схема рассадки' : 'Seating plan'}
-        </span>
-      ) : null}
-
       {/* Стрелки и точки — при нескольких кадрах */}
-      {slides.length > 1 ? (
+      {items.length > 1 ? (
         <>
           <button
             type="button"
@@ -661,7 +653,7 @@ function HallRiderMedia({
             <span aria-hidden>→</span>
           </button>
           <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-            {slides.map((_, i) => (
+            {items.map((_, i) => (
               <button
                 key={i}
                 type="button"
