@@ -78,6 +78,15 @@ def seed():
     admin_email = settings.admin_email
     admin_password = settings.admin_password
     if admin_email and admin_password:
+        # На проде запрещаем слабый bootstrap-пароль — иначе тривиальный захват.
+        _WEAK = {"changeme", "password", "admin", "admin123", "123456", "12345678",
+                 "qwerty", "root", "test", "changeme123", "secret"}
+        _is_prod = not settings.DATABASE_URL.startswith("sqlite")
+        if _is_prod and (len(admin_password) < 8 or admin_password.lower() in _WEAK):
+            raise RuntimeError(
+                "BOOTSTRAP_ADMIN_PASSWORD слишком слабый для продакшена "
+                "(нужно ≥ 8 символов и не из списка типовых). Задайте надёжный пароль."
+            )
         existing = db.query(AdminUser).filter_by(email=admin_email).first()
         if existing:
             # Сброс пароля под текущее значение из env.

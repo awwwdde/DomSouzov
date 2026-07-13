@@ -1,7 +1,8 @@
 """Public read-only API endpoints."""
 import re
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
+import time as _time
+from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -56,6 +57,23 @@ def subscribe(body: SubscribeIn, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
+# Анти-абьюз формы «Организаторам»: не больше N заявок с IP за окно —
+# защита от спама и заваливания хранилища вложениями. In-memory (на инстанс).
+_FORM_HITS: dict = {}
+_FORM_MAX = 5
+_FORM_WINDOW_SEC = 10 * 60
+
+
+def _req_ip(request: Request) -> str:
+    """IP клиента с учётом доверенных прокси (см. TRUSTED_PROXY_COUNT)."""
+    n = app_settings.TRUSTED_PROXY_COUNT
+    if n > 0:
+        chain = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+        if len(chain) >= n:
+            return chain[-n]
+    return request.client.host if request.client else "unknown"
+
+
 # Вложение к заявке — только документы (PDF/DOCX/DOC).
 ALLOWED_REQUEST_EXT = {"pdf", "docx", "doc"}
 ALLOWED_REQUEST_MIME = {
@@ -68,6 +86,7 @@ ALLOWED_REQUEST_MIME = {
 
 @router.post("/organizers/request")
 async def organizers_request(
+    request: Request,
     name: str = Form(...),
     email: str = Form(...),
     phone: str = Form(""),
@@ -76,6 +95,15 @@ async def organizers_request(
     file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
 ):
+    # Rate-limit по IP — против спама/переполнения хранилища.
+    ip = _req_ip(request)
+    now = _time.time()
+    hits = [t for t in _FORM_HITS.get(ip, []) if now - t < _FORM_WINDOW_SEC]
+    if len(hits) >= _FORM_MAX:
+        raise HTTPException(429, "Слишком много заявок. Попробуйте позже.")
+    hits.append(now)
+    _FORM_HITS[ip] = hits
+
     name = (name or "").strip()
     email = (email or "").strip()
     phone = (phone or "").strip()
@@ -95,7 +123,9 @@ async def organizers_request(
     att_mime = None
     if file is not None and file.filename:
         ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
-        if ext not in ALLOWED_REQUEST_EXT and (file.content_type or "") not in ALLOWED_REQUEST_MIME:
+        # Требуем разрешённое расширение (не полагаемся на content-type: браузер
+        # может прислать application/octet-stream, что раньше пропускало любой файл).
+        if ext not in ALLOWED_REQUEST_EXT:
             raise HTTPException(400, "Можно прикрепить только PDF или DOCX")
         content = await file.read()
         max_bytes = app_settings.MAX_UPLOAD_MB * 1024 * 1024

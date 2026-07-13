@@ -22,11 +22,28 @@ import seo
 Base.metadata.create_all(bind=engine)
 migrate_sqlite()
 
-app = FastAPI(title="Дом Союзов CMS API", version="1.0.0")
+# Прод определяем по не-SQLite БД (на проде — PostgreSQL). В проде прячем
+# интерактивную схему API (/docs, /openapi.json) — меньше раскрываем поверхность.
+_IS_PROD = not settings.DATABASE_URL.startswith("sqlite")
+app = FastAPI(
+    title="Дом Союзов CMS API",
+    version="1.0.0",
+    docs_url=None if _IS_PROD else "/docs",
+    redoc_url=None if _IS_PROD else "/redoc",
+    openapi_url=None if _IS_PROD else "/openapi.json",
+)
+
+# CORS с credentials несовместим с origin "*" — и это опасно. Не допускаем.
+_cors_origins = settings.cors_origins_list
+if "*" in _cors_origins:
+    raise RuntimeError(
+        "CORS_ORIGINS не может содержать '*' при allow_credentials=True. "
+        "Перечислите конкретные домены."
+    )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,6 +110,11 @@ def serve_upload(filename: str, request: Request):
             base_headers = {
                 "Cache-Control": "public, max-age=31536000, immutable",
                 "Accept-Ranges": "bytes",
+                # Загруженный файл (напр. вредоносный SVG) при прямом открытии
+                # не должен исполнять скрипты в origin сайта. `sandbox` блокирует
+                # JS в документе, но не мешает встраиванию через <img>.
+                "Content-Security-Policy": "sandbox",
+                "X-Content-Type-Options": "nosniff",
             }
             range_header = request.headers.get("range")
             if range_header:
@@ -137,9 +159,14 @@ def serve_upload(filename: str, request: Request):
         db.close()
     # Фолбэк: файл на диске (локальная разработка или legacy). FileResponse
     # сам поддерживает Range/Accept-Ranges.
-    path = os.path.join(settings.UPLOAD_DIR, filename)
+    # Защита от traversal: имя файла не должно содержать путей.
+    safe_name = os.path.basename(filename)
+    path = os.path.join(settings.UPLOAD_DIR, safe_name)
     if os.path.isfile(path):
-        return FileResponse(path)
+        return FileResponse(
+            path,
+            headers={"Content-Security-Policy": "sandbox", "X-Content-Type-Options": "nosniff"},
+        )
     raise HTTPException(404, "File not found")
 
 app.include_router(public.router)
@@ -239,9 +266,14 @@ if STATIC_DIR and os.path.isdir(STATIC_DIR):
     # Catch-all регистрируем ПОСЛЕДНИМ, чтобы /api/*, /uploads/*, /healthz
     # успели сматчиться выше. Файлы из корня сборки (favicon, manifest) —
     # отдаём как есть, всё остальное — index.html (с SEO) для React Router.
+    _STATIC_ROOT = os.path.realpath(STATIC_DIR)
+
     @app.get("/{full_path:path}", include_in_schema=False)
     def spa_fallback(full_path: str):
-        candidate = os.path.join(STATIC_DIR, full_path)
-        if full_path and os.path.isfile(candidate):
+        candidate = os.path.realpath(os.path.join(STATIC_DIR, full_path))
+        # Защита от path traversal: файл отдаём, только если он реально лежит
+        # внутри STATIC_DIR (иначе «../../etc/passwd» и т.п. читались бы с диска).
+        within_static = candidate == _STATIC_ROOT or candidate.startswith(_STATIC_ROOT + os.sep)
+        if full_path and within_static and os.path.isfile(candidate):
             return FileResponse(candidate)
         return _index_with_seo(full_path)

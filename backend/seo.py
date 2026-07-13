@@ -216,7 +216,12 @@ def _meta_block(
     for tag in _dedup(article_tags or []):
         parts.append(f'<meta property="article:tag" content="{html.escape(tag, quote=True)}" />')
     if jsonld:
-        parts.append(f'<script type="application/ld+json">{jsonld}</script>')
+        # Экранируем <, >, & — иначе значение вроде «</script><script>…» из CMS
+        # вырвалось бы из тега и дало XSS. \u-последовательности валидны в JSON.
+        safe_jsonld = (
+            jsonld.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        )
+        parts.append(f'<script type="application/ld+json">{safe_jsonld}</script>')
     return "\n    ".join(parts)
 
 

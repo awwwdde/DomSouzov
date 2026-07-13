@@ -74,9 +74,14 @@ _LOGIN_WINDOW_SEC = 15 * 60      # окно блокировки, сек
 
 
 def _client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
+    # X-Forwarded-For доверяем только если перед нами есть доверенные прокси.
+    # Берём IP, добавленный самым внешним доверенным прокси (n-й справа) — его
+    # клиент подделать не может (прокси дописывает реальный peer в конец цепочки).
+    n = app_settings.TRUSTED_PROXY_COUNT
+    if n > 0:
+        chain = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+        if len(chain) >= n:
+            return chain[-n]
     return request.client.host if request.client else "unknown"
 
 
@@ -116,8 +121,8 @@ def create_admin(body: AdminUserCreate, db: Session = Depends(get_db), _: AdminU
     email = (body.email or "").strip().lower()
     if not email or "@" not in email:
         raise HTTPException(400, "Некорректный email")
-    if len(body.password or "") < 6:
-        raise HTTPException(400, "Пароль должен быть не короче 6 символов")
+    if len(body.password or "") < 8:
+        raise HTTPException(400, "Пароль должен быть не короче 8 символов")
     if db.query(AdminUser).filter(AdminUser.email == email).first():
         raise HTTPException(409, "Админ с таким email уже существует")
     user = AdminUser(email=email, hashed_password=hash_password(body.password), is_active=True, is_super=False)
@@ -132,8 +137,8 @@ def reset_admin_password(admin_id: int, body: AdminPasswordReset, db: Session = 
     user = db.query(AdminUser).filter_by(id=admin_id).first()
     if not user:
         raise HTTPException(404, "Не найдено")
-    if len(body.password or "") < 6:
-        raise HTTPException(400, "Пароль должен быть не короче 6 символов")
+    if len(body.password or "") < 8:
+        raise HTTPException(400, "Пароль должен быть не короче 8 символов")
     user.hashed_password = hash_password(body.password)
     db.commit()
     return {"ok": True}
@@ -161,7 +166,10 @@ def change_password(
 ):
     if not verify_password(body.get("current_password", ""), current.hashed_password):
         raise HTTPException(400, "Current password is incorrect")
-    current.hashed_password = hash_password(body["new_password"])
+    new_password = (body.get("new_password") or "").strip()
+    if len(new_password) < 8:
+        raise HTTPException(400, "Новый пароль должен быть не короче 8 символов")
+    current.hashed_password = hash_password(new_password)
     db.commit()
     return {"ok": True}
 
