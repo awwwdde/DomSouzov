@@ -569,6 +569,35 @@ def _hall_schemes(h: Hall) -> list:
     return out
 
 
+def _hall_equipment_blocks(h: Hall) -> list:
+    """Блоки оборудования: [{text:{ru,en}, image}]. Источник — JSON equipment_blocks;
+    если пусто — собираем из легаси-строк equipment_ru/en (без картинок)."""
+    import json
+    out = []
+    raw = getattr(h, "equipment_blocks", None)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                for b in parsed:
+                    if not isinstance(b, dict):
+                        continue
+                    text_ru = str(b.get("text_ru", "") or "")
+                    text_en = str(b.get("text_en", "") or "")
+                    image = b.get("image") or None
+                    if text_ru or text_en or image:
+                        out.append({"text": {"ru": text_ru, "en": text_en}, "image": image})
+        except Exception:
+            out = []
+    if not out:
+        ru_lines = _split_lines(getattr(h, "equipment_ru", ""))
+        en_lines = _split_lines(getattr(h, "equipment_en", ""))
+        for i, ru in enumerate(ru_lines):
+            en = en_lines[i] if i < len(en_lines) else ""
+            out.append({"text": {"ru": ru, "en": en}, "image": None})
+    return out
+
+
 def _hall_out(h: Hall) -> dict:
     return {
         "id": h.id,
@@ -591,6 +620,7 @@ def _hall_out(h: Hall) -> dict:
             "ru": _split_lines(getattr(h, "equipment_ru", "")),
             "en": _split_lines(getattr(h, "equipment_en", "")),
         },
+        "equipment_blocks": _hall_equipment_blocks(h),
         "rider_only": bool(getattr(h, "rider_only", False)),
     }
 

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users, ZoomIn } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 import HallStats from '../components/HallStats';
+import Lightbox from '../components/Lightbox';
 import { submitOrganizerRequest } from '../api/client';
 import type { Hall } from '../types';
 
@@ -470,9 +471,23 @@ function gridColsClass(count: number): string {
 
 function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
   const name = hall.name?.[lang] || hall.name?.ru || '';
-  const equipment = hall.equipment_list?.[lang]?.length
-    ? hall.equipment_list[lang]
-    : hall.equipment_list?.ru ?? [];
+
+  // Блоки оборудования (каждый — отдельная запись, у части может быть картинка).
+  const eqBlocks = hall.equipment_blocks ?? [];
+  const eqText = (b: { text: { ru: string; en: string } }) => b.text?.[lang] || b.text?.ru || '';
+  // Лайтбокс — только блоки с картинкой; клик по блоку открывает его фото.
+  const imageBlocks = eqBlocks.filter((b) => b.image);
+  const lightboxItems = imageBlocks.map((b) => ({ src: mediaUrl(b.image), alt: eqText(b) || name }));
+  const [lbOpen, setLbOpen] = useState(false);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLightbox = (image: string | null | undefined) => {
+    const idx = imageBlocks.findIndex((b) => b.image === image);
+    if (idx >= 0) {
+      setLbIndex(idx);
+      setLbOpen(true);
+    }
+  };
+
   // Фото зала (до 5) и схемы рассадки (может быть несколько вариаций).
   const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : [])
     .filter(Boolean)
@@ -523,17 +538,42 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
             <Layers size={15} className="text-accent" strokeWidth={1.8} />
             {lang === 'ru' ? 'Оборудование' : 'Equipment'}
           </div>
-          {equipment.length ? (
-            /* Блоки во всю ширину, число колонок — под количество. */
-            <div className={`mt-5 grid border-l border-t border-line ${gridColsClass(equipment.length)}`}>
-              {equipment.map((item, j) => {
+          {eqBlocks.length ? (
+            /* Блоки во всю ширину, число колонок — под количество. Блок с фото
+               кликабелен и открывает картинку в модальном окне (лайтбокс). */
+            <div className={`mt-5 grid border-l border-t border-line ${gridColsClass(eqBlocks.length)}`}>
+              {eqBlocks.map((b, j) => {
+                const item = eqText(b);
                 const Icon = equipmentIcon(item);
-                return (
-                  <div key={j} className="group flex h-full flex-col gap-4 border-b border-r border-line bg-paper p-6 transition hover:bg-paper-soft md:p-7">
+                const hasImage = Boolean(b.image);
+                const inner = (
+                  <>
                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
                       <Icon size={22} strokeWidth={1.6} />
                     </span>
                     <p className="text-[16px] font-medium leading-[1.5] text-ink">{item}</p>
+                    {hasImage ? (
+                      <span className="mt-auto inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
+                        <ZoomIn size={14} strokeWidth={2} />
+                        {lang === 'ru' ? 'Смотреть фото' : 'View photo'}
+                      </span>
+                    ) : null}
+                  </>
+                );
+                const cls = 'group flex h-full flex-col gap-4 border-b border-r border-line bg-paper p-6 transition hover:bg-paper-soft md:p-7';
+                return hasImage ? (
+                  <button
+                    key={j}
+                    type="button"
+                    onClick={() => openLightbox(b.image)}
+                    className={`${cls} cursor-zoom-in text-left`}
+                    aria-label={`${item} — ${lang === 'ru' ? 'открыть фото' : 'open photo'}`}
+                  >
+                    {inner}
+                  </button>
+                ) : (
+                  <div key={j} className={cls}>
+                    {inner}
                   </div>
                 );
               })}
@@ -542,6 +582,16 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
             <NoEquipment lang={lang} />
           )}
       </div>
+
+      {lightboxItems.length ? (
+        <Lightbox
+          open={lbOpen}
+          onClose={() => setLbOpen(false)}
+          items={lightboxItems}
+          index={lbIndex}
+          onIndexChange={setLbIndex}
+        />
+      ) : null}
     </article>
   );
 }

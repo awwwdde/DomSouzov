@@ -14,9 +14,36 @@ const EMPTY = {
   scheme: '',
   schemes: '',
   equipment_ru: '', equipment_en: '',
+  equipment_blocks: '',
   rider_only: false,
   sort_order: 0,
 };
+
+/** Блок оборудования: текст на двух языках + необязательная картинка (открывается
+ *  в лайтбоксе на сайте). Хранится JSON-массивом в поле equipment_blocks. */
+interface EqBlock {
+  text_ru: string;
+  text_en: string;
+  image: string;
+}
+
+/** Парсим блоки оборудования: сначала из JSON equipment_blocks, иначе — из
+ *  легаси-строк equipment_ru/en (по строке на пункт, без картинок). */
+function parseEqBlocks(item: typeof EMPTY | null): EqBlock[] {
+  try {
+    const a = JSON.parse((item?.equipment_blocks as string) || '[]');
+    if (Array.isArray(a) && a.length) {
+      return a
+        .filter((x) => x && typeof x === 'object')
+        .map((x) => ({ text_ru: String(x.text_ru || ''), text_en: String(x.text_en || ''), image: String(x.image || '') }));
+    }
+  } catch {
+    /* fallthrough */
+  }
+  const ru = String(item?.equipment_ru || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  const en = String(item?.equipment_en || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  return ru.map((t, i) => ({ text_ru: t, text_en: en[i] || '', image: '' }));
+}
 
 /** URL-ы фото зала хранятся JSON-массивом в поле gallery. */
 function parseUrls(raw: string): string[] {
@@ -78,9 +105,30 @@ export default function AdminHalls() {
 function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => void; onCancel: () => void }) {
   const [form, setForm] = useState({ ...EMPTY, ...(item as typeof EMPTY || {}) });
   const [features, setFeatures] = useState<Feature[]>(() => parseFeatures((item as typeof EMPTY)?.features_ru || ''));
+  const [equipment, setEquipment] = useState<EqBlock[]>(() => parseEqBlocks(item as typeof EMPTY | null));
   const [saving, setSaving] = useState(false);
   const [galBusy, setGalBusy] = useState(false);
   const [schemeBusy, setSchemeBusy] = useState(false);
+  const [eqImgBusy, setEqImgBusy] = useState<number | null>(null);
+
+  // Блоки оборудования (отдельные записи, как «Зрителям»). У каждого — RU/EN
+  // текст и необязательная картинка (клик по блоку на сайте открывает фото).
+  const addEqBlock = () => setEquipment((p) => [...p, { text_ru: '', text_en: '', image: '' }]);
+  const removeEqBlock = (i: number) => setEquipment((p) => p.filter((_, j) => j !== i));
+  const setEqField = (i: number, key: keyof EqBlock, value: string) =>
+    setEquipment((p) => p.map((b, j) => (j === i ? { ...b, [key]: value } : b)));
+  const uploadEqImage = async (i: number, file: File | undefined) => {
+    if (!file) return;
+    setEqImgBusy(i);
+    try {
+      const url = await adminApi.uploadFile(file);
+      setEqField(i, 'image', url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка загрузки');
+    } finally {
+      setEqImgBusy(null);
+    }
+  };
 
   // Схемы зала: несколько вариаций (JSON-массив в поле schemes). Для обратной
   // совместимости fallback на легаси-поле scheme; при сохранении scheme = первая.
@@ -145,8 +193,23 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
     try {
       // Особенности пишем JSON-массивом в features_ru; features_en больше не используем.
       const clean = features.filter((f) => f.title_ru || f.title_en || f.text_ru || f.text_en);
+      // Оборудование: блоки → JSON equipment_blocks; для легаси-совместимости
+      // дублируем тексты в equipment_ru/en (по строке на пункт).
+      const eqClean = equipment.filter((b) => b.text_ru || b.text_en || b.image);
+      const eqRu = eqClean.map((b) => b.text_ru).filter(Boolean).join('\n');
+      const eqEn = eqClean.map((b) => b.text_en).filter(Boolean).join('\n');
       // Главное фото = первое из галереи (для превью/SEO).
-      const payload = { ...form, features_ru: JSON.stringify(clean), features_en: '', image: gallery[0] || '', schemes: JSON.stringify(schemes), scheme: schemes[0] || '' };
+      const payload = {
+        ...form,
+        features_ru: JSON.stringify(clean),
+        features_en: '',
+        equipment_blocks: JSON.stringify(eqClean),
+        equipment_ru: eqRu,
+        equipment_en: eqEn,
+        image: gallery[0] || '',
+        schemes: JSON.stringify(schemes),
+        scheme: schemes[0] || '',
+      };
       if (form.id) await adminApi.updateHall(form.id, payload);
       else await adminApi.createHall(payload);
       onSave();
@@ -287,16 +350,66 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
         </div>
       </div>
 
-      {/* ОБОРУДОВАНИЕ — тех. райдер, по одному пункту на строку. */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label>Оборудование (RU) — по строке на пункт</label>
-          <textarea value={form.equipment_ru} onChange={set('equipment_ru')} rows={6} placeholder={'Цифровой микшер Soundcraft Vi6\nЛинейный массив CODA AUDIO 300 Вт (24 шт)\n…'} />
+      {/* ОБОРУДОВАНИЕ — отдельные блоки (как «Зрителям»). У каждого блока —
+          RU/EN текст и необязательная картинка (клик по блоку на сайте
+          открывает фото в модальном окне). */}
+      <div className="grid gap-3 rounded-2xl border border-line bg-paper-soft p-4">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Оборудование (блоки)</label>
+          <button
+            type="button"
+            onClick={addEqBlock}
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white"
+          >
+            <Plus size={13} /> Добавить
+          </button>
         </div>
-        <div className="grid gap-2">
-          <label>Equipment (EN) — one item per line</label>
-          <textarea value={form.equipment_en} onChange={set('equipment_en')} rows={6} placeholder={'Soundcraft Vi6 digital mixer\n…'} />
-        </div>
+
+        {equipment.length === 0 ? (
+          <p className="py-2 text-sm text-muted">Пока нет блоков. Нажмите «Добавить».</p>
+        ) : (
+          <div className="grid gap-4">
+            {equipment.map((b, i) => (
+              <div key={i} className="grid gap-3 rounded-xl border border-line bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">№ {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeEqBlock(i)}
+                    className="inline-flex items-center gap-1 rounded-full border border-red-200 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-red-700"
+                  >
+                    <Trash2 size={12} /> Удалить
+                  </button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <input value={b.text_ru} onChange={(e) => setEqField(i, 'text_ru', e.target.value)} placeholder="Название (RU) — напр. «Рояль Steinway & Sons»" />
+                  <input value={b.text_en} onChange={(e) => setEqField(i, 'text_en', e.target.value)} placeholder="Title (EN) — e.g. «Steinway & Sons grand piano»" />
+                </div>
+                {/* Картинка блока — необязательная. */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {b.image ? (
+                    <div className="relative h-24 w-32 overflow-hidden rounded-lg border border-line bg-white">
+                      <img src={b.image} alt="" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEqField(i, 'image', '')}
+                        className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-sm text-white"
+                        aria-label="Удалить картинку"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className="flex h-24 w-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-line bg-paper text-xs font-semibold text-ink transition hover:border-ink">
+                    {eqImgBusy === i ? '…' : b.image ? '+ Заменить' : '+ Фото'}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => uploadEqImage(i, e.target.files?.[0])} />
+                  </label>
+                  <span className="text-[11px] text-muted">Необязательно. Если задать — блок на сайте открывает это фото в модальном окне.</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ФЛАГ — буфет/анфилада: только в тех. райдере, не на странице «Залы». */}

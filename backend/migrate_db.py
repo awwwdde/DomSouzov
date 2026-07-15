@@ -36,6 +36,7 @@ def migrate_sqlite() -> None:
         ("halls", "gallery", "TEXT"),
         ("halls", "scheme", "VARCHAR"),
         ("halls", "schemes", "TEXT"),
+        ("halls", "equipment_blocks", "TEXT"),
         ("halls", "equipment_ru", "TEXT"),
         ("halls", "equipment_en", "TEXT"),
         ("halls", "rider_only", bool_default),

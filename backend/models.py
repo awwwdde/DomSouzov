@@ -156,8 +156,9 @@ class Hall(Base):
     gallery = Column(Text, nullable=True)            # JSON-массив URL фото для слайдера
     scheme = Column(String, nullable=True)           # (легаси) одиночная схема — = первая из schemes
     schemes = Column(Text, nullable=True)            # JSON-массив URL схем/планов для слайдера
-    equipment_ru = Column(Text, nullable=True)       # оборудование (тех. райдер), по строке на пункт
+    equipment_ru = Column(Text, nullable=True)       # (легаси) оборудование по строке на пункт
     equipment_en = Column(Text, nullable=True)
+    equipment_blocks = Column(Text, nullable=True)   # JSON: [{text_ru,text_en,image}] — блоки с картинкой
     rider_only = Column(Boolean, default=False)      # показывать только в райдере (буфет, анфилада), не на странице «Залы»
     sort_order = Column(Integer, default=0)
 

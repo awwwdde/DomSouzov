@@ -81,6 +81,7 @@ export interface Hall {
   schemes?: string[];
   equipment?: BilingualString;
   equipment_list?: { ru: string[]; en: string[] };
+  equipment_blocks?: { text: BilingualString; image?: string | null }[];
   rider_only?: boolean;
 }
 

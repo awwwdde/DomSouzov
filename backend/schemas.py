@@ -156,6 +156,7 @@ class HallBase(BaseModel):
     schemes: Optional[str] = None
     equipment_ru: Optional[str] = None
     equipment_en: Optional[str] = None
+    equipment_blocks: Optional[str] = None
     rider_only: bool = False
     sort_order: int = 0
 
