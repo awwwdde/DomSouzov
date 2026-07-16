@@ -1,21 +1,26 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import { readConsent, onConsentChange } from '../lib/consent';
 
 /* ============================================================ */
-/* Analytics — Яндекс.Метрика и Google Analytics из CMS.       */
-/* ID задаются в админке (Настройки → Аналитика):              */
-/*   analytics_yandex_metrika — номер счётчика Метрики;        */
-/*   analytics_ga_id          — Measurement ID GA (G-XXXX).    */
-/* Скрипты грузятся только если ID заданы. Трекинг SPA-         */
-/* переходов — на смене маршрута.                              */
+/* Analytics — Яндекс.Метрика из CMS.                          */
+/* ID задаётся в админке (Настройки → Аналитика):              */
+/*   analytics_yandex_metrika — номер счётчика Метрики.        */
+/*                                                             */
+/* Скрипт грузится, только если задан ID И пользователь        */
+/* согласился на аналитические cookies (152-ФЗ: до согласия    */
+/* аналитику подключать нельзя). Трекинг SPA-переходов — на    */
+/* смене маршрута.                                             */
+/*                                                             */
+/* Google Analytics удалён намеренно: он передаёт данные        */
+/* посетителей за пределы РФ, что 152-ФЗ запрещает независимо  */
+/* от согласия на cookies. Метрика хостится в РФ.               */
 /* ============================================================ */
 
 declare global {
   interface Window {
     ym?: (...args: unknown[]) => void;
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
   }
 }
 
@@ -23,13 +28,17 @@ export default function Analytics() {
   const { t } = useSite();
   const location = useLocation();
   const ym = (t('analytics_yandex_metrika') || '').trim();
-  const ga = (t('analytics_ga_id') || '').trim();
   const ymReady = useRef(false);
-  const gaReady = useRef(false);
+
+  const [allowed, setAllowed] = useState(() => readConsent()?.analytics === true);
+
+  // Пользователь мог согласиться уже после загрузки страницы — тогда
+  // счётчик поднимается сразу, без перезагрузки.
+  useEffect(() => onConsentChange(() => setAllowed(readConsent()?.analytics === true)), []);
 
   // Инициализация Яндекс.Метрики (один раз).
   useEffect(() => {
-    if (!ym || ymReady.current) return;
+    if (!ym || !allowed || ymReady.current) return;
     ymReady.current = true;
     (function (m: any, e: any, t: any, r: any, i: string) {
       m[i] =
@@ -50,30 +59,13 @@ export default function Analytics() {
       accurateTrackBounce: true,
       webvisor: false,
     });
-  }, [ym]);
-
-  // Инициализация Google Analytics (один раз).
-  useEffect(() => {
-    if (!ga || gaReady.current) return;
-    gaReady.current = true;
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = `https://www.googletagmanager.com/gtag/js?id=${ga}`;
-    document.head.appendChild(s);
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function (...args: unknown[]) {
-      window.dataLayer!.push(args);
-    };
-    window.gtag('js', new Date());
-    window.gtag('config', ga, { send_page_view: false });
-  }, [ga]);
+  }, [ym, allowed]);
 
   // Трекинг переходов SPA.
   useEffect(() => {
-    const url = location.pathname + location.search;
-    if (ym && window.ym) window.ym(Number(ym), 'hit', url);
-    if (ga && window.gtag) window.gtag('event', 'page_view', { page_path: url });
-  }, [location.pathname, location.search, ym, ga]);
+    if (!allowed || !ym || !window.ym) return;
+    window.ym(Number(ym), 'hit', location.pathname + location.search);
+  }, [location.pathname, location.search, ym, allowed]);
 
   return null;
 }

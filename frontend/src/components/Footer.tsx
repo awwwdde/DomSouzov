@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
+import { revokeConsent } from '../lib/consent';
 import { subscribeNewsletter } from '../api/client';
 
 /* ============================================================ */
@@ -44,6 +45,7 @@ export default function Footer() {
   const reduced = useReducedMotionActive();
   const year = new Date().getFullYear();
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [subError, setSubError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,15 +62,17 @@ export default function Footer() {
     ] as const
   ).filter((s) => s.href && s.href.trim().length > 0);
 
+  // E-mail — персональные данные, поэтому без явного согласия не отправляем (152-ФЗ).
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email.includes('@') || submitting) return;
+    if (!email.includes('@') || !consent || submitting) return;
     setSubmitting(true);
     setSubError(false);
     try {
       await subscribeNewsletter(email);
       setSubscribed(true);
       setEmail('');
+      setConsent(false);
     } catch {
       setSubError(true);
     } finally {
@@ -129,7 +133,7 @@ export default function Footer() {
                 />
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !consent}
                   className="shrink-0 rounded-full bg-paper px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-paper/90 disabled:opacity-60"
                 >
                   {submitting
@@ -137,6 +141,25 @@ export default function Footer() {
                     : lang === 'ru' ? 'Подписаться' : 'Subscribe'}
                 </button>
               </div>
+            </label>
+
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                required
+                className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+              />
+              <span className="text-[11px] leading-relaxed text-paper/55">
+                {lang === 'ru' ? 'Я согласен на обработку ' : 'I consent to the processing of my '}
+                <Link
+                  to="/personal-data-consent"
+                  className="font-semibold text-paper/85 underline underline-offset-2 hover:text-paper"
+                >
+                  {lang === 'ru' ? 'персональных данных' : 'personal data'}
+                </Link>
+              </span>
             </label>
             <p className="max-w-[44ch] text-[11px] leading-relaxed text-paper/45">
               {subError
@@ -257,6 +280,18 @@ export default function Footer() {
             <Link to="/personal-data-consent" className="transition hover:underline hover:underline-offset-4">
               {lang === 'ru' ? 'Согласие на обработку ПД' : 'Personal data consent'}
             </Link>
+            {/* Отзыв согласия: стираем выбор и перезагружаем страницу, чтобы
+                выгрузить уже поднятые счётчики. Баннер спросит заново. */}
+            <button
+              type="button"
+              onClick={() => {
+                revokeConsent();
+                window.location.reload();
+              }}
+              className="uppercase tracking-[0.14em] transition hover:underline hover:underline-offset-4"
+            >
+              {lang === 'ru' ? 'Настройки cookie' : 'Cookie settings'}
+            </button>
             <a
               href="https://awwwdde.art"
               target="_blank"

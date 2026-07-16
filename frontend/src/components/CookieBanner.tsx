@@ -1,21 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
-
-const STORAGE_KEY = 'ds-cookies-accepted';
-const CONSENT_KEY = 'ds-cookies-consent';
-
-/** Категории cookies. Обязательные всегда включены (нужны для работы сайта). */
-type Consent = { essential: true; analytics: boolean };
-
-function saveConsent(consent: Consent) {
-  try {
-    localStorage.setItem(STORAGE_KEY, '1');
-    localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
-  } catch {
-    /* ignore */
-  }
-}
+import { readConsent, saveConsent, onConsentChange } from '../lib/consent';
 
 export default function CookieBanner() {
   const { lang } = useSite();
@@ -23,13 +9,16 @@ export default function CookieBanner() {
   const [configuring, setConfiguring] = useState(false);
   const [analytics, setAnalytics] = useState(false);
 
+  // Баннер виден, пока выбор не сделан. После отзыва согласия (кнопка
+  // «Настройки cookie» в подвале) выбор стирается — и баннер спрашивает заново.
   useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === '1') return;
-    } catch {
-      /* ignore */
-    }
-    setVisible(true);
+    const sync = () => {
+      const consent = readConsent();
+      setVisible(consent === null);
+      setAnalytics(consent?.analytics ?? false);
+    };
+    sync();
+    return onConsentChange(sync);
   }, []);
 
   const acceptAll = () => {

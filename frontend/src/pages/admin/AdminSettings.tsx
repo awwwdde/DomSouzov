@@ -380,10 +380,9 @@ const PAGES: PageDef[] = [
     href: '/',
     sections: [
       {
-        title: 'Счётчики (грузятся только если заполнены)',
+        title: 'Счётчики (грузятся только если заполнены и есть согласие на cookies)',
         fields: [
-          { key: 'analytics_yandex_metrika', label: 'Яндекс.Метрика — номер счётчика', type: 'text', single: true, hint: 'Только цифры, напр. 12345678.' },
-          { key: 'analytics_ga_id', label: 'Google Analytics — Measurement ID', type: 'text', single: true, hint: 'Формат G-XXXXXXX.' },
+          { key: 'analytics_yandex_metrika', label: 'Яндекс.Метрика — номер счётчика', type: 'text', single: true, hint: 'Только цифры, напр. 12345678. Счётчик подключается только после согласия посетителя на аналитические cookies.' },
         ],
       },
     ],
