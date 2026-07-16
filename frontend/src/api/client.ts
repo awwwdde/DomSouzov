@@ -43,14 +43,6 @@ export const getGallery = (): Promise<GalleryImage[]> =>
 export const getReviews = (): Promise<ReviewsResponse> =>
   api.get('/reviews').then((r) => r.data);
 
-export const subscribeNewsletter = async (email: string): Promise<void> => {
-  try {
-    await api.post('/subscribe', { email });
-  } catch (error) {
-    throw new Error(extractApiErrorMessage(error));
-  }
-};
-
 export interface OrganizerRequestPayload {
   name: string;
   email: string;
@@ -169,9 +161,6 @@ export const adminApi = {
   createAboutTimeline: (data: unknown) => api.post('/admin/about/timeline', data).then((r) => r.data),
   updateAboutTimeline: (id: number, data: unknown) => api.put(`/admin/about/timeline/${id}`, data).then((r) => r.data),
   deleteAboutTimeline: (id: number) => api.delete(`/admin/about/timeline/${id}`).then((r) => r.data),
-
-  // Newsletter
-  getSubscribers: () => api.get('/admin/subscribers').then((r) => r.data),
 
   // Заявки с формы «Организаторам»
   getOrganizerRequests: () => api.get('/admin/organizer-requests').then((r) => r.data),

@@ -3,10 +3,8 @@ import re
 import uuid
 import time as _time
 from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile, Request
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from sqlalchemy.exc import IntegrityError
 from typing import Dict, Any
 from database import get_db
 from models import (
@@ -21,7 +19,6 @@ from models import (
     AboutHoverTip,
     AboutScatteredPhoto,
     AboutTimelineEvent,
-    NewsletterSubscriber,
     OrganizerRequest,
     MediaFile,
     Review,
@@ -35,26 +32,6 @@ import reviews_yandex
 router = APIRouter(prefix="/api", tags=["public"])
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-
-class SubscribeIn(BaseModel):
-    email: str
-
-
-@router.post("/subscribe")
-def subscribe(body: SubscribeIn, db: Session = Depends(get_db)):
-    email = (body.email or "").strip().lower()
-    if not _EMAIL_RE.match(email):
-        raise HTTPException(400, "Некорректный email")
-    existing = db.query(NewsletterSubscriber).filter_by(email=email).first()
-    if existing:
-        return {"ok": True, "already": True}
-    try:
-        db.add(NewsletterSubscriber(email=email))
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-    return {"ok": True}
 
 
 # Анти-абьюз формы «Организаторам»: не больше N заявок с IP за окно —

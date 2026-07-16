@@ -1,18 +1,15 @@
-import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
 import { revokeConsent } from '../lib/consent';
-import { subscribeNewsletter } from '../api/client';
 
 /* ============================================================ */
 /* FOOTER — четырёхколоночная подвал-сетка в духе ZILART.       */
-/*  Ряд 1: 4 колонки разделов (Афиша/Залы/О Доме/Все события).  */
-/*  Ряд 2: ссылки-плитки (Галерея, Организаторам, Зрителям,     */
-/*         Контакты) + блок подписки на рассылку.                */
+/*  Ряд 1: логотип-вход.                                        */
+/*  Ряд 2: 4 колонки разделов + ссылки-плитки.                  */
 /*  Ряд 3: адрес, телефон, e-mail, соц-сети.                     */
-/*  Ряд 4: copyright + правовые ссылки.                          */
+/*  Ряд 4: copyright + правовые ссылки, настройки cookie.        */
 /* ============================================================ */
 
 // Честный сайтмап: каждая ссылка ведёт на реально существующую страницу.
@@ -44,11 +41,6 @@ export default function Footer() {
   const { lang, t } = useSite();
   const reduced = useReducedMotionActive();
   const year = new Date().getFullYear();
-  const [email, setEmail] = useState('');
-  const [consent, setConsent] = useState(false);
-  const [subscribed, setSubscribed] = useState(false);
-  const [subError, setSubError] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
 
@@ -61,24 +53,6 @@ export default function Footer() {
       { label: 'Telegram', href: t('social_tg') },
     ] as const
   ).filter((s) => s.href && s.href.trim().length > 0);
-
-  // E-mail — персональные данные, поэтому без явного согласия не отправляем (152-ФЗ).
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email.includes('@') || !consent || submitting) return;
-    setSubmitting(true);
-    setSubError(false);
-    try {
-      await subscribeNewsletter(email);
-      setSubscribed(true);
-      setEmail('');
-      setConsent(false);
-    } catch {
-      setSubError(true);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <footer className="border-t border-white/10 bg-ink text-paper">
@@ -93,7 +67,7 @@ export default function Footer() {
         >
           <Link
             to="/"
-            className="md:col-span-7 group flex items-end gap-6"
+            className="md:col-span-12 group flex items-end gap-6"
             aria-label="Дом Союзов"
           >
             <img
@@ -111,70 +85,6 @@ export default function Footer() {
               </span>
             </div>
           </Link>
-
-          {/* Подписка на рассылку */}
-          <form
-            onSubmit={onSubmit}
-            className="md:col-span-5 flex flex-col gap-4"
-            aria-label={lang === 'ru' ? 'Подписаться на рассылку' : 'Subscribe to newsletter'}
-          >
-            <label className="flex flex-col gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">
-                {lang === 'ru' ? 'Подписаться на афишу' : 'Subscribe to programme'}
-              </span>
-              <div className="flex items-center border-b border-paper/30 pb-2 focus-within:border-accent">
-                <input
-                  type="email"
-                  value={email}
-                  required
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={lang === 'ru' ? 'Электронная почта' : 'Your email'}
-                  className="w-full min-w-0 flex-1 bg-transparent text-paper outline-none placeholder:text-paper/40"
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || !consent}
-                  className="shrink-0 rounded-full bg-paper px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-paper/90 disabled:opacity-60"
-                >
-                  {submitting
-                    ? lang === 'ru' ? '…' : '…'
-                    : lang === 'ru' ? 'Подписаться' : 'Subscribe'}
-                </button>
-              </div>
-            </label>
-
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                required
-                className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
-              />
-              <span className="text-[11px] leading-relaxed text-paper/55">
-                {lang === 'ru' ? 'Я согласен на обработку ' : 'I consent to the processing of my '}
-                <Link
-                  to="/personal-data-consent"
-                  className="font-semibold text-paper/85 underline underline-offset-2 hover:text-paper"
-                >
-                  {lang === 'ru' ? 'персональных данных' : 'personal data'}
-                </Link>
-              </span>
-            </label>
-            <p className="max-w-[44ch] text-[11px] leading-relaxed text-paper/45">
-              {subError
-                ? lang === 'ru'
-                  ? 'Не удалось подписаться. Проверьте адрес и попробуйте ещё раз.'
-                  : 'Subscription failed. Check the address and try again.'
-                : subscribed
-                  ? lang === 'ru'
-                    ? 'Спасибо! Вы подписаны на афишу Дома Союзов.'
-                    : 'Thank you. You are subscribed to our programme.'
-                  : lang === 'ru'
-                    ? 'Афиша концертов и анонсы публичных программ. Без спама, можно отписаться в любой момент.'
-                    : 'Concert programme and public events digest. No spam; you can unsubscribe at any time.'}
-            </p>
-          </form>
         </motion.div>
 
         {/* 4 колонки навигации */}

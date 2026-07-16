@@ -21,14 +21,6 @@ class MediaFile(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
-class NewsletterSubscriber(Base):
-    """Подписчики на афишу из формы в футере."""
-    __tablename__ = "newsletter_subscribers"
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
 class OrganizerRequest(Base):
     """Заявка с формы «Организаторам» (модальное окно на /organizers).
 

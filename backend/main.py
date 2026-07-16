@@ -1,3 +1,4 @@
+import mimetypes
 import os
 import re
 import sys
@@ -230,6 +231,34 @@ def rss_xml():
     )
 
 
+# ── Статика с долгим кэшем ───────────────────────────────────────────────────
+# Python-таблица mimetypes не знает woff2 и отдавала шрифты как text/plain.
+# Из-за этого браузер игнорировал <link rel="preload" type="font/woff2">
+# и грузил такие шрифты повторно.
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
+
+
+class ImmutableStaticFiles(StaticFiles):
+    """
+    StaticFiles + явный Cache-Control на год.
+
+    Без заголовка браузер применяет эвристику: считает файл свежим лишь ~10%
+    от его возраста. Сразу после деплоя это почти ноль, поэтому бандлы и шрифты
+    перезапрашивались на каждой загрузке.
+
+    Годится только для файлов с неизменяемым содержимым: у бандлов Vite хэш в
+    имени, у шрифтов имя кодирует семейство/начертание/подмножество. При замене
+    самого файла шрифта его нужно переименовать, иначе у клиентов останется
+    старая версия из кэша.
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 # ── SPA: раздаём собранный фронт тем же процессом ────────────────────────────
 # Каталог задаётся переменной STATIC_DIR (см. Dockerfile в корне репо).
 # Если статика не подмонтирована — гасим SPA-раздачу: удобно для dev-режима,
@@ -238,7 +267,13 @@ STATIC_DIR = os.environ.get("STATIC_DIR", "")
 if STATIC_DIR and os.path.isdir(STATIC_DIR):
     _ASSETS = os.path.join(STATIC_DIR, "assets")
     if os.path.isdir(_ASSETS):
-        app.mount("/assets", StaticFiles(directory=_ASSETS), name="assets")
+        app.mount("/assets", ImmutableStaticFiles(directory=_ASSETS), name="assets")
+
+    # Шрифты раздаём отдельным монтированием, а не catch-all'ом: иначе каждый
+    # .woff2 уходил с Content-Type text/plain и без Cache-Control.
+    _FONTS = os.path.join(STATIC_DIR, "fonts")
+    if os.path.isdir(_FONTS):
+        app.mount("/fonts", ImmutableStaticFiles(directory=_FONTS), name="fonts")
 
     _INDEX = os.path.join(STATIC_DIR, "index.html")
 

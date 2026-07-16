@@ -29,7 +29,6 @@ import models  # noqa: E402,F401  — регистрирует все модел
 # Порядок важен: сперва таблицы без внешних ключей, затем зависимые.
 ORDERED_MODELS = [
     models.MediaFile,                # ВАЖНО: все загруженные файлы (картинки/PDF/видео)
-    models.NewsletterSubscriber,     # подписчики из формы в футере
     models.AdminUser,
     models.SiteSettings,
     models.Event,

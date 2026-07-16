@@ -21,7 +21,6 @@ from models import (
     AboutScatteredPhoto,
     AboutTimelineEvent,
     MediaFile,
-    NewsletterSubscriber,
     OrganizerRequest,
     Review,
 )
@@ -234,17 +233,6 @@ async def upload_file(
     db.commit()
 
     return {"url": f"/uploads/{filename}"}
-
-
-# ──────────── NEWSLETTER ────────────
-
-@router.get("/subscribers")
-def list_subscribers(db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
-    rows = db.query(NewsletterSubscriber).order_by(NewsletterSubscriber.created_at.desc()).all()
-    return [
-        {"id": r.id, "email": r.email, "created_at": r.created_at.isoformat() if r.created_at else None}
-        for r in rows
-    ]
 
 
 # ──────────── ORGANIZER REQUESTS (заявки с формы «Организаторам») ────────────

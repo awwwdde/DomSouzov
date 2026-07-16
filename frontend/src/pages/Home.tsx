@@ -225,8 +225,8 @@ export default function Home() {
             label={lang === 'ru' ? 'Сезон формируется' : 'Programme in preparation'}
             body={
               lang === 'ru'
-                ? 'Афиша Колонного зала на ближайшие месяцы готовится. Подпишитесь, чтобы получить анонс концертов и церемоний первыми.'
-                : 'The Hall of Columns programme for the coming months is being prepared. Subscribe to be the first to receive announcements.'
+                ? 'Афиша Колонного зала на ближайшие месяцы готовится. Следите за анонсами концертов и церемоний в наших соцсетях.'
+                : 'The Hall of Columns programme for the coming months is being prepared. Follow our social media for concert and ceremony announcements.'
             }
           />
         ) : (
