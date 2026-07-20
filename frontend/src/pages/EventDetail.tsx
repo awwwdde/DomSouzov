@@ -109,8 +109,12 @@ export default function EventDetail() {
           },
         ]}
       />
-      <header className="border-b border-line bg-paper px-5 pb-10 pt-28 md:px-12 md:pb-14 md:pt-32">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:flex-row md:items-start md:justify-between">
+      {/* Отступы задаём ВНУТРИ центрированного контейнера max-w-[1600px], а не
+          на секции: иначе на экранах шире 1600px левый край заголовка и текста
+          не совпадал с краем фото ниже (у той секции max-w и padding на одном
+          элементе). Разъезд был ровно на величину padding — 48px. */}
+      <header className="border-b border-line bg-paper pb-10 pt-28 md:pb-14 md:pt-32">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-5 md:flex-row md:items-start md:justify-between md:px-12">
           <div className="min-w-0 flex-1">
             <PageKicker>
               <Link to="/">{lang === 'ru' ? 'Главная' : 'Home'}</Link>
@@ -268,8 +272,8 @@ export default function EventDetail() {
 
       {/* Описание программы — читаемая колонка, изображения аккуратно вписаны */}
       {descBlocks.length > 0 ? (
-        <section className="border-t border-line px-5 py-14 md:px-12 md:py-20">
-          <div className="mx-auto max-w-[1600px]">
+        <section className="border-t border-line py-14 md:py-20">
+          <div className="mx-auto w-full max-w-[1600px] px-5 md:px-12">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
             {/* Выключка по ширине — как в новостях: ровный правый край,
                 без переносов, последняя строка выравнивается влево. */}
@@ -302,8 +306,8 @@ export default function EventDetail() {
 
       {/* Похожие события */}
       {related.length > 0 ? (
-        <section className="border-t border-line bg-paper px-5 py-16 md:px-12">
-          <div className="mx-auto max-w-[1600px]">
+        <section className="border-t border-line bg-paper py-16">
+          <div className="mx-auto w-full max-w-[1600px] px-5 md:px-12">
             <h2 className="mb-10 font-heading text-[clamp(28px,4vw,56px)] font-bold uppercase leading-[0.95] tracking-[0.02em] text-ink">
               {lang === 'ru' ? 'Похожие события' : 'Related events'}
             </h2>

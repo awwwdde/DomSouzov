@@ -231,11 +231,19 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Нижний ряд: слева реквизиты, по центру логотип УДП, справа правовые
-            ссылки. Когда логотип не загружен, левый и правый блоки делят ряд
-            пополам — как было до его появления. */}
-        <div className="grid gap-6 pt-8 text-[11px] leading-relaxed text-paper/45 md:grid-cols-12 md:items-center">
-          <div className={`${udpLogo ? 'md:col-span-4' : 'md:col-span-6'} space-y-1`}>
+        {/* Нижний ряд: [реквизиты | логотип УДП | правовые ссылки].
+            Средняя колонка `auto` — по ширине логотипа с подписью, боковые
+            `1fr` делят остаток поровну, поэтому логотип стоит ровно по центру.
+            Правовые ссылки идут столбиком тем же начертанием, что и реквизиты
+            слева, — столбик узкий, места хватает всем трём колонкам.
+            Без логотипа ряд остаётся прежним: две половины. */}
+        <div
+          className={[
+            'grid gap-x-8 gap-y-8 pt-8 text-[11px] leading-relaxed text-paper/45 md:items-start',
+            udpLogo ? 'md:grid-cols-[1fr_auto_1fr]' : 'md:grid-cols-2',
+          ].join(' ')}
+        >
+          <div className="space-y-1">
             <div>
               © {year} {t('footer_copyright_name') || brandTitle}
             </div>
@@ -247,25 +255,26 @@ export default function Footer() {
             </div>
             {t('legal_address') ? <div>{t('legal_address')}</div> : null}
           </div>
-          {/* Логотип Управления делами Президента РФ — центральная колонка
-              нижнего ряда. Выводится, только если загружен в админке
-              (Настройки → Подвал). */}
+          {/* Логотип Управления делами Президента РФ с подписью под ним. */}
           {udpLogo ? (
-            <div className="md:col-span-4 flex flex-col items-center gap-2 md:order-none">
+            <div className="flex shrink-0 flex-col items-center gap-2.5">
               {udpUrl ? (
                 <a href={udpUrl} target="_blank" rel="noopener noreferrer" className="transition hover:opacity-80">
-                  <img src={udpLogo} alt={udpAlt} className="h-12 w-auto md:h-14" />
+                  <img src={udpLogo} alt={udpAlt || 'Управление делами Президента Российской Федерации'} className="h-20 w-auto md:h-24" />
                 </a>
               ) : (
-                <img src={udpLogo} alt={udpAlt} className="h-12 w-auto md:h-14" />
+                <img src={udpLogo} alt={udpAlt || 'Управление делами Президента Российской Федерации'} className="h-20 w-auto md:h-24" />
               )}
               {udpAlt ? (
-                <span className="max-w-[280px] text-center text-[10px] leading-snug text-paper/45">{udpAlt}</span>
+                <span className="max-w-[260px] text-center leading-relaxed text-paper/45">{udpAlt}</span>
               ) : null}
             </div>
           ) : null}
 
-          <div className={`${udpLogo ? 'md:col-span-4' : 'md:col-span-6'} flex flex-wrap items-start justify-start gap-x-6 gap-y-2 uppercase tracking-[0.14em] md:justify-end`}>
+          {/* Правовые ссылки — столбиком, тем же начертанием и кеглем, что и
+              реквизиты слева (без uppercase и разрядки): так обе боковые
+              колонки читаются как один блок информации. */}
+          <div className="flex flex-col items-start gap-1 md:items-end">
             <Link to="/privacy-policy" className="transition hover:underline hover:underline-offset-4">
               {t('footer_link_privacy') || (ru ? 'Политика конфиденциальности' : 'Privacy')}
             </Link>
@@ -280,7 +289,7 @@ export default function Footer() {
                 revokeConsent();
                 window.location.reload();
               }}
-              className="uppercase tracking-[0.14em] transition hover:underline hover:underline-offset-4"
+              className="text-left transition hover:underline hover:underline-offset-4 md:text-right"
             >
               {t('footer_link_cookie') || (ru ? 'Настройки cookie' : 'Cookie settings')}
             </button>
