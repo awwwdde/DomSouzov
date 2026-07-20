@@ -235,7 +235,7 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
             <h2 className="font-heading text-[clamp(26px,4vw,40px)] font-bold uppercase leading-[1] tracking-[0.02em] text-ink">
               {lang === 'ru' ? 'Заявка отправлена' : 'Request sent'}
             </h2>
-            <p className="max-w-md text-base leading-7 text-ink-soft">
+            <p className="max-w-md text-justify text-base leading-7 text-ink-soft [hyphens:none] [text-align-last:start]">
               {lang === 'ru'
                 ? 'Спасибо! Мы свяжемся с вами в ближайшее время — с доступными датами и сметой.'
                 : 'Thank you! We will get back to you shortly with available dates and a quote.'}
@@ -257,7 +257,7 @@ function RequestModal({ lang, onClose }: { lang: 'ru' | 'en'; onClose: () => voi
               <h2 className="mt-2 font-heading text-[clamp(26px,4vw,42px)] font-bold uppercase leading-[0.98] tracking-[0.02em] text-ink">
                 {lang === 'ru' ? 'Оставить заявку' : 'Send a request'}
               </h2>
-              <p className="mt-3 text-[15px] leading-6 text-ink-soft">
+              <p className="mt-3 text-justify text-[15px] leading-6 text-ink-soft [hyphens:none] [text-align-last:start]">
                 {lang === 'ru'
                   ? 'Опишите мероприятие — мы ответим с доступными датами, залами и сметой.'
                   : 'Tell us about your event — we will reply with available dates, halls and a quote.'}
@@ -551,7 +551,9 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line text-accent transition group-hover:border-accent group-hover:bg-accent group-hover:text-paper">
                       <Icon size={22} strokeWidth={1.6} />
                     </span>
-                    <p className="text-[16px] font-medium leading-[1.5] text-ink">{item}</p>
+                    <p className="text-justify text-[16px] font-medium leading-[1.5] text-ink [hyphens:none] [text-align-last:start]">
+                      {item}
+                    </p>
                     {hasImage ? (
                       <span className="mt-auto inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
                         <ZoomIn size={14} strokeWidth={2} />
@@ -612,7 +614,7 @@ function NoEquipment({ lang }: { lang: 'ru' | 'en' }) {
       ];
   return (
     <>
-      <p className="mt-3 text-[15px] leading-[1.6] text-muted">
+      <p className="mt-3 text-justify text-[15px] leading-[1.6] text-muted [hyphens:none] [text-align-last:start]">
         {lang === 'ru'
           ? 'Сценическое оборудование не предусмотрено — пространство для:'
           : 'No stage equipment — a space for:'}

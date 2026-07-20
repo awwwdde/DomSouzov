@@ -170,7 +170,13 @@ export const adminApi = {
     api.delete(`/admin/organizer-requests/${id}`).then((r) => r.data),
 
   changePassword: (current_password: string, new_password: string) =>
-    api.post('/admin/change-password', { current_password, new_password }).then((r) => r.data),
+    api.post('/admin/change-password', { current_password, new_password }).then((r) => {
+      // Смена пароля обесценивает все прежние токены, включая текущий.
+      // Бэкенд сразу отдаёт новый — сохраняем, иначе следующий же запрос
+      // получит 401 и выбросит администратора из панели.
+      if (r.data?.access_token) localStorage.setItem('admin_token', r.data.access_token);
+      return r.data;
+    }),
 
   // Администраторы (только супер-админ)
   getAdmins: () => api.get('/admin/admins').then((r) => r.data),

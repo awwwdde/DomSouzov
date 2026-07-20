@@ -84,7 +84,9 @@ def send_email(
                 if settings.SMTP_USER:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
-        print(f"[mailer] письмо отправлено: {from_addr} -> {to_addr} (host={host}:{settings.SMTP_PORT}, ssl={settings.SMTP_USE_SSL})")
+        # Без адресов в логе — это персональные данные. Для диагностики
+        # достаточно факта отправки и параметров транспорта.
+        print(f"[mailer] письмо отправлено (host={host}:{settings.SMTP_PORT}, ssl={settings.SMTP_USE_SSL})")
         return True
     except Exception as exc:  # noqa: BLE001 — почта не критична для запроса
         print(f"[mailer] send failed: {type(exc).__name__}: {exc}")

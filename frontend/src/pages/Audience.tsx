@@ -297,7 +297,9 @@ export default function Audience() {
                   <h3 className="font-heading text-[clamp(17px,1.4vw,21px)] font-bold uppercase leading-[1.1] tracking-[0.02em] text-ink">
                     {ruleTitle}
                   </h3>
-                  <p className="text-[14px] leading-6 text-ink-soft">{ruleText}</p>
+                  <p className="text-justify text-[14px] leading-6 text-ink-soft [hyphens:none] [text-align-last:start]">
+                    {ruleText}
+                  </p>
                 </div>
               </RevealItem>
             );

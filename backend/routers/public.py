@@ -25,6 +25,8 @@ from models import (
     YandexReview,
 )
 from config import settings as app_settings
+from ratelimit import RateLimiter, client_ip
+import filetypes
 import mailer
 import email_templates
 import reviews_yandex
@@ -36,19 +38,14 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 # Анти-абьюз формы «Организаторам»: не больше N заявок с IP за окно —
 # защита от спама и заваливания хранилища вложениями. In-memory (на инстанс).
-_FORM_HITS: dict = {}
-_FORM_MAX = 5
-_FORM_WINDOW_SEC = 10 * 60
+_FORM_LIMITER = RateLimiter(max_hits=5, window_sec=10 * 60)
 
-
-def _req_ip(request: Request) -> str:
-    """IP клиента с учётом доверенных прокси (см. TRUSTED_PROXY_COUNT)."""
-    n = app_settings.TRUSTED_PROXY_COUNT
-    if n > 0:
-        chain = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
-        if len(chain) >= n:
-            return chain[-n]
-    return request.client.host if request.client else "unknown"
+# Потолки на длину полей: без них в БД можно записать мегабайты текста
+# (rate-limit ограничивает частоту, но не размер одной заявки).
+_MAX_NAME_LEN = 200
+_MAX_PHONE_LEN = 50
+_MAX_EMAIL_LEN = 254   # максимум для адреса по RFC 5321
+_MAX_MESSAGE_LEN = 5000
 
 
 # Вложение к заявке — только документы (PDF/DOCX/DOC).
@@ -73,13 +70,10 @@ async def organizers_request(
     db: Session = Depends(get_db),
 ):
     # Rate-limit по IP — против спама/переполнения хранилища.
-    ip = _req_ip(request)
-    now = _time.time()
-    hits = [t for t in _FORM_HITS.get(ip, []) if now - t < _FORM_WINDOW_SEC]
-    if len(hits) >= _FORM_MAX:
+    ip = client_ip(request)
+    if _FORM_LIMITER.is_limited(ip):
         raise HTTPException(429, "Слишком много заявок. Попробуйте позже.")
-    hits.append(now)
-    _FORM_HITS[ip] = hits
+    _FORM_LIMITER.register(ip)
 
     name = (name or "").strip()
     email = (email or "").strip()
@@ -88,10 +82,16 @@ async def organizers_request(
 
     if not name:
         raise HTTPException(400, "Укажите имя")
-    if not _EMAIL_RE.match(email):
+    if not _EMAIL_RE.match(email) or len(email) > _MAX_EMAIL_LEN:
         raise HTTPException(400, "Некорректный email")
     if not consent:
         raise HTTPException(400, "Необходимо согласие на обработку персональных данных")
+    if len(name) > _MAX_NAME_LEN:
+        raise HTTPException(400, f"Имя слишком длинное (максимум {_MAX_NAME_LEN} символов)")
+    if len(phone) > _MAX_PHONE_LEN:
+        raise HTTPException(400, f"Телефон слишком длинный (максимум {_MAX_PHONE_LEN} символов)")
+    if len(message) > _MAX_MESSAGE_LEN:
+        raise HTTPException(400, f"Сообщение слишком длинное (максимум {_MAX_MESSAGE_LEN} символов)")
 
     # Необязательный файл-вложение: валидируем тип/размер, кладём в БД (MediaFile).
     attachment_url = None
@@ -108,6 +108,10 @@ async def organizers_request(
         max_bytes = app_settings.MAX_UPLOAD_MB * 1024 * 1024
         if len(content) > max_bytes:
             raise HTTPException(413, f"Файл слишком большой. Максимум — {app_settings.MAX_UPLOAD_MB} МБ.")
+        # Вложение приходит от неавторизованного посетителя — проверяем, что
+        # содержимое действительно документ, а не переименованный файл.
+        if not content or not filetypes.sniff_matches(ext, content[:64]):
+            raise HTTPException(400, "Файл повреждён или не является документом PDF/DOC/DOCX")
         stored = f"{uuid.uuid4().hex}.{ext or 'bin'}"
         att_mime = file.content_type or "application/octet-stream"
         db.add(MediaFile(filename=stored, content_type=att_mime, data=content, size=len(content)))
@@ -147,7 +151,10 @@ async def organizers_request(
         request_id=req.id, attachment_name=attachment_name or "",
     )
     attachments = [(attachment_name, att_bytes, att_mime)] if att_bytes else None
-    print(f"[organizers] заявка #{req.id}: получатель={recipient!r}, вложение={attachment_name!r}")
+    # В лог — только факт и номер заявки. Адреса, имена и названия файлов
+    # это персональные данные (152-ФЗ): в логах им не место, сама заявка
+    # со всеми полями уже сохранена в БД и видна в админке.
+    print(f"[organizers] заявка #{req.id} принята (вложение: {'да' if att_bytes else 'нет'})")
     if not recipient:
         print("[organizers] получатель не определён (нет organizers_form_email / SMTP_TO / email_rent)")
     emailed = (

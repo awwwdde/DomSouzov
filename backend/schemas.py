@@ -24,6 +24,13 @@ class AdminPasswordReset(BaseModel):
     password: str
 
 
+class AdminPasswordChange(BaseModel):
+    """Смена собственного пароля. Раньше эндпоинт принимал сырой dict —
+    без схемы, в отличие от всех остальных."""
+    current_password: str
+    new_password: str
+
+
 class AdminUserOut(BaseModel):
     id: int
     email: str

@@ -33,6 +33,7 @@ def migrate_sqlite() -> None:
         ("about_timeline_events", "tag_ru", "VARCHAR"),
         ("about_timeline_events", "tag_en", "VARCHAR"),
         ("admin_users", "is_super", bool_default),
+        ("admin_users", "token_version", "INTEGER DEFAULT 0"),
         ("halls", "gallery", "TEXT"),
         ("halls", "scheme", "VARCHAR"),
         ("halls", "schemes", "TEXT"),

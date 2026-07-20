@@ -271,7 +271,12 @@ export default function EventDetail() {
         <section className="border-t border-line px-5 py-14 md:px-12 md:py-20">
           <div className="mx-auto max-w-[1600px]">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
-            <div className="mt-8 space-y-6 text-[17px] leading-[1.8] text-ink-soft">
+            {/* Выключка по ширине — как в новостях: ровный правый край,
+                без переносов, последняя строка выравнивается влево. */}
+            <div
+              lang={lang}
+              className="mt-8 max-w-[900px] space-y-6 text-justify text-[17px] leading-[1.8] text-ink-soft [hyphens:none] [text-align-last:start]"
+            >
               {descBlocks.map((b, i) =>
                 b.type === 'image' ? (
                   <figure key={i} className="my-9">

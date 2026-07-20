@@ -1,7 +1,6 @@
 """Admin CRUD API endpoints (JWT-protected)."""
 import os
 import re
-import time
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -39,8 +38,10 @@ from schemas import (
     AboutTimelineEventCreate, AboutTimelineEventUpdate, AboutTimelineEventOut,
 )
 from auth import verify_password, create_access_token, get_current_admin, get_current_super_admin, hash_password
-from schemas import AdminUserCreate, AdminUserOut, AdminPasswordReset, OrganizerRequestUpdate
+from schemas import AdminUserCreate, AdminUserOut, AdminPasswordReset, AdminPasswordChange, OrganizerRequestUpdate
 from config import settings as app_settings
+from ratelimit import RateLimiter, client_ip
+import filetypes
 import aiofiles
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -64,42 +65,24 @@ ALLOWED_DOC_EXTENSIONS = {"pdf"}
 
 # ──────────── AUTH ────────────
 
-# Простой in-memory rate-limit на вход: защита от перебора пароля.
-# Хранит метки времени неудачных попыток по IP. Сбрасывается при рестарте —
-# для одного инстанса этого достаточно; для кластера нужен общий стор (Redis).
-_LOGIN_ATTEMPTS: dict = {}
-_LOGIN_MAX_ATTEMPTS = 7          # попыток за окно
-_LOGIN_WINDOW_SEC = 15 * 60      # окно блокировки, сек
-
-
-def _client_ip(request: Request) -> str:
-    # X-Forwarded-For доверяем только если перед нами есть доверенные прокси.
-    # Берём IP, добавленный самым внешним доверенным прокси (n-й справа) — его
-    # клиент подделать не может (прокси дописывает реальный peer в конец цепочки).
-    n = app_settings.TRUSTED_PROXY_COUNT
-    if n > 0:
-        chain = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
-        if len(chain) >= n:
-            return chain[-n]
-    return request.client.host if request.client else "unknown"
+# Rate-limit на вход: защита от перебора пароля. Общая реализация в
+# ratelimit.py — там же очистка протухших IP, чтобы словарь не рос вечно.
+_LOGIN_LIMITER = RateLimiter(max_hits=7, window_sec=15 * 60)
 
 
 @router.post("/login", response_model=Token)
 def login(form: LoginRequest, request: Request, db: Session = Depends(get_db)):
-    ip = _client_ip(request)
-    now = time.time()
-    attempts = [t for t in _LOGIN_ATTEMPTS.get(ip, []) if now - t < _LOGIN_WINDOW_SEC]
-    if len(attempts) >= _LOGIN_MAX_ATTEMPTS:
+    ip = client_ip(request)
+    if _LOGIN_LIMITER.is_limited(ip):
         raise HTTPException(429, "Слишком много попыток входа. Повторите через несколько минут.")
 
     user = db.query(AdminUser).filter(AdminUser.email == form.email).first()
     if not user or not verify_password(form.password, user.hashed_password):
-        attempts.append(now)
-        _LOGIN_ATTEMPTS[ip] = attempts
+        _LOGIN_LIMITER.register(ip)
         raise HTTPException(401, "Incorrect email or password")
 
-    _LOGIN_ATTEMPTS.pop(ip, None)  # успешный вход — сбрасываем счётчик
-    token = create_access_token({"sub": user.email})
+    _LOGIN_LIMITER.reset(ip)  # успешный вход — сбрасываем счётчик
+    token = create_access_token({"sub": user.email, "tv": user.token_version or 0})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -139,6 +122,8 @@ def reset_admin_password(admin_id: int, body: AdminPasswordReset, db: Session = 
     if len(body.password or "") < 8:
         raise HTTPException(400, "Пароль должен быть не короче 8 символов")
     user.hashed_password = hash_password(body.password)
+    # Сброс пароля супер-админом выкидывает этого админа из всех активных сессий.
+    user.token_version = (user.token_version or 0) + 1
     db.commit()
     return {"ok": True}
 
@@ -159,18 +144,23 @@ def delete_admin(admin_id: int, db: Session = Depends(get_db), current: AdminUse
 
 @router.post("/change-password")
 def change_password(
-    body: dict,
+    body: AdminPasswordChange,
     db: Session = Depends(get_db),
     current: AdminUser = Depends(get_current_admin),
 ):
-    if not verify_password(body.get("current_password", ""), current.hashed_password):
+    if not verify_password(body.current_password, current.hashed_password):
         raise HTTPException(400, "Current password is incorrect")
-    new_password = (body.get("new_password") or "").strip()
+    new_password = (body.new_password or "").strip()
     if len(new_password) < 8:
         raise HTTPException(400, "Новый пароль должен быть не короче 8 символов")
     current.hashed_password = hash_password(new_password)
+    # Обесцениваем все ранее выпущенные токены (включая возможно украденный).
+    current.token_version = (current.token_version or 0) + 1
     db.commit()
-    return {"ok": True}
+    # Свой же токен только что стал недействителен — сразу отдаём новый,
+    # чтобы администратора не выбросило из панели после смены пароля.
+    token = create_access_token({"sub": current.email, "tv": current.token_version})
+    return {"ok": True, "access_token": token}
 
 
 # ──────────── UPLOAD ────────────
@@ -218,6 +208,18 @@ async def upload_file(
             413,
             f"Файл слишком большой ({len(content) // (1024 * 1024)} МБ). Максимум — {limit_mb} МБ.",
         )
+
+    # Расширение и Content-Type задаёт клиент — проверяем фактическое содержимое.
+    # Пустой файл и файл, чьи байты не соответствуют расширению, отклоняем.
+    if not content:
+        raise HTTPException(400, "Файл пустой")
+    if not filetypes.sniff_matches(ext, content[:64]):
+        actual = filetypes.describe(content[:512])
+        detail = f"Содержимое файла не соответствует расширению .{ext}"
+        if actual:
+            detail += f" (похоже на {actual})"
+        raise HTTPException(400, detail)
+
     filename = f"{uuid.uuid4().hex}.{ext}"
     content_type = file.content_type or "application/octet-stream"
 

@@ -5,6 +5,7 @@ import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealSection, RevealList, RevealItem } from '../components/Reveal';
 import { getReviews } from '../api/client';
+import { usePhones, telHref } from '../lib/phones';
 import type { Review, ReviewsResponse } from '../types';
 
 const ADDRESS_QUERY = 'Москва, Большая Дмитровка, 1';
@@ -14,6 +15,7 @@ const ROUTE_URL = `https://yandex.ru/maps/?rtext=~${encodeURIComponent(ADDRESS_Q
 export default function Contacts() {
   const { lang, t } = useSite();
   const mapEmbed = t('map_embed_url') || DEFAULT_MAP_EMBED;
+  const phones = usePhones();
 
   return (
     <>
@@ -45,16 +47,20 @@ export default function Contacts() {
             )}
           </h2>
           <dl className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-5 text-sm">
-            <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Вход' : 'Entrance'}</dt>
+            <dt className="font-bold uppercase tracking-[0.08em]">
+              {phones.length > 1 ? (lang === 'ru' ? 'Телефоны' : 'Phones') : (lang === 'ru' ? 'Вход' : 'Entrance')}
+            </dt>
             <dd className="leading-6 text-ink-soft">
-              {t('phone')}<br />
+              {phones.map((p) => (
+                <span key={p.number} className="block">
+                  <a href={telHref(p.number)} className="transition hover:text-accent">{p.number}</a>
+                  {p.label ? <span className="text-muted"> · {p.label}</span> : null}
+                </span>
+              ))}
               <span className="text-muted">{lang === 'ru' ? 'Вт–Вс · 10:00—21:30' : 'Tue–Sun · 10:00—21:30'}</span>
             </dd>
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Залы и мероприятия' : 'Venues'}</dt>
-            <dd className="leading-6 text-ink-soft">
-              {t('email_rent')}<br />
-              <span className="text-muted">+7 (495) 000-11-11</span>
-            </dd>
+            <dd className="leading-6 text-ink-soft">{t('email_rent')}</dd>
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Пресса' : 'Press'}</dt>
             <dd className="text-ink-soft">{t('email_press')}</dd>
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Метро' : 'Metro'}</dt>

@@ -267,6 +267,17 @@ def build_head(path: str, db: Session) -> str:
     clean_path = path.strip("/")
     parts = clean_path.split("/") if clean_path else [""]
 
+    # Панель управления — служебный раздел: закрываем от индексации и не
+    # показываем посетителю «Страница не найдена» в заголовке вкладки
+    # (раньше /admin/* уходил в общий 404-фолбэк в конце функции).
+    if parts[0] == "admin":
+        return _meta_block(
+            title="Панель управления — Дом Союзов",
+            description="Служебный раздел сайта.",
+            canonical=_abs(clean_path),
+            robots="noindex, nofollow",
+        )
+
     # /events/{id}
     if len(parts) == 2 and parts[0] == "events" and parts[1].isdigit():
         e = db.query(Event).filter(Event.id == int(parts[1]), Event.is_active == True).first()

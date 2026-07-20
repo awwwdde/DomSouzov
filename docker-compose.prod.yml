@@ -39,6 +39,10 @@ services:
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
       SITE_URL: ${SITE_URL:-https://domsojuzov.ru}
       CORS_ORIGINS: ${CORS_ORIGINS:-https://domsojuzov.ru}
+      # Перед приложением стоит ровно один доверенный прокси — caddy (см. ниже).
+      # Без этого rate-limit видел бы IP Caddy у всех посетителей и блокировал
+      # вход в админку сразу всем после 7 чужих неудачных попыток.
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
       BOOTSTRAP_ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
       BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       SEED_DEMO_CONTENT: "false"

@@ -62,4 +62,8 @@ EXPOSE 8080
 
 # Сид/миграции на старте, потом uvicorn. seed.py создаёт таблицы (Base.metadata)
 # и идемпотентно докидывает дефолтных админов/настройки.
-CMD ["sh", "-c", "python seed.py && uvicorn main:app --host 0.0.0.0 --port 8080"]
+#
+# --no-server-header: не отдавать «Server: uvicorn». Заголовок добавляется на
+# уровне протокола, уже после middleware приложения, поэтому убрать его можно
+# только флагом запуска. По названию стека проще подобрать known-CVE.
+CMD ["sh", "-c", "python seed.py && uvicorn main:app --host 0.0.0.0 --port 8080 --no-server-header"]

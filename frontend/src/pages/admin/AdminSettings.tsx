@@ -328,7 +328,18 @@ const PAGES: PageDef[] = [
       {
         title: 'Связь',
         fields: [
-          { key: 'phone', label: 'Телефон', type: 'text', single: true },
+          {
+            key: 'phones',
+            label: 'Телефоны',
+            type: 'list',
+            itemLabel: 'Добавить телефон',
+            hint: 'Можно добавить несколько номеров — они показываются и на странице «Контакты», и в подвале. Подпись необязательна (например «Касса», «Приёмная»). Если список пуст, используется одиночное поле «Телефон (один)» ниже.',
+            itemFields: [
+              { key: 'number', label: 'Номер (напр. +7 (495) 692-71-41)', bilingual: false },
+              { key: 'label', label: 'Подпись (необязательно)' },
+            ],
+          },
+          { key: 'phone', label: 'Телефон (один, запасной)', type: 'text', single: true, hint: 'Используется, только если список «Телефоны» выше пуст.' },
           { key: 'email_rent', label: 'Email — залы и мероприятия', type: 'text', single: true },
           { key: 'email_press', label: 'Email — пресс-служба', type: 'text', single: true },
           { key: 'contact_email', label: 'Email — общий (резервный для подвала)', type: 'text', single: true },
@@ -345,12 +356,61 @@ const PAGES: PageDef[] = [
   {
     id: 'footer',
     label: 'Подвал',
-    description: 'Юридическая информация в подвале.',
+    description: 'Логотип, навигация, контакты, соцсети и реквизиты.',
     group: 'Общее',
     icon: PanelBottom,
     href: '/',
     span: { col: 2, row: 1 },
     sections: [
+      {
+        title: 'Логотип и название',
+        fields: [
+          { key: 'footer_logo', label: 'Логотип', type: 'image', single: true, hint: 'SVG/PNG. Осветляется автоматически под тёмный фон. Если пусто — стандартный логотип Дома.' },
+          { key: 'footer_brand_title', label: 'Название', type: 'text' },
+          { key: 'footer_brand_subtitle', label: 'Подпись под названием', type: 'text' },
+        ],
+      },
+      {
+        title: 'Колонки навигации',
+        fields: [
+          {
+            key: 'footer_nav',
+            label: 'Пункты меню',
+            type: 'list',
+            itemLabel: 'Добавить пункт',
+            hint: 'Пункты с одинаковым «Заголовком колонки» объединяются в одну колонку — порядок колонок задаётся порядком пунктов. Если список пуст, показывается стандартное меню.',
+            itemFields: [
+              { key: 'column', label: 'Заголовок колонки' },
+              { key: 'label', label: 'Название пункта' },
+              { key: 'link', label: 'Ссылка (напр. /events или https://…)', bilingual: false },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Плитки-разделы (крупные ссылки)',
+        fields: [
+          {
+            key: 'footer_tiles',
+            label: 'Плитки',
+            type: 'list',
+            itemLabel: 'Добавить плитку',
+            hint: 'Ряд крупных ссылок под колонками. Если список пуст, показываются стандартные плитки.',
+            itemFields: [
+              { key: 'label', label: 'Название' },
+              { key: 'link', label: 'Ссылка', bilingual: false },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Заголовки блоков контактов',
+        fields: [
+          { key: 'footer_heading_address', label: 'Заголовок «Адрес»', type: 'text' },
+          { key: 'footer_heading_contact', label: 'Заголовок «Связь»', type: 'text' },
+          { key: 'footer_heading_social', label: 'Заголовок «Соцсети»', type: 'text' },
+        ],
+      },
       {
         title: 'Реквизиты',
         fields: [
@@ -367,6 +427,34 @@ const PAGES: PageDef[] = [
           { key: 'social_vk', label: 'ВКонтакте', type: 'text', single: true, hint: 'Полная ссылка https://vk.com/...' },
           { key: 'social_max', label: 'MAX', type: 'text', single: true, hint: 'Полная ссылка на профиль в мессенджере MAX.' },
           { key: 'social_tg', label: 'Telegram', type: 'text', single: true, hint: 'Полная ссылка https://t.me/...' },
+          {
+            key: 'footer_socials',
+            label: 'Свой список соцсетей',
+            type: 'list',
+            itemLabel: 'Добавить соцсеть',
+            hint: 'Необязательно. Если добавить хотя бы одну — в подвале показывается ЭТОТ список вместо трёх полей выше. Так можно добавить любые площадки и свои названия.',
+            itemFields: [
+              { key: 'label', label: 'Название' },
+              { key: 'url', label: 'Ссылка', bilingual: false },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Копирайт и правовые ссылки',
+        fields: [
+          { key: 'footer_copyright_name', label: 'Название в копирайте', type: 'text', hint: 'Год подставляется автоматически. Если пусто — берётся название из блока «Логотип и название».' },
+          { key: 'footer_link_privacy', label: 'Подпись ссылки «Политика конфиденциальности»', type: 'text' },
+          { key: 'footer_link_consent', label: 'Подпись ссылки «Согласие на обработку ПД»', type: 'text' },
+          { key: 'footer_link_cookie', label: 'Подпись кнопки «Настройки cookie»', type: 'text' },
+        ],
+      },
+      {
+        title: 'Логотип УДП (в самом низу подвала, по центру)',
+        fields: [
+          { key: 'footer_udp_logo', label: 'Логотип', type: 'image', single: true, hint: 'Логотип Управления делами Президента РФ. Показывается по центру самым нижним блоком подвала. Если поле пустое — блок не выводится. Лучше загрузить светлый PNG/SVG с прозрачным фоном: подвал тёмный.' },
+          { key: 'footer_udp_caption', label: 'Подпись под логотипом', type: 'text', hint: 'Необязательно. Например: «Управление делами Президента Российской Федерации».' },
+          { key: 'footer_udp_url', label: 'Ссылка с логотипа', type: 'text', single: true, hint: 'Необязательно. Если указать — логотип станет кликабельным.' },
         ],
       },
     ],

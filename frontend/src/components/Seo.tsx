@@ -12,7 +12,18 @@ import { useEffect } from 'react';
 /* не плодить дубли с тегами из index.html / серверной инъекции.*/
 /* ============================================================ */
 
-export const SITE_URL = 'https://union.awwwdde.art';
+/**
+ * Домен для canonical / og:url / JSON-LD.
+ *
+ * Берём фактический origin страницы: раньше здесь был жёстко прописан адрес
+ * стенда (union.awwwdde.art), из-за чего на боевом домене canonical и og:url
+ * указывали на чужой сайт. Фолбэк нужен только для сборки/тестов вне браузера.
+ * Серверная инъекция мета-тегов (backend/seo.py) использует settings.SITE_URL.
+ */
+export const SITE_URL =
+  typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://domsojuzov.ru';
 export const SITE_NAME = 'Дом Союзов';
 const DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
 

@@ -51,6 +51,35 @@ app.add_middleware(
 )
 
 
+# Content-Security-Policy для HTML-документа SPA — основной барьер против XSS.
+#
+# Почему именно так:
+#   • script-src   — свои бандлы + тег Яндекс.Метрики (mc.yandex.ru). 'unsafe-inline'
+#                    НЕ нужен: счётчик подключается через createElement, а JSON-LD
+#                    (<script type="application/ld+json">) браузером не исполняется
+#                    и под script-src не подпадает;
+#   • style-src    — 'unsafe-inline' обязателен: framer-motion анимирует элементы
+#                    через атрибут style, без него анимации по всему сайту встанут;
+#   • frame-src    — iframe карты на странице «Контакты» (yandex.ru/map-widget);
+#   • object-src   — 'none' и base-uri 'self' закрывают классические обходы CSP;
+#   • frame-ancestors дублирует X-Frame-Options (его понимают современные браузеры).
+_CSP = "; ".join([
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https://mc.yandex.ru https://yandex.ru",
+    "media-src 'self' blob:",
+    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' https://mc.yandex.ru",
+    "connect-src 'self' https://mc.yandex.ru",
+    "frame-src https://yandex.ru https://mc.yandex.ru",
+    "upgrade-insecure-requests",
+])
+
+
 # Security-заголовки. В прод-сборке (один контейнер) FastAPI раздаёт SPA сам,
 # nginx.conf не задействован — поэтому заголовки ставим здесь.
 @app.middleware("http")
@@ -63,6 +92,14 @@ async def security_headers(request, call_next):
     # HSTS действует только поверх HTTPS; по HTTP браузер заголовок игнорирует,
     # поэтому слать его безопасно всегда.
     response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+    # CSP вешаем только на HTML-документ. /uploads уже отдаёт собственный
+    # `sandbox` (setdefault его не перезапишет), а /docs и /redoc в dev
+    # рисуются инлайновыми скриптами Swagger — им строгая политика помешает.
+    if response.headers.get("content-type", "").startswith("text/html") and not request.url.path.startswith(
+        ("/docs", "/redoc")
+    ):
+        response.headers.setdefault("Content-Security-Policy", _CSP)
     return response
 
 # Загрузки раздаём из БД (переживают редеплой), с фолбэком на диск (локалка).

@@ -49,6 +49,10 @@ class AdminUser(Base):
     # Супер-админ: может создавать/удалять других админов. Обычные админы
     # управляют контентом, но не учётками.
     is_super = Column(Boolean, default=False)
+    # Версия токенов. Кладётся в JWT при выпуске и сверяется при каждой проверке.
+    # Смена/сброс пароля увеличивает счётчик — все ранее выпущенные токены
+    # (в т.ч. украденный) мгновенно перестают действовать, не дожидаясь `exp`.
+    token_version = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

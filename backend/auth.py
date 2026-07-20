@@ -45,6 +45,12 @@ def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends
     user = db.query(AdminUser).filter(AdminUser.email == email).first()
     if user is None or not user.is_active:
         raise credentials_exception
+
+    # Токены, выпущенные до последней смены пароля, недействительны.
+    # `or 0` — для строк, созданных до появления колонки, и для токенов,
+    # выпущенных старой версией кода (в них поля `tv` нет).
+    if (payload.get("tv") or 0) != (user.token_version or 0):
+        raise credentials_exception
     return user
 
 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useSite } from '../context/SiteContext';
 import { useReducedMotionActive } from '../lib/motion';
 import { revokeConsent } from '../lib/consent';
+import { usePhones, telHref } from '../lib/phones';
 
 /* ============================================================ */
 /* FOOTER — четырёхколоночная подвал-сетка в духе ZILART.       */
@@ -10,49 +11,103 @@ import { revokeConsent } from '../lib/consent';
 /*  Ряд 2: 4 колонки разделов + ссылки-плитки.                  */
 /*  Ряд 3: адрес, телефон, e-mail, соц-сети.                     */
 /*  Ряд 4: copyright + правовые ссылки, настройки cookie.        */
+/*                                                              */
+/*  Всё содержимое редактируется в админке (Настройки → Подвал).*/
+/*  Константы ниже — фолбэк: показываются, пока соответствующая  */
+/*  настройка пуста, поэтому подвал никогда не «схлопывается».   */
 /* ============================================================ */
 
-// Честный сайтмап: каждая ссылка ведёт на реально существующую страницу.
-const COL_PROGRAMME = [
-  { ru: 'Афиша', en: 'Programme', to: '/events' },
-  { ru: 'Новости', en: 'News', to: '/news' },
-  { ru: 'Галерея', en: 'Gallery', to: '/gallery' },
-];
-const COL_HALLS = [
-  { ru: 'Залы', en: 'Halls', to: '/halls' },
-  { ru: 'О Доме', en: 'About', to: '/about' },
-];
-const COL_RENT = [
-  { ru: 'Организаторам', en: 'For organizers', to: '/organizers' },
-  { ru: 'Зрителям', en: 'For visitors', to: '/audience' },
-];
-const COL_INFO = [
-  { ru: 'Контакты', en: 'Contacts', to: '/contacts' },
+/** Пункт навигации: `column` — заголовок колонки, в которую он попадёт.
+ *  Плоский список (а не вложенный) — так его умеет редактировать
+ *  ListEditor в админке; колонки собираются группировкой по `column`. */
+type RawNavItem = { column?: unknown; label?: unknown; link?: unknown };
+type RawTile = { label?: unknown; link?: unknown };
+type RawSocial = { label?: unknown; url?: unknown };
+
+const DEFAULT_NAV: Array<{ column: { ru: string; en: string }; label: { ru: string; en: string }; link: string }> = [
+  { column: { ru: 'Афиша', en: 'Programme' }, label: { ru: 'Афиша', en: 'Programme' }, link: '/events' },
+  { column: { ru: 'Афиша', en: 'Programme' }, label: { ru: 'Новости', en: 'News' }, link: '/news' },
+  { column: { ru: 'Афиша', en: 'Programme' }, label: { ru: 'Галерея', en: 'Gallery' }, link: '/gallery' },
+  { column: { ru: 'Дом', en: 'House' }, label: { ru: 'Залы', en: 'Halls' }, link: '/halls' },
+  { column: { ru: 'Дом', en: 'House' }, label: { ru: 'О Доме', en: 'About' }, link: '/about' },
+  { column: { ru: 'Гостям', en: 'Guests' }, label: { ru: 'Организаторам', en: 'For organizers' }, link: '/organizers' },
+  { column: { ru: 'Гостям', en: 'Guests' }, label: { ru: 'Зрителям', en: 'For visitors' }, link: '/audience' },
+  { column: { ru: 'Информация', en: 'Information' }, label: { ru: 'Контакты', en: 'Contacts' }, link: '/contacts' },
 ];
 
-const TILE_LINKS = [
-  { ru: 'Афиша', en: 'Programme', to: '/events' },
-  { ru: 'Залы', en: 'Halls', to: '/halls' },
-  { ru: 'Организаторам', en: 'For organizers', to: '/organizers' },
-  { ru: 'Контакты', en: 'Contacts', to: '/contacts' },
+const DEFAULT_TILES = [
+  { label: { ru: 'Афиша', en: 'Programme' }, link: '/events' },
+  { label: { ru: 'Залы', en: 'Halls' }, link: '/halls' },
+  { label: { ru: 'Организаторам', en: 'For organizers' }, link: '/organizers' },
+  { label: { ru: 'Контакты', en: 'Contacts' }, link: '/contacts' },
 ];
+
+/** Внутренние пути рендерим через <Link> (SPA-переход), внешние — <a>. */
+function isExternal(href: string) {
+  return /^(https?:)?\/\//i.test(href) || href.startsWith('mailto:') || href.startsWith('tel:');
+}
+
+function NavLink({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) {
+  if (isExternal(to)) {
+    return (
+      <a href={to} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link to={to || '/'} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 export default function Footer() {
-  const { lang, t } = useSite();
+  const { lang, t, list, pickItem } = useSite();
   const reduced = useReducedMotionActive();
   const year = new Date().getFullYear();
+  const phones = usePhones();
 
-  const l = (item: { ru: string; en: string }) => (lang === 'ru' ? item.ru : item.en);
+  const ru = lang === 'ru';
 
-  // Ссылки соцсетей из CMS (ключи social_vk / social_max / social_tg).
-  // Показываем только заполненные — без «мёртвых» href="#".
-  const socials = (
+  /* Навигация: плоский список из админки → колонки в порядке появления. */
+  const navItems = list<RawNavItem>('footer_nav', DEFAULT_NAV);
+  const columns: Array<{ title: string; items: Array<{ label: string; link: string }> }> = [];
+  navItems.forEach((item) => {
+    const title = pickItem(item, 'column');
+    const label = pickItem(item, 'label');
+    const link = pickItem(item, 'link');
+    if (!label) return;
+    const col = columns.find((c) => c.title === title);
+    if (col) col.items.push({ label, link });
+    else columns.push({ title, items: [{ label, link }] });
+  });
+
+  const tiles = list<RawTile>('footer_tiles', DEFAULT_TILES)
+    .map((tile) => ({ label: pickItem(tile, 'label'), link: pickItem(tile, 'link') }))
+    .filter((tile) => tile.label);
+
+  /* Соцсети: сначала произвольный список из админки, иначе — три
+     исторических ключа social_vk / social_max / social_tg.
+     Показываем только заполненные — без «мёртвых» href="#". */
+  const customSocials = list<RawSocial>('footer_socials', [])
+    .map((s) => ({ label: pickItem(s, 'label'), href: pickItem(s, 'url') }))
+    .filter((s) => s.label && s.href);
+  const legacySocials = (
     [
       { label: 'ВКонтакте', href: t('social_vk') },
       { label: 'MAX', href: t('social_max') },
       { label: 'Telegram', href: t('social_tg') },
     ] as const
   ).filter((s) => s.href && s.href.trim().length > 0);
+  const socials = customSocials.length > 0 ? customSocials : legacySocials;
+
+  const brandTitle = t('footer_brand_title') || (ru ? 'Дом Союзов' : 'House of Unions');
+
+  // Логотип УДП внизу подвала: сам файл, подпись и необязательная ссылка.
+  const udpLogo = t('footer_udp_logo');
+  const udpAlt = t('footer_udp_caption');
+  const udpUrl = t('footer_udp_url');
 
   return (
     <footer className="border-t border-white/10 bg-ink text-paper">
@@ -65,74 +120,81 @@ export default function Footer() {
           transition={{ duration: reduced ? 0 : 0.65, ease: [0.22, 1, 0.36, 1] }}
           className="grid gap-10 border-b border-paper/10 pb-10 md:grid-cols-12 md:gap-10 md:pb-14"
         >
-          <Link
-            to="/"
-            className="md:col-span-12 group flex items-end gap-6"
-            aria-label="Дом Союзов"
-          >
+          <Link to="/" className="md:col-span-12 group flex items-end gap-6" aria-label={brandTitle}>
             <img
-              src="/logo-house.svg"
+              src={t('footer_logo') || '/logo-house.svg'}
               alt=""
               className="h-20 w-auto md:h-28"
               style={{ filter: 'invert(1) brightness(1.1)' }}
             />
             <div className="flex flex-col gap-3">
               <span className="font-heading text-[clamp(36px,6vw,72px)] font-bold uppercase leading-[0.92] tracking-[0.02em]">
-                {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
+                {brandTitle}
               </span>
               <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">
-                {lang === 'ru' ? 'Большая Дмитровка, дом 1' : 'Bolshaya Dmitrovka 1'}
+                {t('footer_brand_subtitle') || (ru ? 'Большая Дмитровка, дом 1' : 'Bolshaya Dmitrovka 1')}
               </span>
             </div>
           </Link>
         </motion.div>
 
-        {/* 4 колонки навигации */}
-        <div className="grid gap-10 border-b border-paper/10 py-10 md:grid-cols-4 md:gap-10 md:py-14">
-          <FooterColumn title={lang === 'ru' ? 'Афиша' : 'Programme'} items={COL_PROGRAMME} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'Дом' : 'House'} items={COL_HALLS} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'Гостям' : 'Guests'} items={COL_RENT} l={l} />
-          <FooterColumn title={lang === 'ru' ? 'Информация' : 'Information'} items={COL_INFO} l={l} />
-        </div>
+        {/* Колонки навигации */}
+        {columns.length > 0 ? (
+          <div className="grid gap-10 border-b border-paper/10 py-10 md:grid-cols-4 md:gap-10 md:py-14">
+            {columns.map((col) => (
+              <FooterColumn key={col.title} title={col.title} items={col.items} />
+            ))}
+          </div>
+        ) : null}
 
         {/* Плитки-разделы */}
-        <div className="grid gap-2 border-b border-paper/10 py-8 md:grid-cols-4 md:gap-3">
-          {TILE_LINKS.map((tile) => (
-            <Link
-              key={tile.to + l(tile)}
-              to={tile.to}
-              className="group flex items-center justify-between border-b border-paper/10 py-3 font-heading text-[clamp(20px,1.6vw,26px)] font-bold uppercase leading-none tracking-[0.04em] text-paper transition md:border-b-0 md:border-l md:border-paper/15 md:px-5 md:py-4 first:md:border-l-0"
-            >
-              <span className="relative inline-block after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 after:ease-out group-hover:after:scale-x-100">{l(tile)}</span>
-              <span aria-hidden className="text-paper/40 transition group-hover:translate-x-1 group-hover:text-paper">→</span>
-            </Link>
-          ))}
-        </div>
+        {tiles.length > 0 ? (
+          <div className="grid gap-2 border-b border-paper/10 py-8 md:grid-cols-4 md:gap-3">
+            {tiles.map((tile) => (
+              <NavLink
+                key={tile.link + tile.label}
+                to={tile.link}
+                className="group flex items-center justify-between border-b border-paper/10 py-3 font-heading text-[clamp(20px,1.6vw,26px)] font-bold uppercase leading-none tracking-[0.04em] text-paper transition md:border-b-0 md:border-l md:border-paper/15 md:px-5 md:py-4 first:md:border-l-0"
+              >
+                <span className="relative inline-block after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 after:ease-out group-hover:after:scale-x-100">
+                  {tile.label}
+                </span>
+                <span aria-hidden className="text-paper/40 transition group-hover:translate-x-1 group-hover:text-paper">
+                  →
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        ) : null}
 
         {/* Контакты + соц-сети */}
         <div className="grid gap-10 border-b border-paper/10 py-10 md:grid-cols-12 md:gap-10 md:py-12">
           <div className="md:col-span-5 space-y-2 text-[13px] leading-relaxed">
             <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-paper/55">
-              {lang === 'ru' ? 'Адрес' : 'Address'}
+              {t('footer_heading_address') || (ru ? 'Адрес' : 'Address')}
             </div>
             <address className="not-italic text-paper/85">
-              {t('address_ru') || (lang === 'ru' ? 'Большая Дмитровка, дом 1, Москва' : 'Bolshaya Dmitrovka 1, Moscow')}
+              {t('address_ru') || (ru ? 'Большая Дмитровка, дом 1, Москва' : 'Bolshaya Dmitrovka 1, Moscow')}
             </address>
             <p className="text-paper/55">
-              {lang === 'ru'
-                ? 'Ст. метро «Охотный Ряд», «Театральная»'
-                : 'Okhotny Ryad, Teatralnaya metro stations'}
+              {t('metro_ru') ||
+                (ru ? 'Ст. метро «Охотный Ряд», «Театральная»' : 'Okhotny Ryad, Teatralnaya metro stations')}
             </p>
           </div>
           <div className="md:col-span-4 space-y-2 text-[13px] leading-relaxed">
             <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-paper/55">
-              {lang === 'ru' ? 'Связь' : 'Contact'}
+              {t('footer_heading_contact') || (ru ? 'Связь' : 'Contact')}
             </div>
-            {t('phone') ? (
-              <a className="block font-mono text-[15px] font-medium text-paper transition hover:underline hover:underline-offset-4" href={`tel:${t('phone')}`}>
-                {t('phone')}
+            {phones.map((p) => (
+              <a
+                key={p.number}
+                className="block font-mono text-[15px] font-medium text-paper transition hover:underline hover:underline-offset-4"
+                href={telHref(p.number)}
+              >
+                {p.number}
+                {p.label ? <span className="ml-2 font-sans text-[12px] text-paper/55">{p.label}</span> : null}
               </a>
-            ) : null}
+            ))}
             {t('email_press') || t('contact_email') ? (
               <a
                 className="block text-paper/85 transition hover:underline hover:underline-offset-4"
@@ -142,14 +204,12 @@ export default function Footer() {
               </a>
             ) : null}
             <p className="text-paper/55">
-              {lang === 'ru'
-                ? t('hours_ru') || 'Вход: пн–вс 11:00–20:00'
-                : t('hours_en') || 'Entrance: Mon–Sun 11:00–20:00'}
+              {ru ? t('hours_ru') || 'Вход: пн–вс 11:00–20:00' : t('hours_en') || 'Entrance: Mon–Sun 11:00–20:00'}
             </p>
           </div>
           <div className="md:col-span-3 space-y-2 text-[13px] leading-relaxed">
             <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-paper/55">
-              {lang === 'ru' ? 'Соцсети' : 'Social'}
+              {t('footer_heading_social') || (ru ? 'Соцсети' : 'Social')}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] uppercase tracking-[0.18em]">
               {socials.length > 0 ? (
@@ -165,30 +225,52 @@ export default function Footer() {
                   </a>
                 ))
               ) : (
-                <span className="text-paper/45">{lang === 'ru' ? 'Скоро' : 'Soon'}</span>
+                <span className="text-paper/45">{ru ? 'Скоро' : 'Soon'}</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Реквизиты + копирайт */}
-        <div className="grid gap-6 pt-8 text-[11px] leading-relaxed text-paper/45 md:grid-cols-12">
-          <div className="md:col-span-6 space-y-1">
-            <div>© {year} {lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}</div>
+        {/* Нижний ряд: слева реквизиты, по центру логотип УДП, справа правовые
+            ссылки. Когда логотип не загружен, левый и правый блоки делят ряд
+            пополам — как было до его появления. */}
+        <div className="grid gap-6 pt-8 text-[11px] leading-relaxed text-paper/45 md:grid-cols-12 md:items-center">
+          <div className={`${udpLogo ? 'md:col-span-4' : 'md:col-span-6'} space-y-1`}>
+            <div>
+              © {year} {t('footer_copyright_name') || brandTitle}
+            </div>
             {t('legal_full_name') ? <div>{t('legal_full_name')}</div> : null}
             <div className="flex flex-wrap gap-x-4">
               {t('legal_inn') ? <span>ИНН {t('legal_inn')}</span> : null}
-              {t('legal_ogrn') ? <span>{lang === 'ru' ? 'ОГРН' : 'OGRN'} {t('legal_ogrn')}</span> : null}
+              {t('legal_ogrn') ? <span>{ru ? 'ОГРН' : 'OGRN'} {t('legal_ogrn')}</span> : null}
               {t('legal_kpp') ? <span>КПП {t('legal_kpp')}</span> : null}
             </div>
             {t('legal_address') ? <div>{t('legal_address')}</div> : null}
           </div>
-          <div className="md:col-span-6 flex flex-wrap items-start justify-start gap-x-6 gap-y-2 uppercase tracking-[0.14em] md:justify-end">
+          {/* Логотип Управления делами Президента РФ — центральная колонка
+              нижнего ряда. Выводится, только если загружен в админке
+              (Настройки → Подвал). */}
+          {udpLogo ? (
+            <div className="md:col-span-4 flex flex-col items-center gap-2 md:order-none">
+              {udpUrl ? (
+                <a href={udpUrl} target="_blank" rel="noopener noreferrer" className="transition hover:opacity-80">
+                  <img src={udpLogo} alt={udpAlt} className="h-12 w-auto md:h-14" />
+                </a>
+              ) : (
+                <img src={udpLogo} alt={udpAlt} className="h-12 w-auto md:h-14" />
+              )}
+              {udpAlt ? (
+                <span className="max-w-[280px] text-center text-[10px] leading-snug text-paper/45">{udpAlt}</span>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className={`${udpLogo ? 'md:col-span-4' : 'md:col-span-6'} flex flex-wrap items-start justify-start gap-x-6 gap-y-2 uppercase tracking-[0.14em] md:justify-end`}>
             <Link to="/privacy-policy" className="transition hover:underline hover:underline-offset-4">
-              {lang === 'ru' ? 'Политика конфиденциальности' : 'Privacy'}
+              {t('footer_link_privacy') || (ru ? 'Политика конфиденциальности' : 'Privacy')}
             </Link>
             <Link to="/personal-data-consent" className="transition hover:underline hover:underline-offset-4">
-              {lang === 'ru' ? 'Согласие на обработку ПД' : 'Personal data consent'}
+              {t('footer_link_consent') || (ru ? 'Согласие на обработку ПД' : 'Personal data consent')}
             </Link>
             {/* Отзыв согласия: стираем выбор и перезагружаем страницу, чтобы
                 выгрузить уже поднятые счётчики. Баннер спросит заново. */}
@@ -200,16 +282,8 @@ export default function Footer() {
               }}
               className="uppercase tracking-[0.14em] transition hover:underline hover:underline-offset-4"
             >
-              {lang === 'ru' ? 'Настройки cookie' : 'Cookie settings'}
+              {t('footer_link_cookie') || (ru ? 'Настройки cookie' : 'Cookie settings')}
             </button>
-            <a
-              href="https://awwwdde.art"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition hover:underline hover:underline-offset-4"
-            >
-              {lang === 'ru' ? 'Сделано awwwdde' : 'Made by awwwdde'}
-            </a>
           </div>
         </div>
       </div>
@@ -220,26 +294,24 @@ export default function Footer() {
 function FooterColumn({
   title,
   items,
-  l,
 }: {
   title: string;
-  items: ReadonlyArray<{ ru: string; en: string; to: string }>;
-  l: (item: { ru: string; en: string }) => string;
+  items: Array<{ label: string; link: string }>;
 }) {
   return (
     <div>
-      <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">
-        {title}
-      </div>
+      {title ? (
+        <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/55">{title}</div>
+      ) : null}
       <ul className="space-y-2 text-[13px] leading-relaxed">
         {items.map((item) => (
-          <li key={item.to + l(item)}>
-            <Link
-              to={item.to}
+          <li key={item.link + item.label}>
+            <NavLink
+              to={item.link}
               className="block text-paper/85 transition hover:underline hover:underline-offset-4"
             >
-              {l(item)}
-            </Link>
+              {item.label}
+            </NavLink>
           </li>
         ))}
       </ul>
