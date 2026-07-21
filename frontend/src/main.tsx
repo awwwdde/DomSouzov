@@ -2,6 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { printWatermark } from './lib/watermark'
+
+// Подпись автора в консоли — только в собранной версии (прод), не в dev.
+if (import.meta.env.PROD) {
+  printWatermark();
+}
 
 // Отключаем браузерное восстановление скролла: иначе при SPA-переходе Chrome
 // возвращает прежнюю позицию после смены контента и «уносит» страницу вниз/вверх
