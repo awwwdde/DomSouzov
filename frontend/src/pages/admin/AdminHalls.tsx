@@ -132,7 +132,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
 
   // Схемы зала: несколько вариаций (JSON-массив в поле schemes). Для обратной
   // совместимости fallback на легаси-поле scheme; при сохранении scheme = первая.
-  const MAX_HALL_SCHEMES = 5;
+  const MAX_HALL_SCHEMES = 10;
   const schemes = (() => {
     const fromField = parseUrls(form.schemes || '');
     return fromField.length ? fromField : form.scheme ? [form.scheme] : [];
@@ -157,7 +157,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
   };
   const removeScheme = (i: number) => setSchemes(schemes.filter((_, j) => j !== i));
 
-  const MAX_HALL_PHOTOS = 5;
+  const MAX_HALL_PHOTOS = 10;
   const gallery = parseUrls(form.gallery);
   const setGallery = (arr: string[]) => setForm((p) => ({ ...p, gallery: JSON.stringify(arr) }));
   const addImage = async (file: File | undefined) => {
@@ -297,7 +297,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
       </div>
 
       <div className="grid gap-2">
-        <label>Фото зала (до 5 — на странице листаются слайдером)</label>
+        <label>Фото зала (до {MAX_HALL_PHOTOS} — на странице листаются слайдером)</label>
         <div className="flex flex-wrap gap-3">
           {gallery.map((url, i) => (
             <div key={i} className="relative h-24 w-32 overflow-hidden rounded-lg border border-line">
@@ -326,7 +326,7 @@ function HallForm({ item, onSave, onCancel }: { item: unknown; onSave: () => voi
 
       {/* СХЕМЫ — планы/рассадки зала: можно несколько вариаций (листаются слайдером). */}
       <div className="grid gap-2">
-        <label>Схемы зала (план / рассадка — до 5, на странице листаются слайдером)</label>
+        <label>Схемы зала (план / рассадка — до {MAX_HALL_SCHEMES}, на странице листаются слайдером)</label>
         <div className="flex flex-wrap gap-3">
           {schemes.map((url, i) => (
             <div key={i} className="relative h-28 w-40 overflow-hidden rounded-lg border border-line bg-white">

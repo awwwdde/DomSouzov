@@ -42,6 +42,21 @@ const DEFAULT_TILES = [
   { label: { ru: 'Контакты', en: 'Contacts' }, link: '/contacts' },
 ];
 
+/** Устойчивые словосочетания, которые нельзя разрывать переносом строки:
+ *  пробел внутри заменяем на неразрывный (U+00A0). */
+const NON_BREAKING_PHRASES = [
+  'Российской Федерации',
+  'Russian Federation',
+  'Управление делами',
+];
+
+function keepPhrasesTogether(text: string): string {
+  return NON_BREAKING_PHRASES.reduce(
+    (acc, phrase) => acc.split(phrase).join(phrase.replace(/ /g, ' ')),
+    text,
+  );
+}
+
 /** Внутренние пути рендерим через <Link> (SPA-переход), внешние — <a>. */
 function isExternal(href: string) {
   return /^(https?:)?\/\//i.test(href) || href.startsWith('mailto:') || href.startsWith('tel:');
@@ -266,7 +281,12 @@ export default function Footer() {
                 <img src={udpLogo} alt={udpAlt || 'Управление делами Президента Российской Федерации'} className="h-20 w-auto md:h-24" />
               )}
               {udpAlt ? (
-                <span className="max-w-[260px] text-center leading-relaxed text-paper/45">{udpAlt}</span>
+                /* Подпись под логотипом: строки балансируем (text-wrap: balance),
+                   а неразрывные пробелы держат вместе части названия, которые
+                   разрывать нельзя («Российской Федерации» и т.п.). */
+                <span className="max-w-[320px] text-balance text-center leading-relaxed text-paper/45">
+                  {keepPhrasesTogether(udpAlt)}
+                </span>
               ) : null}
             </div>
           ) : null}

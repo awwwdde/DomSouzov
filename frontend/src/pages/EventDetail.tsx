@@ -276,10 +276,12 @@ export default function EventDetail() {
           <div className="mx-auto w-full max-w-[1600px] px-5 md:px-12">
             <PageKicker>{lang === 'ru' ? 'О программе' : 'About the programme'}</PageKicker>
             {/* Выключка по ширине — как в новостях: ровный правый край,
-                без переносов, последняя строка выравнивается влево. */}
+                без переносов, последняя строка выравнивается влево.
+                Ширина — по контейнеру страницы (без узкой колонки в 900px):
+                иначе текст «уезжал» влево и не совпадал с краем фото выше. */}
             <div
               lang={lang}
-              className="mt-8 max-w-[900px] space-y-6 text-justify text-[17px] leading-[1.8] text-ink-soft [hyphens:none] [text-align-last:start]"
+              className="mt-8 space-y-6 text-justify text-[17px] leading-[1.8] text-ink-soft [hyphens:none] [text-align-last:start]"
             >
               {descBlocks.map((b, i) =>
                 b.type === 'image' ? (

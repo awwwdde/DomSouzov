@@ -488,12 +488,13 @@ function HallRiderBlock({ hall, lang }: { hall: Hall; lang: 'ru' | 'en' }) {
     }
   };
 
-  // Фото зала (до 5) и схемы рассадки (может быть несколько вариаций).
+  // Фото зала (до 10) и схемы рассадки (тоже до 10 вариаций).
   const photos = (hall.gallery && hall.gallery.length ? hall.gallery : hall.image ? [hall.image] : [])
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, 10);
   const schemes = (hall.schemes && hall.schemes.length ? hall.schemes : hall.scheme ? [hall.scheme] : [])
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, 10);
 
   // Два одинаковых блока в ряд: схема | фото. Показываем только непустые.
   const blocks: { key: 'scheme' | 'photo'; items: string[] }[] = [];
