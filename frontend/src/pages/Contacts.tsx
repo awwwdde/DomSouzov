@@ -57,7 +57,6 @@ export default function Contacts() {
                   {p.label ? <span className="text-muted"> · {p.label}</span> : null}
                 </span>
               ))}
-              <span className="text-muted">{lang === 'ru' ? 'Вт–Вс · 10:00—21:30' : 'Tue–Sun · 10:00—21:30'}</span>
             </dd>
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Залы и мероприятия' : 'Venues'}</dt>
             <dd className="leading-6 text-ink-soft">{t('email_rent')}</dd>
@@ -68,7 +67,6 @@ export default function Contacts() {
             <dt className="font-bold uppercase tracking-[0.08em]">{lang === 'ru' ? 'Часы' : 'Hours'}</dt>
             <dd className="leading-6 text-ink-soft">
               {t('hours_ru')}<br />
-              <span className="text-muted">{lang === 'ru' ? 'Понедельник — выходной' : 'Monday — closed'}</span>
             </dd>
           </dl>
           <div className="mt-7 flex flex-wrap gap-3">
