@@ -48,7 +48,7 @@ export default function Contacts() {
           </h2>
           <dl className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-5 text-sm">
             <dt className="font-bold uppercase tracking-[0.08em]">
-              {phones.length > 1 ? (lang === 'ru' ? 'Телефоны' : 'Phones') : (lang === 'ru' ? 'Вход' : 'Entrance')}
+              {phones.length > 1 ? (lang === 'ru' ? 'Телефоны' : 'Phones') : (lang === 'ru' ? 'Телефоны' : 'Phones')}
             </dt>
             <dd className="leading-6 text-ink-soft">
               {phones.map((p) => (
