@@ -22,6 +22,8 @@ export const EVENT_CATEGORIES: Category[] = [
   { ru: 'Вечер памяти', en: 'Memorial evening' },
   { ru: 'Творческий вечер', en: 'Artist’s evening' },
   { ru: 'Выставка', en: 'Exhibition' },
+  { ru: 'Показ', en: 'Screening' },
+  { ru: 'Презентация', en: 'Presentation' },
   { ru: 'Экскурсия', en: 'Guided tour' },
   { ru: 'Лекция', en: 'Lecture' },
   { ru: 'Детям', en: 'For children' },

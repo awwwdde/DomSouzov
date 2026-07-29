@@ -25,13 +25,16 @@ const EN_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const RU_WEEKDAYS_MON = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
 const EN_WEEKDAYS_MON = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-const FILTERS_RU = ['Все', 'Концерты', 'Балы', 'Форумы', 'Спектакли'];
-const FILTERS_EN = ['All', 'Concerts', 'Balls', 'Forums', 'Performances'];
+const FILTERS_RU = ['Все', 'Концерты', 'Балы', 'Форумы', 'Спектакли', 'Выставки', 'Показы', 'Презентации'];
+const FILTERS_EN = ['All', 'Concerts', 'Balls', 'Forums', 'Performances', 'Exhibitions', 'Screenings', 'Presentations'];
 const FILTER_TOKENS: Record<number, string[]> = {
   1: ['Концерт', 'Concert', 'симфон', 'камерн', 'хор', 'музык', 'music', 'symphon', 'chamber', 'choir'],
   2: ['Бал', 'Ball', 'танц', 'dance'],
   3: ['Форум', 'Forum', 'Собрание', 'Meeting', 'конференц', 'съезд', 'заседан', 'assembly', 'conference'],
   4: ['Спектакл', 'Performance', 'театр', 'theatre', 'theater', 'балет', 'ballet', 'опера', 'opera', 'литератур', 'премьер', 'фестивал', 'гала', 'спектакль'],
+  5: ['Выставк', 'Exhibition', 'выставк', 'экспозиц', 'exhibit'],
+  6: ['Показ', 'показ', 'Кинопоказ', 'кинопоказ', 'Screening', 'screening'],
+  7: ['Презентац', 'презентац', 'Presentation', 'presentation'],
 };
 
 const addMonths = (date: Date, months: number) => new Date(date.getFullYear(), date.getMonth() + months, 1);

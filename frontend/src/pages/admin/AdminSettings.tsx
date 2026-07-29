@@ -55,6 +55,8 @@ type Field = {
   key: string;
   label: string;
   type: FieldType;
+  /** Только для type === 'file': какой файл ждём. 'pdf' (по умолчанию) или 'zip'. */
+  fileKind?: 'pdf' | 'zip';
   /** Поле общее для RU и EN (телефоны, реквизиты, URL). */
   single?: boolean;
   /** Высота textarea, по умолчанию 4. */
@@ -269,6 +271,13 @@ const PAGES: PageDef[] = [
           { key: 'organizers_halls_pdf', label: 'Презентация залов (PDF)', type: 'file', single: true, hint: 'Кнопка «Залы». Если пусто — кнопка ведёт на страницу /halls.' },
         ],
       },
+      {
+        title: 'Брендбук и логотип',
+        fields: [
+          { key: 'organizers_brandbook_pdf', label: 'Брендбук (PDF)', type: 'file', single: true, hint: 'Кнопка «Смотреть брендбук» — открывает PDF в новой вкладке. Если пусто — кнопка не показывается.' },
+          { key: 'organizers_logo_zip', label: 'Логотипы (ZIP-архив)', type: 'file', fileKind: 'zip', single: true, hint: 'Кнопка «Скачать лого» — скачивает ZIP-архив с логотипами (SVG). Если пусто — кнопка не показывается.' },
+        ],
+      },
     ],
   },
   {
@@ -349,6 +358,28 @@ const PAGES: PageDef[] = [
         title: 'Отзывы (виджет Яндекс Карт)',
         fields: [
           { key: 'yandex_reviews_url', label: 'Ссылка на виджет отзывов', type: 'text', single: true, hint: 'Яндекс Бизнес → «Виджет отзывов» → ссылка вида https://yandex.ru/maps-reviews-widget/ORG_ID. Отзывы обновляются автоматически.' },
+        ],
+      },
+      {
+        title: 'Наша команда (карточки под отзывами)',
+        fields: [
+          {
+            key: 'contacts_team',
+            label: 'Участники команды',
+            type: 'list',
+            itemLabel: 'Добавить участника',
+            hint: 'Карточки людей, работавших над проектом. Показываются по 3 в ряд в секции «Наша команда» на странице «Контакты». Соцсети и почту заполняйте по желанию — пустые не показываются.',
+            itemFields: [
+              { key: 'photo', label: 'Фото', type: 'image', bilingual: false },
+              { key: 'name', label: 'ФИО' },
+              { key: 'position', label: 'Должность' },
+              { key: 'role', label: 'Роль в проекте' },
+              { key: 'email', label: 'Email (необязательно)', bilingual: false },
+              { key: 'telegram', label: 'Telegram — ссылка (необязательно)', bilingual: false },
+              { key: 'vk', label: 'ВКонтакте — ссылка (необязательно)', bilingual: false },
+              { key: 'website', label: 'Сайт / другое — ссылка (необязательно)', bilingual: false },
+            ],
+          },
         ],
       },
     ],
@@ -520,6 +551,7 @@ const PAGE_GROUPS: Array<{ name: string; ids: string[] }> = [
 const ACCEPT_IMAGE = 'image/*';
 const ACCEPT_VIDEO = 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv';
 const ACCEPT_PDF = 'application/pdf,.pdf';
+const ACCEPT_ZIP = 'application/zip,application/x-zip-compressed,.zip';
 
 /* ------------------------------------------------------------------ */
 
@@ -771,6 +803,8 @@ function FieldEditor({
   }
 
   if (field.type === 'file') {
+    const isZip = field.fileKind === 'zip';
+    const kindLabel = isZip ? 'ZIP' : 'PDF';
     return (
       <div className="grid gap-3 border-t border-line pt-5 first:border-t-0 first:pt-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -786,11 +820,11 @@ function FieldEditor({
             rel="noreferrer"
             className="inline-flex items-center gap-2 self-start rounded-xl border border-line bg-paper px-3 py-2 text-sm text-ink transition hover:border-ink"
           >
-            <FileText size={14} /> Открыть текущий PDF ↗
+            <FileText size={14} /> {`Открыть текущий ${kindLabel} ↗`}
           </a>
         ) : (
           <div className="rounded-2xl border border-dashed border-line bg-paper px-4 py-4 text-xs text-muted">
-            PDF не загружен
+            {`${kindLabel} не загружен`}
           </div>
         )}
 
@@ -802,15 +836,15 @@ function FieldEditor({
               onChange('value_ru', e.target.value);
               onChange('value_en', e.target.value);
             }}
-            placeholder="URL PDF или загрузите файл"
+            placeholder={`URL ${kindLabel} или загрузите файл`}
             className="min-h-11 w-full rounded-xl border border-line bg-white px-3 outline-none transition focus:border-ink"
           />
           <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-line bg-paper px-4 text-sm font-semibold text-ink transition hover:border-ink">
             {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-            {uploading ? 'Загрузка…' : 'Загрузить PDF'}
+            {uploading ? 'Загрузка…' : `Загрузить ${kindLabel}`}
             <input
               type="file"
-              accept={ACCEPT_PDF}
+              accept={isZip ? ACCEPT_ZIP : ACCEPT_PDF}
               onChange={(e) => onUpload(e.target.files?.[0])}
               className="hidden"
             />

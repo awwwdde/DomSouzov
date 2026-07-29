@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Star, ArrowUpRight } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Star, ArrowUpRight, Mail, Send, Globe } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
@@ -96,7 +97,148 @@ export default function Contacts() {
 
       {/* ОТЗЫВЫ — карточки в стиле сайта; данные авто с Яндекс Карт + ручные из CMS. */}
       <ReviewsSection lang={lang} />
+
+      {/* НАША КОМАНДА — карточки людей, работавших над проектом (из CMS). */}
+      <TeamSection />
     </>
+  );
+}
+
+/* ----------------------------------------------------------------- */
+/* TeamSection — «Наша команда»: карточки участников проекта.         */
+/*  Данные из настроек CMS (список `contacts_team`, страница          */
+/*  «Контакты»). По 3 карточки в ряд, затем перенос.                  */
+/* ----------------------------------------------------------------- */
+interface TeamMember {
+  photo?: string;
+  name?: unknown;
+  position?: unknown;
+  role?: unknown;
+  email?: string;
+  telegram?: string;
+  vk?: string;
+  website?: string;
+}
+
+function TeamSection() {
+  const { lang, list, pickItem } = useSite();
+  const members = list<TeamMember>('contacts_team', []);
+  if (!members.length) return null;
+
+  return (
+    <RevealSection className="border-t border-line bg-paper px-5 py-16 md:px-12 md:py-20">
+      <PageKicker>{lang === 'ru' ? 'Команда' : 'Team'}</PageKicker>
+      <h2 className="font-heading text-[clamp(34px,4.5vw,72px)] font-bold uppercase leading-[0.9] tracking-[0.03em] text-ink">
+        {lang === 'ru' ? 'Наша команда' : 'Our team'}
+      </h2>
+      <p className="mt-4 max-w-2xl text-base leading-7 text-ink-soft">
+        {lang === 'ru'
+          ? 'Сотрудники Дома Союзов'
+          : 'House of Unions workers.'}
+      </p>
+
+      <RevealList className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {members.map((m, i) => (
+          <RevealItem key={i}>
+            <TeamCard member={m} lang={lang} pickItem={pickItem} />
+          </RevealItem>
+        ))}
+      </RevealList>
+    </RevealSection>
+  );
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '·';
+  const letters = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '');
+  return letters.join('') || '·';
+}
+
+/* Иконка ВКонтакте — у lucide нет брендовых иконок, поэтому inline-SVG. */
+function VkIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M13.16 18.06c-6.24 0-9.8-4.28-9.95-11.4h3.13c.1 5.23 2.4 7.44 4.23 7.9V6.66h2.95v4.52c1.8-.2 3.7-2.25 4.34-4.52h2.95c-.49 2.8-2.54 4.85-4 5.7 1.46.68 3.79 2.47 4.68 5.7h-3.25c-.69-2.16-2.43-3.83-4.72-4.06v4.06h-.35Z" />
+    </svg>
+  );
+}
+
+function TeamCard({
+  member,
+  lang,
+  pickItem,
+}: {
+  member: TeamMember;
+  lang: 'ru' | 'en';
+  pickItem: (item: unknown, key: string) => string;
+}) {
+  const name = pickItem(member, 'name');
+  const position = pickItem(member, 'position');
+  const role = pickItem(member, 'role');
+  const photo = member.photo || '';
+  const email = (member.email || '').trim();
+  const telegram = (member.telegram || '').trim();
+  const vk = (member.vk || '').trim();
+  const website = (member.website || '').trim();
+
+  const socials = [
+    email ? { key: 'email', href: email.startsWith('mailto:') ? email : `mailto:${email}`, label: 'Email', icon: <Mail size={16} strokeWidth={1.7} /> } : null,
+    telegram ? { key: 'tg', href: telegram, label: 'Telegram', icon: <Send size={16} strokeWidth={1.7} /> } : null,
+    vk ? { key: 'vk', href: vk, label: 'ВКонтакте', icon: <VkIcon size={17} /> } : null,
+    website ? { key: 'web', href: website, label: lang === 'ru' ? 'Сайт' : 'Website', icon: <Globe size={16} strokeWidth={1.7} /> } : null,
+  ].filter(Boolean) as { key: string; href: string; label: string; icon: ReactNode }[];
+
+  return (
+    <div className="flex h-full flex-col border border-line bg-paper p-6">
+      <div className="aspect-[4/5] w-full overflow-hidden bg-paper-soft">
+        {photo ? (
+          <img
+            src={photo}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center font-heading text-[clamp(36px,6vw,64px)] font-bold uppercase tracking-[0.04em] text-line">
+            {initials(name)}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5 flex flex-1 flex-col">
+        <h3 className="font-heading text-[clamp(18px,1.6vw,22px)] font-bold uppercase leading-[1.05] tracking-[0.02em] text-ink">
+          {name}
+        </h3>
+        {position ? (
+          <div className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
+            {position}
+          </div>
+        ) : null}
+        {role ? (
+          <p className="mt-3 text-[14px] leading-6 text-ink-soft">{role}</p>
+        ) : null}
+
+        {socials.length ? (
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-5">
+            {socials.map((s) => (
+              <a
+                key={s.key}
+                href={s.href}
+                target={s.href.startsWith('mailto:') ? undefined : '_blank'}
+                rel={s.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+                aria-label={s.label}
+                title={s.label}
+                className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink transition hover:border-accent hover:bg-accent hover:text-paper"
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

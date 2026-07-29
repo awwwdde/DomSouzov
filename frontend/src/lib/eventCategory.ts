@@ -3,11 +3,14 @@ import {
   Sparkles,
   Users,
   Drama,
+  Image as ImageIcon,
+  Film,
+  Presentation,
   type LucideIcon,
 } from 'lucide-react';
 
 /** Иконка категории по тексту тега события (RU/EN).
- *  Базовые категории: Концерт · Бал · Форум · Спектакль. */
+ *  Базовые категории: Концерт · Бал · Форум · Спектакль · Выставка · Показ · Презентация. */
 export function eventCategoryIcon(tag: string): LucideIcon {
   const t = (tag || '').toLowerCase();
   const has = (...keys: string[]) => keys.some((k) => t.includes(k));
@@ -17,6 +20,9 @@ export function eventCategoryIcon(tag: string): LucideIcon {
     return Users;
   if (has('спектакл', 'performance', 'театр', 'theatre', 'theater', 'балет', 'опера', 'opera', 'литератур'))
     return Drama;
+  if (has('выставк', 'exhibit', 'экспозиц')) return ImageIcon;
+  if (has('показ', 'screening')) return Film;
+  if (has('презентац', 'presentation')) return Presentation;
   // Концерт и музыкальные форматы — по умолчанию.
   return Music2;
 }
@@ -32,5 +38,8 @@ export function eventCategoryColor(tag: string): string {
     return '#7a9b3f';                                                 // оливково-зелёный
   if (has('спектакл', 'performance', 'театр', 'theatre', 'балет', 'опера', 'литератур'))
     return '#0d3b2e';                                                 // тёмный изумруд
+  if (has('выставк', 'exhibit', 'экспозиц')) return '#4f8a76';        // мятно-зелёный
+  if (has('показ', 'screening')) return '#356859';                    // приглушённый зелёный
+  if (has('презентац', 'presentation')) return '#688f3a';             // травяной
   return '#1f5f4e';                                                   // Концерт — брендовый зелёный
 }

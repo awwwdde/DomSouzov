@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users, ZoomIn } from 'lucide-react';
+import { ArrowUpRight, Mail, X, Check, Loader2, Paperclip, Layers, Image as ImageIcon, Map, UtensilsCrossed, Coffee, Wine, Mic, Piano, Speaker, SlidersHorizontal, Volume2, MonitorSpeaker, Music, Users, ZoomIn, BookOpen, Download } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
@@ -53,6 +53,8 @@ export default function Organizers() {
       : 'The Hall of Columns, the October and Small halls of the House of Unions — for concerts, ceremonies, forums and filming. Historic architecture in the heart of Moscow, class A acoustics, capacity up to 1,200 guests and an in-house technical crew.');
   const videoUrl = t('organizers_video_url');
   const videoPoster = t('organizers_video_poster');
+  const brandbookPdf = t('organizers_brandbook_pdf');
+  const logoZip = t('organizers_logo_zip');
 
   return (
     <div className="bg-paper">
@@ -92,7 +94,7 @@ export default function Organizers() {
       <HallsRider halls={halls} lang={lang} />
 
       {/* ЗАЯВКА */}
-      <RevealSection className="px-5 py-16 md:px-12 md:py-24">
+      <RevealSection className="px-5 pb-16 pt-6 md:px-12 md:pb-24 md:pt-8">
         {/* Заявка — кнопка во всю ширину, открывает форму */}
         <button
           type="button"
@@ -118,6 +120,66 @@ export default function Organizers() {
             className="shrink-0 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
           />
         </button>
+
+        {/* Брендбук и логотип — две вторичные кнопки под большой формой заявки.
+            Показываются только те, для которых загружен файл (PDF / ZIP). */}
+        {brandbookPdf || logoZip ? (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 md:mt-6">
+            {brandbookPdf ? (
+              <a
+                href={brandbookPdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-between gap-4 border border-ink bg-paper p-6 text-ink transition hover:border-accent hover:bg-paper-soft md:p-7"
+              >
+                <span className="flex items-center gap-4">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current text-accent">
+                    <BookOpen size={20} strokeWidth={1.6} />
+                  </span>
+                  <span className="flex flex-col text-left">
+                    <span className="font-heading text-[clamp(17px,1.6vw,22px)] font-bold uppercase leading-[1.05] tracking-[0.02em]">
+                      {lang === 'ru' ? 'Смотреть брендбук' : 'View brand book'}
+                    </span>
+                    <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                      {lang === 'ru' ? 'PDF · открыть в новой вкладке' : 'PDF · opens in a new tab'}
+                    </span>
+                  </span>
+                </span>
+                <ArrowUpRight
+                  size={22}
+                  strokeWidth={1.6}
+                  className="shrink-0 text-accent transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                />
+              </a>
+            ) : null}
+            {logoZip ? (
+              <a
+                href={logoZip}
+                download
+                className="group flex items-center justify-between gap-4 border border-ink bg-paper p-6 text-ink transition hover:border-accent hover:bg-paper-soft md:p-7"
+              >
+                <span className="flex items-center gap-4">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current text-accent">
+                    <Download size={20} strokeWidth={1.6} />
+                  </span>
+                  <span className="flex flex-col text-left">
+                    <span className="font-heading text-[clamp(17px,1.6vw,22px)] font-bold uppercase leading-[1.05] tracking-[0.02em]">
+                      {lang === 'ru' ? 'Скачать лого' : 'Download logo'}
+                    </span>
+                    <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                      {lang === 'ru' ? 'ZIP · логотипы в SVG' : 'ZIP · logos in SVG'}
+                    </span>
+                  </span>
+                </span>
+                <Download
+                  size={22}
+                  strokeWidth={1.6}
+                  className="shrink-0 text-accent transition-transform group-hover:translate-y-0.5"
+                />
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </RevealSection>
 
       <AnimatePresence>

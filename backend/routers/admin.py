@@ -58,9 +58,12 @@ ALLOWED_VIDEO_TYPES = {
     "application/mp4",
 }
 ALLOWED_DOC_TYPES = {"application/pdf"}
+# Архивы (ZIP) — например, набор логотипов для организаторов.
+ALLOWED_ARCHIVE_TYPES = {"application/zip", "application/x-zip-compressed"}
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif", "svg"}
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "ogg", "mov", "m4v", "avi", "mkv"}
 ALLOWED_DOC_EXTENSIONS = {"pdf"}
+ALLOWED_ARCHIVE_EXTENSIONS = {"zip"}
 
 
 # ──────────── AUTH ────────────
@@ -176,11 +179,13 @@ async def upload_file(
         file.content_type in ALLOWED_IMAGE_TYPES
         or file.content_type in ALLOWED_VIDEO_TYPES
         or file.content_type in ALLOWED_DOC_TYPES
+        or file.content_type in ALLOWED_ARCHIVE_TYPES
     )
     is_known_ext = (
         ext in ALLOWED_IMAGE_EXTENSIONS
         or ext in ALLOWED_VIDEO_EXTENSIONS
         or ext in ALLOWED_DOC_EXTENSIONS
+        or ext in ALLOWED_ARCHIVE_EXTENSIONS
     )
     is_octet_stream = file.content_type == "application/octet-stream"
 
@@ -188,7 +193,7 @@ async def upload_file(
         raise HTTPException(
             400,
             "Unsupported file type. Allowed images: JPEG/PNG/WebP/GIF/SVG. "
-            "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF",
+            "Videos: MP4/WebM/OGG/MOV/M4V/AVI/MKV. Documents: PDF. Archives: ZIP",
         )
 
     # Лимит размера — ДО чтения в память (файлы лежат в БД как bytea).
