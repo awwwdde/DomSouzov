@@ -16,7 +16,7 @@ from sqlalchemy import text as _sql_text
 from config import settings
 from database import engine, Base, SessionLocal
 from migrate_db import migrate_sqlite
-from models import MediaFile
+from models import MediaFile, MediaVariant
 from routers import public, admin
 import seo
 
@@ -132,9 +132,14 @@ def _read_blob_slice(db, media_id: int, start: int, length: int) -> bytes:
 # Оригиналы (до 6000×4000) отдавались как есть — браузер тянул мегабайты и
 # декодировал 24 Мпикс на каждой карточке, отсюда лаги при скролле. Здесь
 # по ?w=<ширина> отдаём уменьшенную копию (только вниз, апскейла нет), при
-# поддержке браузером — в WebP (Accept: image/webp). Результат кэшируется в
-# памяти процесса: содержимое /uploads неизменяемо (хэш в имени файла),
-# поэтому ключа (имя, ширина, webp) достаточно. Визуально идентично.
+# поддержке браузером — в WebP (Accept: image/webp). Визуально идентично.
+#
+# Кэш двухуровневый: lru_cache в памяти процесса (горячий путь) + таблица
+# media_variants в БД (durable). Содержимое /uploads неизменяемо (хэш в имени),
+# поэтому ключа (имя, ширина, формат) достаточно, и каждый размер считается один
+# раз за всё время жизни — переживает редеплой. Плюс JPEG декодируем через
+# draft() в пониженном разрешении: ресайз 24-Мпикс в разы дешевле, иначе
+# открытие галереи с десятком фото клало CPU и картинки «висели».
 import io as _io
 from functools import lru_cache as _lru_cache
 
@@ -156,52 +161,105 @@ def _snap_width(w: int) -> int:
     return _RESIZE_WIDTHS[-1]
 
 
-@_lru_cache(maxsize=512)
-def _build_resized(filename: str, width: int, webp: bool):
-    """Возвращает (bytes, content_type) уменьшенной копии или None при неудаче."""
-    if not _PIL_OK:
-        return None
+def _load_original(filename: str):
+    """Байты оригинала из БД, иначе с диска (dev/legacy). None если нет."""
     db = SessionLocal()
     try:
         row = (
-            db.query(MediaFile.data, MediaFile.content_type)
+            db.query(MediaFile.data)
             .filter(MediaFile.filename == filename)
             .first()
         )
     finally:
         db.close()
     if row and row[0]:
-        data, ctype = row[0], (row[1] or "")
-    else:
-        # Фолбэк: файл на диске (локальная разработка / legacy).
-        safe_name = os.path.basename(filename)
-        path = os.path.join(settings.UPLOAD_DIR, safe_name)
-        if not os.path.isfile(path):
-            return None
+        return bytes(row[0])
+    safe_name = os.path.basename(filename)
+    path = os.path.join(settings.UPLOAD_DIR, safe_name)
+    if os.path.isfile(path):
         with open(path, "rb") as fh:
-            data = fh.read()
-        ctype = mimetypes.guess_type(safe_name)[0] or ""
+            return fh.read()
+    return None
+
+
+@_lru_cache(maxsize=512)
+def _build_resized(filename: str, width: int, webp: bool):
+    """Возвращает (bytes, content_type) уменьшенной копии или None при неудаче."""
+    if not _PIL_OK:
+        return None
+    ext = os.path.splitext(filename)[1].lower()
+    if webp:
+        fmt, out_type = "webp", "image/webp"
+    elif ext == ".png":
+        fmt, out_type = "png", "image/png"
+    else:
+        fmt, out_type = "jpeg", "image/jpeg"
+
+    # 1) durable-кэш в БД
+    db = SessionLocal()
+    try:
+        cached = (
+            db.query(MediaVariant.data, MediaVariant.content_type)
+            .filter(
+                MediaVariant.filename == filename,
+                MediaVariant.width == width,
+                MediaVariant.fmt == fmt,
+            )
+            .first()
+        )
+    finally:
+        db.close()
+    if cached and cached[0]:
+        return bytes(cached[0]), cached[1]
+
+    # 2) оригинал → ресайз
+    data = _load_original(filename)
+    if data is None:
+        return None
     try:
         im = _PILImage.open(_io.BytesIO(data))
+        # Быстрый декод JPEG в пониженном разрешении (в разы дешевле полного).
+        try:
+            im.draft(None, (width, width))
+        except Exception:
+            pass
         im = _PILImageOps.exif_transpose(im)  # учесть EXIF-ориентацию
         if im.width > width:
             new_h = max(1, round(im.height * width / im.width))
             im = im.resize((width, new_h), _PILImage.LANCZOS)
         out = _io.BytesIO()
-        if webp:
+        if fmt == "webp":
             if im.mode not in ("RGB", "RGBA"):
                 im = im.convert("RGBA" if "A" in im.getbands() else "RGB")
             im.save(out, format="WEBP", quality=82, method=4)
-            return out.getvalue(), "image/webp"
-        if "png" in ctype:
+        elif fmt == "png":
             im.save(out, format="PNG", optimize=True)
-            return out.getvalue(), "image/png"
-        if im.mode != "RGB":
-            im = im.convert("RGB")
-        im.save(out, format="JPEG", quality=84, optimize=True, progressive=True)
-        return out.getvalue(), "image/jpeg"
+        else:
+            if im.mode != "RGB":
+                im = im.convert("RGB")
+            im.save(out, format="JPEG", quality=84, optimize=True, progressive=True)
+        body = out.getvalue()
     except Exception:
         return None
+
+    # 3) сохраняем в durable-кэш (best-effort; гонки/ошибки игнорируем)
+    db = SessionLocal()
+    try:
+        db.add(
+            MediaVariant(
+                filename=filename,
+                width=width,
+                fmt=fmt,
+                content_type=out_type,
+                data=body,
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+    return body, out_type
 
 
 @app.get("/uploads/{filename}", include_in_schema=False)

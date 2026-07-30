@@ -21,6 +21,25 @@ class MediaFile(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class MediaVariant(Base):
+    """Кэш уменьшенных копий изображений (ресайз «на лету» по ?w=).
+
+    Пересчёт 24-Мпикс JPEG на каждый запрос дорог: при открытии страницы с
+    большой галереей десятки одновременных ресайзов кладут CPU, и картинки
+    «висят». Здесь храним готовый вариант (имя + ширина + формат), поэтому
+    каждый размер считается один раз за всё время жизни (переживает редеплой,
+    т.к. лежит в БД, как и оригиналы). См. _build_resized в main.py.
+    """
+    __tablename__ = "media_variants"
+    id = Column(Integer, primary_key=True)
+    filename = Column(String, nullable=False, index=True)
+    width = Column(Integer, nullable=False)
+    fmt = Column(String, nullable=False)  # 'webp' | 'jpeg' | 'png'
+    content_type = Column(String, nullable=False)
+    data = Column(LargeBinary, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class OrganizerRequest(Base):
     """Заявка с формы «Организаторам» (модальное окно на /organizers).
 
