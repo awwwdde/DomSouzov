@@ -8,6 +8,7 @@ import { RevealSection, RevealList, RevealItem } from '../components/Reveal';
 import { getReviews } from '../api/client';
 import { usePhones, telHref } from '../lib/phones';
 import type { Review, ReviewsResponse } from '../types';
+import { imgAttrs } from '../lib/img';
 
 const ADDRESS_QUERY = 'Москва, Большая Дмитровка, 1';
 const DEFAULT_MAP_EMBED = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(ADDRESS_QUERY)}&z=16`;
@@ -194,7 +195,7 @@ function TeamCard({
       <div className="aspect-[4/5] w-full overflow-hidden bg-paper-soft">
         {photo ? (
           <img
-            src={photo}
+            {...imgAttrs(photo, '(min-width:768px) 33vw, 100vw', 480)}
             alt={name}
             loading="lazy"
             decoding="async"

@@ -128,8 +128,111 @@ def _read_blob_slice(db, media_id: int, start: int, length: int) -> bytes:
     return bytes(row[0])
 
 
+# ── Ресайз изображений «на лету» ─────────────────────────────────────────────
+# Оригиналы (до 6000×4000) отдавались как есть — браузер тянул мегабайты и
+# декодировал 24 Мпикс на каждой карточке, отсюда лаги при скролле. Здесь
+# по ?w=<ширина> отдаём уменьшенную копию (только вниз, апскейла нет), при
+# поддержке браузером — в WebP (Accept: image/webp). Результат кэшируется в
+# памяти процесса: содержимое /uploads неизменяемо (хэш в имени файла),
+# поэтому ключа (имя, ширина, webp) достаточно. Визуально идентично.
+import io as _io
+from functools import lru_cache as _lru_cache
+
+try:
+    from PIL import Image as _PILImage, ImageOps as _PILImageOps
+    _PIL_OK = True
+except Exception:  # pragma: no cover
+    _PIL_OK = False
+
+# Дискретный набор ширин: снапим запрошенную ширину к ближайшей сверху, чтобы
+# ограничить число вариантов в кэше и повысить попадания в кэш браузера/CDN.
+_RESIZE_WIDTHS = (320, 480, 640, 768, 1024, 1280, 1600, 1920)
+
+
+def _snap_width(w: int) -> int:
+    for cand in _RESIZE_WIDTHS:
+        if w <= cand:
+            return cand
+    return _RESIZE_WIDTHS[-1]
+
+
+@_lru_cache(maxsize=512)
+def _build_resized(filename: str, width: int, webp: bool):
+    """Возвращает (bytes, content_type) уменьшенной копии или None при неудаче."""
+    if not _PIL_OK:
+        return None
+    db = SessionLocal()
+    try:
+        row = (
+            db.query(MediaFile.data, MediaFile.content_type)
+            .filter(MediaFile.filename == filename)
+            .first()
+        )
+    finally:
+        db.close()
+    if row and row[0]:
+        data, ctype = row[0], (row[1] or "")
+    else:
+        # Фолбэк: файл на диске (локальная разработка / legacy).
+        safe_name = os.path.basename(filename)
+        path = os.path.join(settings.UPLOAD_DIR, safe_name)
+        if not os.path.isfile(path):
+            return None
+        with open(path, "rb") as fh:
+            data = fh.read()
+        ctype = mimetypes.guess_type(safe_name)[0] or ""
+    try:
+        im = _PILImage.open(_io.BytesIO(data))
+        im = _PILImageOps.exif_transpose(im)  # учесть EXIF-ориентацию
+        if im.width > width:
+            new_h = max(1, round(im.height * width / im.width))
+            im = im.resize((width, new_h), _PILImage.LANCZOS)
+        out = _io.BytesIO()
+        if webp:
+            if im.mode not in ("RGB", "RGBA"):
+                im = im.convert("RGBA" if "A" in im.getbands() else "RGB")
+            im.save(out, format="WEBP", quality=82, method=4)
+            return out.getvalue(), "image/webp"
+        if "png" in ctype:
+            im.save(out, format="PNG", optimize=True)
+            return out.getvalue(), "image/png"
+        if im.mode != "RGB":
+            im = im.convert("RGB")
+        im.save(out, format="JPEG", quality=84, optimize=True, progressive=True)
+        return out.getvalue(), "image/jpeg"
+    except Exception:
+        return None
+
+
 @app.get("/uploads/{filename}", include_in_schema=False)
 def serve_upload(filename: str, request: Request):
+    # Уменьшенная копия по ?w=<ширина> — работает и для БД, и для файлов на
+    # диске. Отдаём целиком (варианты маленькие, Range не нужен). Формат — WebP,
+    # если браузер прислал Accept: image/webp, иначе исходный jpeg/png.
+    w_param = request.query_params.get("w")
+    ext = os.path.splitext(filename)[1].lower()
+    if w_param and ext in (".jpg", ".jpeg", ".png", ".webp"):
+        try:
+            req_w = int(w_param)
+        except (TypeError, ValueError):
+            req_w = 0
+        if req_w > 0:
+            want_webp = "image/webp" in request.headers.get("accept", "")
+            built = _build_resized(filename, _snap_width(req_w), want_webp)
+            if built is not None:
+                body, out_type = built
+                return Response(
+                    content=body,
+                    media_type=out_type,
+                    headers={
+                        "Cache-Control": "public, max-age=31536000, immutable",
+                        "Content-Security-Policy": "sandbox",
+                        "X-Content-Type-Options": "nosniff",
+                        "Content-Length": str(len(body)),
+                        "Vary": "Accept",
+                    },
+                )
+            # при неудаче — обычная отдача оригинала ниже
     db = SessionLocal()
     try:
         # Тянем только метаданные (id/тип/размер) — без самого блоба.

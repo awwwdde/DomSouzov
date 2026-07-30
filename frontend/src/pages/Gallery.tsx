@@ -4,6 +4,7 @@ import { useSite } from '../context/SiteContext';
 import { PageKicker } from '../components/PageKicker';
 import Seo from '../components/Seo';
 import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
+import { imgAttrs } from '../lib/img';
 
 function mediaUrl(path: string | null | undefined) {
   if (!path) return '';
@@ -79,7 +80,7 @@ export default function Gallery() {
                   />
                 ) : cover ? (
                   <img
-                    src={mediaUrl(cover)}
+                    {...imgAttrs(mediaUrl(cover), '(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw', 640)}
                     alt={l(c.name)}
                     loading="lazy"
                     decoding="async"

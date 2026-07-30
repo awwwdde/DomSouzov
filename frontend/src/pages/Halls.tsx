@@ -7,6 +7,7 @@ import { RevealItem, RevealList, RevealSection } from '../components/Reveal';
 import ActionButton from '../components/ActionButton';
 import HallStats from '../components/HallStats';
 import { useReducedMotionActive } from '../lib/motion';
+import { imgAttrs } from '../lib/img';
 
 /* Авто-слайдер фото зала: перелистывает кадры каждые 6 секунд с плавным
    переходом. Прозрачные стрелки — для ручного переключения (сбрасывают
@@ -42,7 +43,7 @@ function HallSlider({ images, alt, fallbackLabel }: { images: string[]; alt: str
       {valid.map((src, i) => (
         <img
           key={src + i}
-          src={src}
+          {...imgAttrs(src, '(min-width:768px) 55vw, 100vw', 1024)}
           alt={i === idx ? alt : ''}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-ds"

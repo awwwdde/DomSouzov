@@ -7,6 +7,7 @@ import { eventCategoryIcon, eventCategoryColor } from '../lib/eventCategory';
 import { DURATION, EASE_DS, useReducedMotionActive } from '../lib/motion';
 import { addDays, dateKey, eventOccurrences, formatDayMonthFromEvent, startOfDay } from '../lib/eventDates';
 import type { Event, Lang } from '../types';
+import { imgAttrs } from '../lib/img';
 
 export type CalendarVariant = 'full' | 'compact';
 
@@ -598,7 +599,7 @@ function FullCalendar({ events, lang }: { events: Event[]; lang: Lang }) {
                     {event.image ? (
                       <motion.img
                         className="h-full w-full object-cover"
-                        src={event.image}
+                        {...imgAttrs(event.image, '(min-width:768px) 40vw, 100vw', 640)}
                         alt={l(event.title)}
                         loading="lazy"
                         decoding="async"

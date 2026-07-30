@@ -8,6 +8,7 @@ import Seo from '../components/Seo';
 import { RevealSection } from '../components/Reveal';
 import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { fadeUp, transitionBase, useReducedMotionActive } from '../lib/motion';
+import { imgAttrs } from '../lib/img';
 
 function mediaUrl(path: string | null | undefined) {
   if (!path) return '';
@@ -103,7 +104,7 @@ export default function GalleryCategory() {
               const inner = (
                 <>
                   <img
-                    src={mediaUrl(g.image)}
+                    {...imgAttrs(mediaUrl(g.image), '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw', 640)}
                     alt={caption}
                     loading="lazy"
                     decoding="async"

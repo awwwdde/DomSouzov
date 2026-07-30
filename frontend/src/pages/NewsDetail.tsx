@@ -11,6 +11,7 @@ import Lightbox, { type LightboxItem } from '../components/Lightbox';
 import { formatNewsLongDate, formatNewsShortDate } from '../lib/newsDates';
 import { parseContentBlocks, firstTextBlock } from '../lib/richText';
 import { fadeUp, transitionBase, useReducedMotionActive } from '../lib/motion';
+import { imgAttrs } from '../lib/img';
 
 function mediaUrl(path: string) {
   if (!path) return '';
@@ -191,7 +192,7 @@ export default function NewsDetail() {
                     transition={reduced ? { duration: 0 } : transitionBase}
                   >
                     <img
-                      src={mediaUrl(m.url)}
+                      {...imgAttrs(mediaUrl(m.url), '(min-width:1024px) 55vw, 100vw', 1024)}
                       alt={l(article.title)}
                       loading="lazy"
                       decoding="async"
@@ -204,7 +205,7 @@ export default function NewsDetail() {
           ) : article.image ? (
             <div className="w-full overflow-hidden border border-line bg-paper-soft">
               <img
-                src={mediaUrl(article.image)}
+                {...imgAttrs(mediaUrl(article.image), '(min-width:1024px) 55vw, 100vw', 1024)}
                 alt={l(article.title)}
                 loading="lazy"
                 decoding="async"
@@ -223,7 +224,7 @@ export default function NewsDetail() {
                   b.type === 'image' ? (
                     <img
                       key={i}
-                      src={mediaUrl(b.url)}
+                      {...imgAttrs(mediaUrl(b.url), '(min-width:1024px) 640px, 100vw', 768)}
                       alt={b.alt}
                       loading="lazy"
                       decoding="async"
@@ -268,7 +269,7 @@ export default function NewsDetail() {
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-soft">
                     {nw.image ? (
                       <img
-                        src={mediaUrl(nw.image)}
+                        {...imgAttrs(mediaUrl(nw.image), '(min-width:768px) 33vw, 100vw', 640)}
                         alt={l(nw.title)}
                         loading="lazy"
                         decoding="async"

@@ -12,6 +12,7 @@ import { DURATION, transitionBase, useReducedMotionActive } from '../lib/motion'
 import { formatDayMonthFromEvent, sortEventsByDate } from '../lib/eventDates';
 import { eventCategoryIcon } from '../lib/eventCategory';
 import { pickHomeEvents, pickHomeNews } from '../lib/homePick';
+import { imgAttrs } from '../lib/img';
 import { useSite } from '../context/SiteContext';
 import type { Event, NewsArticle } from '../types';
 
@@ -125,8 +126,9 @@ export default function Home() {
             />
           ) : heroPoster ? (
             <img
-              src={heroPoster}
+              {...imgAttrs(heroPoster, '100vw', 1600)}
               alt=""
+              fetchPriority="high"
               className="block h-[86vh] max-h-[900px] min-h-[480px] w-full object-cover"
             />
           ) : (
@@ -296,8 +298,10 @@ export default function Home() {
         <Section as="div" tone="paper" spacing="none" bleed>
           <figure className="relative w-full overflow-hidden">
             <img
-              src={ctaBg}
+              {...imgAttrs(ctaBg, '100vw', 1600)}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="block h-[44vh] max-h-[540px] min-h-[320px] w-full object-cover"
             />
           </figure>
@@ -416,7 +420,7 @@ function EditorialCardGrid({
                 </span>
               </Link>
               <Link to={href}>
-                <h3 className="mt-5 mb-6 font-heading text-[clamp(18px,1.35vw,22px)] font-black uppercase leading-[1.05] tracking-[0.01em] text-ink transition group-hover:text-accent">
+                <h3 className="mt-5 mb-6 line-clamp-2 min-h-[2.1em] font-heading text-[clamp(18px,1.35vw,22px)] font-black uppercase leading-[1.05] tracking-[0.01em] text-ink transition group-hover:text-accent">
                   {title}
                 </h3>
               </Link>
@@ -430,7 +434,7 @@ function EditorialCardGrid({
                     — показываем «билет» с названием мероприятия (а не горизонтальное). */}
                 {ev.image_vertical ? (
                   <motion.img
-                    src={ev.image_vertical}
+                    {...imgAttrs(ev.image_vertical, '(min-width:1024px) 31vw, (min-width:768px) 46vw, 100vw', 640)}
                     alt={title}
                     loading="lazy"
                     decoding="async"
@@ -509,7 +513,7 @@ function NewsGrid({
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-soft">
                 {nw.image ? (
                   <motion.img
-                    src={nw.image}
+                    {...imgAttrs(nw.image, '(min-width:1024px) 23vw, (min-width:768px) 46vw, 100vw', 480)}
                     alt={title}
                     loading="lazy"
                     decoding="async"
@@ -624,7 +628,7 @@ function PromoBanner({
     <div className={`group relative flex ${full ? 'min-h-[380px] md:min-h-[420px]' : 'min-h-[320px]'} flex-col justify-end overflow-hidden bg-ink`}>
       {image ? (
         <img
-          src={image}
+          {...imgAttrs(image, full ? '100vw' : '(min-width:768px) 33vw, 100vw', full ? 1280 : 640)}
           alt=""
           loading="lazy"
           decoding="async"

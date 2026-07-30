@@ -8,6 +8,7 @@ import Seo, { SITE_NAME, SITE_URL } from '../components/Seo';
 import ActionButton from '../components/ActionButton';
 import { formatDayMonthFromEvent } from '../lib/eventDates';
 import { parseContentBlocks, firstTextBlock } from '../lib/richText';
+import { imgAttrs } from '../lib/img';
 
 function mediaUrl(path: string) {
   if (!path) return '';
@@ -141,7 +142,7 @@ export default function EventDetail() {
         <div className="w-full">
           {event.image ? (
             <img
-              src={mediaUrl(event.image)}
+              {...imgAttrs(mediaUrl(event.image), '(min-width:1024px) 55vw, 100vw', 1024)}
               alt={l(event.title)}
               loading="lazy"
               decoding="async"
@@ -287,7 +288,7 @@ export default function EventDetail() {
                 b.type === 'image' ? (
                   <figure key={i} className="my-9">
                     <img
-                      src={mediaUrl(b.url)}
+                      {...imgAttrs(mediaUrl(b.url), '(min-width:560px) 560px, 100vw', 640)}
                       alt={b.alt}
                       loading="lazy"
                       decoding="async"
@@ -319,7 +320,7 @@ export default function EventDetail() {
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-soft">
                     {ev.image ? (
                       <img
-                        src={mediaUrl(ev.image)}
+                        {...imgAttrs(mediaUrl(ev.image), '(min-width:768px) 33vw, 100vw', 640)}
                         alt={l(ev.title)}
                         loading="lazy"
                         decoding="async"

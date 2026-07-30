@@ -10,6 +10,7 @@ import { RevealSection } from '../components/Reveal';
 import HallStats from '../components/HallStats';
 import Lightbox from '../components/Lightbox';
 import { submitOrganizerRequest } from '../api/client';
+import { imgAttrs } from '../lib/img';
 import type { Hall } from '../types';
 
 /* ============================================================ */
@@ -732,7 +733,7 @@ function MediaSlider({
             aria-hidden={!active}
           >
             <img
-              src={mediaUrl(src)}
+              {...imgAttrs(mediaUrl(src), '(min-width:768px) 55vw, 100vw', 1024)}
               alt={
                 !active
                   ? ''

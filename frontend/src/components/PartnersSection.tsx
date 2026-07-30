@@ -3,6 +3,7 @@ import type { Partner } from '../types';
 import { RevealItem, RevealList } from './Reveal';
 import { Section } from './Section';
 import { useReducedMotionActive } from '../lib/motion';
+import { imgAttrs } from '../lib/img';
 
 type Props = {
   partners: Partner[];
@@ -58,7 +59,7 @@ function PartnerItem({
     <div className="flex h-28 w-full items-center justify-center md:h-32">
       {partner.logo ? (
         <motion.img
-          src={partner.logo}
+          {...imgAttrs(partner.logo, '(min-width:768px) 220px, 45vw', 480)}
           alt={label}
           className="max-h-full max-w-full object-contain"
           loading="lazy"

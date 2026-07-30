@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { imgAttrs } from '../lib/img';
 
 export type LightboxItem = {
   src: string;
@@ -100,7 +101,7 @@ export default function Lightbox({ open, onClose, items, index, onIndexChange }:
           </video>
         ) : (
           <img
-            src={current.src}
+            {...imgAttrs(current.src, '90vw', 1600)}
             alt={current.alt}
             className="max-h-[90vh] max-w-[90vw] object-contain"
             onClick={(e) => e.stopPropagation()}

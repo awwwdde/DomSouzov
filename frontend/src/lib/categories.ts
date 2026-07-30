@@ -19,7 +19,7 @@ export const EVENT_CATEGORIES: Category[] = [
   { ru: 'Спектакль', en: 'Performance' },
   { ru: 'Фестиваль', en: 'Festival' },
   { ru: 'Церемония', en: 'Ceremony' },
-  { ru: 'Вечер памяти', en: 'Memorial evening' },
+  { ru: 'Чествование', en: 'Tribute' },
   { ru: 'Творческий вечер', en: 'Artist’s evening' },
   { ru: 'Выставка', en: 'Exhibition' },
   { ru: 'Показ', en: 'Screening' },

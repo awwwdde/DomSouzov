@@ -7,6 +7,7 @@ import ActionButton from '../components/ActionButton';
 import HeroVideo from '../components/HeroVideo';
 import Seo from '../components/Seo';
 import type { AboutHoverTip, AboutScatteredPhoto, AboutTimelineEvent } from '../types';
+import { imgAttrs } from '../lib/img';
 
 /* ================================================================ */
 /* ABOUT — страница «О Доме Союзов».                                 */
@@ -105,8 +106,9 @@ function HeroStage({
           />
         ) : poster ? (
           <img
-            src={poster}
+            {...imgAttrs(poster, '100vw', 1600)}
             alt=""
+            fetchPriority="high"
             className="block h-[86vh] max-h-[900px] min-h-[480px] w-full object-cover"
           />
         ) : (
@@ -298,7 +300,7 @@ function NarrativePhoto({
     >
       {photo.image ? (
         <img
-          src={photo.image}
+          {...imgAttrs(photo.image, '80vw', 1024)}
           alt=""
           loading="lazy"
           className="block max-h-[80vh] w-auto max-w-full"
@@ -421,7 +423,7 @@ function HoverPhrase({
                   />
                 ) : (
                   <img
-                    src={tip.media_url}
+                    {...imgAttrs(tip.media_url, '360px', 480)}
                     alt={caption || (typeof children === 'string' ? children : '')}
                     className="block h-full w-full object-cover"
                   />
@@ -478,7 +480,7 @@ function FactsStage({ lang, reduced, t }: { lang: 'ru' | 'en'; reduced: boolean;
           где справа есть свободное место (цифры уведены влево колонками сетки). */}
       {buildingImage ? (
         <motion.img
-          src={buildingImage}
+          {...imgAttrs(buildingImage, '100vw', 1280)}
           alt={lang === 'ru' ? 'Дом Союзов' : 'House of Unions'}
           loading="lazy"
           decoding="async"
@@ -604,7 +606,7 @@ function TimelineStage({
               <div className={isLeft ? 'md:pl-8' : 'md:pr-8'}>
                 {it.image ? (
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
-                    <img src={it.image} alt={title} className="block h-full w-full object-cover" />
+                    <img {...imgAttrs(it.image, '(min-width:768px) 50vw, 100vw', 768)} alt={title} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
                   </div>
                 ) : null}
               </div>
